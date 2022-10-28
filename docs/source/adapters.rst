@@ -34,6 +34,7 @@ The following adapters have no default implementation for arbitrary types:
    _generated/libsemigroups__lambdavalue.rst
    _generated/libsemigroups__one.rst
    _generated/libsemigroups__product.rst
+   _generated/libsemigroups__rank.rst
    _generated/libsemigroups__rho.rst
    _generated/libsemigroups__rhovalue.rst
 

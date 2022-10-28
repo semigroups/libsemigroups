@@ -7,8 +7,9 @@
 Rho
 ===
 
-This page contains details of the specialisations of the `adapters<Adapters>`
-:cpp:any:`Rho` and :cpp:any:`RhoValue` for boolean matrices. 
+This page contains details of the specialisations of the
+:ref:`adapters<Adapters>` :cpp:any:`Rho` and :cpp:any:`RhoValue` for boolean
+matrices. 
 
 .. cpp:struct:: template <typename Mat>  \
                 RhoValue<Mat>

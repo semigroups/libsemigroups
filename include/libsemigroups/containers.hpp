@@ -26,13 +26,14 @@
 #include <initializer_list>  // for initializer_list
 #include <iterator>          // for reverse_iterator, distance
 #include <sstream>           // for operator<<, ostream
-#include <string>            // for to_string
 #include <type_traits>       // for decay_t, false_type, is_def...
 #include <utility>           // for forward
 #include <vector>            // for vector, allocator
 
-#include "debug.hpp"     // for LIBSEMIGROUPS_ASSERT
-#include "iterator.hpp"  // for ConstIteratorStateful, ConstItera...
+#include "adapters.hpp"   // for Hash
+#include "debug.hpp"      // for LIBSEMIGROUPS_ASSERT
+#include "iterator.hpp"   // for ConstIteratorStateful, ConstItera...
+#include "string.hpp"     // for to_string
 
 namespace libsemigroups {
   namespace detail {
@@ -780,6 +781,11 @@ namespace libsemigroups {
                && std::equal(cbegin(), cend(), that.cbegin());
       }
 
+      // Not noexcept, since operator== can throw
+      bool operator!=(StaticVector1 const& that) const {
+        return !operator==(that);
+      }
+
       void clear() noexcept {
         _size = 0;
       }
@@ -928,9 +934,9 @@ namespace libsemigroups {
       }
       os << "{{";  // {{ is an escaped single { for fmt
       for (auto it = vec.cbegin(); it < vec.cend() - 1; ++it) {
-        os << std::to_string(*it) << ", ";
+        os << detail::to_string(*it) << ", ";
       }
-      os << std::to_string(*(vec.cend() - 1)) << "}}";
+      os << detail::to_string(*(vec.cend() - 1)) << "}}";
       return os;
     }
 
@@ -1101,7 +1107,7 @@ namespace std {
     operator()(libsemigroups::detail::StaticVector1<T, N> const& sv) const {
       size_t seed = 0;
       for (T const& x : sv) {
-        seed ^= std::hash<T>()(x) + 0x9e3779b97f4a7c16 + (seed << 6)
+        seed ^= libsemigroups::Hash<T>()(x) + 0x9e3779b97f4a7c16 + (seed << 6)
                 + (seed >> 2);
       }
       return seed;

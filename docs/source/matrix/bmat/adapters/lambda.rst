@@ -7,8 +7,9 @@
 Lambda
 ======
 
-This page contains details of the specialisations of the `adapters<Adapters>`
-:cpp:any:`Lambda` and :cpp:any:`LambdaValue` for boolean matrices. 
+This page contains details of the specialisations of the
+:ref:`adapters<Adapters>` :cpp:any:`Lambda` and :cpp:any:`LambdaValue` for
+boolean matrices. 
 
 .. cpp:struct:: template <typename Mat>  \
                 LambdaValue<Mat>

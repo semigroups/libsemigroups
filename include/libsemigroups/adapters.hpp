@@ -171,6 +171,7 @@ namespace libsemigroups {
   //! \par Used by:
   //! * ActionTraits
   //! * FroidurePinTraits
+  //! * KoniecznyTraits
   //! * SchreierSimsTraits
   //!
   //! \par Example
@@ -216,6 +217,7 @@ namespace libsemigroups {
   //! * ActionTraits
   //! * FroidurePinTraits
   //! * CongruenceByPairs
+  //! * KoniecznyTraits
   //! * SchreierSimsTraits
   //!
   //! \par Example
@@ -359,6 +361,7 @@ namespace libsemigroups {
   //! * ActionTraits
   //! * CongruenceByPairs
   //! * FroidurePinTraits
+  //! * KoniecznyTraits
   //! * SchreierSimsTraits
   template <typename TValueType, typename TSfinae = void>
   struct EqualTo {
@@ -391,6 +394,7 @@ namespace libsemigroups {
   //! * ActionTraits
   //! * CongruenceByPairs
   //! * FroidurePinTraits
+  //! * KoniecznyTraits
   //! * SchreierSimsTraits
   template <typename TValueType, typename TSfinae = void>
   struct Hash {
@@ -522,7 +526,8 @@ namespace libsemigroups {
   //!
   //! \par Used by:
   //! * FroidurePinTraits
-  template <typename TValueType, typename TSfinae = void>
+  //! * KoniecznyTraits.
+  template <typename TValueType, typename = void>
   struct Less {
     //! This call operator compares \p x and \p y using \less with template
     //! parameter \c TValueType.
@@ -640,7 +645,7 @@ namespace libsemigroups {
   };
 
   /////////////////////////////////////////////////////////////////////
-  // KONIECZNY THINGS
+  // KONIECZNY ADAPTERS
   /////////////////////////////////////////////////////////////////////
 
   //! Defined in ``adapters.hpp``.
@@ -770,8 +775,9 @@ namespace libsemigroups {
   //! * \f$\operatorname{rank}\f$ should agree with the \f$D\f$-order on the
   //!   semigroup; that is, if \f$D_x \leq D_y\f$, then
   //!   \f$\operatorname{rank}(x) \leq \operatorname{rank}(y)\f$,
-  //! * if \f$D_x \leq D_y\f$ and \f$\operatorname{rank}(x) =
-  //!   \operatorname{rank}(y)\f$, then \f$D_x = D_y\f$.
+  //! * if \f$D_x \leq D_y\f$ and
+  //!   \f$\operatorname{rank}(x) = \operatorname{rank}(y)\f$, then
+  //!   \f$D_x = D_y\f$.
   //!
   //! \tparam TElementType the type of elements.
   //! \tparam TStateType the type of the data required to compute ranks of

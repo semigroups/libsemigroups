@@ -289,3 +289,19 @@ latter should be constructed using the dimensions.
    This variable has value ``true`` if the template parameter ``T`` is the same
    as :cpp:any:`MaxPlusTruncMat\<T, R, C, Scalar>` for some values of ``T``,
    ``R``, ``C``, and ``Scalar``; and ``false`` if it is not. 
+
+Truncated max-plus matrix adapters
+----------------------------------
+
+The following adapters are implemented to so that
+:cpp:any:`StaticMaxPlusTruncMat\<T, R, C, Scalar>` can be used with
+:cpp:any:`Konieczny`. 
+
+.. toctree::
+   :maxdepth: 1
+   
+   adapters/imagerightaction
+   adapters/imageleftaction
+   adapters/lambda
+   adapters/rho
+   adapters/rank
