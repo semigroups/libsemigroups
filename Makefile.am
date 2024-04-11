@@ -75,6 +75,7 @@ pkginclude_HEADERS += include/libsemigroups/kambites.tpp
 pkginclude_HEADERS += include/libsemigroups/knuth-bendix.hpp
 pkginclude_HEADERS += include/libsemigroups/knuth-bendix.tpp
 pkginclude_HEADERS += include/libsemigroups/konieczny.hpp
+pkginclude_HEADERS += include/libsemigroups/konieczny.tpp
 pkginclude_HEADERS += include/libsemigroups/libsemigroups.hpp
 pkginclude_HEADERS += include/libsemigroups/matrix.hpp
 pkginclude_HEADERS += include/libsemigroups/obvinf.hpp
