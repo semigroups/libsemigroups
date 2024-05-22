@@ -86,6 +86,388 @@ namespace libsemigroups {
     }
   }
 
+  template <typename Element, typename Traits>
+  typename Konieczny<Element, Traits>::lambda_orb_index_type
+  Konieczny<Element, Traits>::get_lambda_group_index(
+      internal_const_reference x) {
+    auto lpos = get_lpos(x);
+    LIBSEMIGROUPS_ASSERT(lpos != UNDEFINED);
+
+    auto lval_scc_id = _lambda_orb.scc().id(lpos);
+
+    std::pair key(get_rpos(x), lval_scc_id);
+
+    if (_group_indices.find(key) != _group_indices.end()) {
+      return _group_indices.at(key);
+    }
+
+    PoolGuard             cg1(_element_pool);
+    PoolGuard             cg2(_element_pool);
+    internal_element_type tmp1 = cg1.get();
+    internal_element_type tmp2 = cg2.get();
+
+    Product()(this->to_external(tmp1),
+              this->to_external_const(x),
+              _lambda_orb.multiplier_to_scc_root(lpos));
+
+    for (auto const& val : _lambda_orb.scc().component(lval_scc_id)) {
+      Product()(this->to_external(tmp2),
+                this->to_external(tmp1),
+                _lambda_orb.multiplier_from_scc_root(val));
+      if (is_group_index(x, tmp2)) {
+        _group_indices.emplace(key, val);
+        return val;
+      }
+    }
+    _group_indices.emplace(key, UNDEFINED);
+    return UNDEFINED;
+  }
+
+  template <typename Element, typename Traits>
+  typename Konieczny<Element, Traits>::rho_orb_index_type
+  Konieczny<Element, Traits>::get_rho_group_index(internal_const_reference x) {
+    Rho()(_tmp_rho_value1, this->to_external_const(x));
+    Lambda()(_tmp_lambda_value1, this->to_external_const(x));
+
+    auto rpos = _rho_orb.position(_tmp_rho_value1);
+    LIBSEMIGROUPS_ASSERT(rpos != UNDEFINED);
+
+    auto rval_scc_id = _rho_orb.scc().id(rpos);
+
+    std::pair key(rval_scc_id, _lambda_orb.position(_tmp_lambda_value1));
+
+    if (_group_indices_rev.find(key) != _group_indices_rev.end()) {
+      return _group_indices_rev.at(key);
+    }
+
+    PoolGuard cg1(_element_pool);
+    PoolGuard cg2(_element_pool);
+
+    internal_element_type tmp1 = cg1.get();
+    internal_element_type tmp2 = cg2.get();
+
+    Product()(this->to_external(tmp1),
+              _rho_orb.multiplier_to_scc_root(rpos),
+              this->to_external_const(x));
+
+    for (auto const& val : _rho_orb.scc().component(rval_scc_id)) {
+      Product()(this->to_external(tmp2),
+                _rho_orb.multiplier_from_scc_root(val),
+                this->to_external(tmp1));
+      if (is_group_index(tmp2, x)) {
+        _group_indices_rev.emplace(key, val);
+        return val;
+      }
+    }
+    _group_indices_rev.emplace(key, UNDEFINED);
+    return UNDEFINED;
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::idem_in_H_class(
+      internal_reference       res,
+      internal_const_reference x) const {
+    this->to_external(res) = this->to_external_const(x);
+    PoolGuard             cg(_element_pool);
+    internal_element_type tmp = cg.get();
+    do {
+      Swap()(this->to_external(res), this->to_external(tmp));
+      Product()(this->to_external(res),
+                this->to_external_const(tmp),
+                this->to_external_const(x));
+      Product()(this->to_external(tmp),
+                this->to_external_const(res),
+                this->to_external_const(res));
+    } while (!InternalEqualTo()(res, tmp));
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::make_idem(internal_reference x) {
+    LIBSEMIGROUPS_ASSERT(is_regular_element_NC(x));
+    PoolGuard             cg1(_element_pool);
+    internal_element_type tmp1 = cg1.get();
+
+    Product()(this->to_external(tmp1),
+              this->to_external_const(x),
+              this->to_external_const(x));
+    if (EqualTo()(this->to_external(tmp1), this->to_external_const(x))) {
+      return;
+    }
+
+    Lambda()(_tmp_lambda_value1, this->to_external_const(x));
+    auto pos = _lambda_orb.position(_tmp_lambda_value1);
+
+    PoolGuard             cg2(_element_pool);
+    internal_element_type tmp2 = cg2.get();
+
+    Product()(this->to_external(tmp1),
+              this->to_external_const(x),
+              _lambda_orb.multiplier_to_scc_root(pos));
+
+    auto i = get_lambda_group_index(x);
+    Product()(this->to_external(tmp2),
+              this->to_external(tmp1),
+              _lambda_orb.multiplier_from_scc_root(i));
+
+    idem_in_H_class(tmp1, tmp2);
+    this->to_external(x) = this->to_external_const(tmp1);
+  }
+
+  template <typename Element, typename Traits>
+  void
+  Konieczny<Element, Traits>::group_inverse(internal_element_type&   res,
+                                            internal_const_reference id,
+                                            internal_const_reference x) const {
+    PoolGuard             cg(_element_pool);
+    internal_element_type tmp = cg.get();
+    this->to_external(tmp)    = this->to_external_const(x);
+    do {
+      Swap()(this->to_external(res), this->to_external(tmp));
+      Product()(this->to_external(tmp),
+                this->to_external_const(res),
+                this->to_external_const(x));
+    } while (!InternalEqualTo()(tmp, id));
+  }
+
+  template <typename Element, typename Traits>
+  bool
+  Konieczny<Element, Traits>::is_group_index(internal_const_reference x,
+                                             internal_const_reference y) const {
+    PoolGuard             cg(_element_pool);
+    internal_element_type tmp = cg.get();
+
+    Product()(this->to_external(tmp),
+              this->to_external_const(y),
+              this->to_external_const(x));
+    Lambda()(_tmp_lambda_value1, this->to_external(tmp));
+    Lambda()(_tmp_lambda_value2, this->to_external_const(x));
+
+    if (_tmp_lambda_value1 != _tmp_lambda_value2) {
+      return false;
+    }
+
+    Rho()(_tmp_rho_value1, this->to_external(tmp));
+    Rho()(_tmp_rho_value2, this->to_external_const(y));
+
+    return _tmp_rho_value1 == _tmp_rho_value2;
+  }
+
+  template <typename Element, typename Traits>
+  typename Konieczny<Element, Traits>::D_class_index_type
+  Konieczny<Element, Traits>::get_containing_D_class(internal_const_reference x,
+                                                     bool const full_check) {
+    if (full_check) {
+      rank_type const rnk
+          = InternalRank()(_rank_state, this->to_external_const(x));
+      run_until([this, rnk]() -> bool { return max_rank() < rnk; });
+    }
+
+    Lambda()(_tmp_lambda_value1, this->to_external_const(x));
+    Rho()(_tmp_rho_value1, this->to_external_const(x));
+
+    auto lpos = _lambda_orb.position(_tmp_lambda_value1);
+    auto rpos = _rho_orb.position(_tmp_rho_value1);
+    if (lpos == UNDEFINED || rpos == UNDEFINED) {
+      // this should only be possible if this function was called from a
+      // public function, and hence full_check is true.
+      LIBSEMIGROUPS_ASSERT(full_check);
+      return UNDEFINED;
+    }
+    auto l_it = _lambda_to_D_map.find(lpos);
+    auto r_it = _rho_to_D_map.find(rpos);
+    if (l_it != _lambda_to_D_map.end() && r_it != _rho_to_D_map.end()) {
+      auto l_D_it  = l_it->second.cbegin();
+      auto l_D_end = l_it->second.cend();
+      auto r_D_it  = r_it->second.cbegin();
+      auto r_D_end = r_it->second.cend();
+      // the vectors should already be sorted given how we create them
+      LIBSEMIGROUPS_ASSERT(std::is_sorted(l_D_it, l_D_end));
+      LIBSEMIGROUPS_ASSERT(std::is_sorted(r_D_it, r_D_end));
+      while (l_D_it != l_D_end && r_D_it != r_D_end) {
+        if (*l_D_it < *r_D_it) {
+          ++l_D_it;
+        } else {
+          if (*r_D_it == *l_D_it) {
+            if (full_check) {
+              if (_D_classes[*l_D_it]->contains(
+                      this->to_external_const(x), lpos, rpos)) {
+                return *l_D_it;
+              }
+            } else {
+              if (_D_classes[*l_D_it]->contains_NC(x, lpos, rpos)) {
+                return *l_D_it;
+              }
+            }
+          }
+          ++r_D_it;
+        }
+      }
+    }
+    return UNDEFINED;
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::add_to_D_maps(D_class_index_type d) {
+    LIBSEMIGROUPS_ASSERT(d < _D_classes.size());
+    DClass* D = _D_classes[d];
+
+    {
+      auto first = D->cbegin_left_indices();
+      auto last  = D->cend_left_indices();
+
+      for (auto it = first; it < last; ++it) {
+        _lambda_to_D_map[*it].push_back(d);
+      }
+    }
+    {
+      auto first = D->cbegin_right_indices();
+      auto last  = D->cend_right_indices();
+      for (auto it = first; it < last; ++it) {
+        _rho_to_D_map[*it].push_back(d);
+      }
+    }
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::init_run() {
+    if (_run_initialised) {
+      return;
+    }
+    // ensure the data is set up correctly
+    init_data();
+    // compute orbits (can stop during these enumerations)
+    compute_orbs();
+    // we might have stopped; then we shouldn't attempt to anything else since
+    // the orbs may not have been fully enumerated and hence we cannot compute
+    // D classes
+    if (stopped()) {
+      return;
+    }
+    // compute the D-class of the adjoined identity and its covering reps
+    internal_element_type y   = this->internal_copy(_one);
+    RegularDClass*        top = new RegularDClass(this, y);
+    add_D_class(top);
+    for (auto& rep_info : top->covering_reps()) {
+      internal_reference x = rep_info._elt;
+      size_t rnk = InternalRank()(_rank_state, this->to_external_const(x));
+      _ranks.insert(rnk);
+      if (is_regular_element_NC(x)) {
+        _reg_reps[rnk].push_back(std::move(rep_info));
+      } else {
+        _nonregular_reps[rnk].push_back(std::move(rep_info));
+      }
+    }
+    _reps_processed++;
+    // Set whether the adjoined one is in the semigroup or not
+    // i.e. whether the generators contain multiple elements in the top D
+    // class
+    bool flag = false;
+    for (internal_const_element_type x : _gens) {
+      if (_D_classes[0]->contains_NC(x)) {
+        if (flag) {
+          _adjoined_identity_contained = true;
+          break;
+        } else {
+          flag = true;
+        }
+      }
+    }
+
+    _run_initialised = true;
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::init_data() {
+    if (_data_initialised) {
+      return;
+    }
+    if (_gens.empty()) {
+      LIBSEMIGROUPS_EXCEPTION("no generators have been added!");
+    }
+    LIBSEMIGROUPS_ASSERT(_degree == UNDEFINED
+                         || _degree
+                                == Degree()(this->to_external_const(_gens[0])));
+    _degree = Degree()(this->to_external_const(_gens[0]));
+
+    element_type x = this->to_external_const(_gens[0]);
+
+    _tmp_lambda_value1 = OneParamLambda()(x);
+    _tmp_lambda_value2 = OneParamLambda()(x);
+
+    _tmp_rho_value1 = OneParamRho()(x);
+    _tmp_rho_value2 = OneParamRho()(x);
+
+    // if _one is created but not immediately push into _gens
+    // it won't be freed if there are exceptions thrown!
+    _one = this->to_internal(One()(x));
+    _gens.push_back(_one);  // TODO(later): maybe not this
+
+    _element_pool.init(_one);
+
+    init_rank_state_and_rep_vecs();
+
+    _data_initialised = true;
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::init_rank_state_and_rep_vecs() {
+    if (started() || _run_initialised) {
+      LIBSEMIGROUPS_EXCEPTION("too late to initialise rank/rep vecs!");
+    }
+
+    // We don't necessarily know how to update _rank_state with any
+    // new generators, so we will just delete it and create it anew.
+    if (_data_initialised) {
+      delete _rank_state;
+    }
+
+    _rank_state = new rank_state_type(cbegin_generators(), cend_generators());
+    LIBSEMIGROUPS_ASSERT((_rank_state == nullptr)
+                         == (std::is_void_v<rank_state_type>) );
+
+    // We can safely just replace the vectors without deleting their
+    // contents, since we know that the run has not been initialised and
+    // they are empty.
+    // FIXME these assertions fail
+    // LIBSEMIGROUPS_ASSERT(_nonregular_reps.empty());
+    _nonregular_reps = std::vector<std::vector<RepInfo>>(
+        InternalRank()(_rank_state, this->to_external_const(_one)) + 1,
+        std::vector<RepInfo>());
+
+    // FIXME these assertions fail
+    // LIBSEMIGROUPS_ASSERT(_reg_reps.empty());
+    _reg_reps = std::vector<std::vector<RepInfo>>(
+        InternalRank()(_rank_state, this->to_external_const(_one)) + 1,
+        std::vector<RepInfo>());
+  }
+
+  template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::compute_orbs() {
+    if (_lambda_orb.finished() && _rho_orb.finished()) {
+      return;
+    }
+    report_default("Computing orbits...\n");
+    detail::Timer t;
+    if (!_lambda_orb.started()) {
+      _lambda_orb.add_seed(OneParamLambda()(this->to_external_const(_one)));
+      for (auto const& g : _gens) {
+        _lambda_orb.add_generator(this->to_external_const(g));
+      }
+    }
+    if (!_rho_orb.started()) {
+      _rho_orb.add_seed(OneParamRho()(this->to_external_const(_one)));
+      for (auto const& g : _gens) {
+        _rho_orb.add_generator(this->to_external_const(g));
+      }
+    }
+    _lambda_orb.run_until([this]() { return stopped(); });
+    _rho_orb.run_until([this]() { return stopped(); });
+    report_default("found {} lambda-values and {} rho-values in {}\n",
+                   _lambda_orb.current_size(),
+                   _rho_orb.current_size(),
+                   t.string());
+  }
+
   // This is a traits class for ConstIteratorStateless in detail/iterator.hpp
   template <typename Element, typename Traits>
   template <typename T>
@@ -153,54 +535,6 @@ namespace libsemigroups {
     _D_rels.push_back(std::vector<D_class_index_type>());
   }
 #endif
-
-  template <typename Element, typename Traits>
-  void Konieczny<Element, Traits>::init_run() {
-    if (_run_initialised) {
-      return;
-    }
-    // ensure the data is set up correctly
-    init_data();
-    // compute orbits (can stop during these enumerations)
-    compute_orbs();
-    // we might have stopped; then we shouldn't attempt to anything else since
-    // the orbs may not have been fully enumerated and hence we cannot compute
-    // D classes
-    if (stopped()) {
-      return;
-    }
-    // compute the D-class of the adjoined identity and its covering reps
-    internal_element_type y   = this->internal_copy(_one);
-    RegularDClass*        top = new RegularDClass(this, y);
-    add_D_class(top);
-    for (auto& rep_info : top->covering_reps()) {
-      internal_reference x = rep_info._elt;
-      size_t rnk = InternalRank()(_rank_state, this->to_external_const(x));
-      _ranks.insert(rnk);
-      if (is_regular_element_NC(x)) {
-        _reg_reps[rnk].push_back(std::move(rep_info));
-      } else {
-        _nonregular_reps[rnk].push_back(std::move(rep_info));
-      }
-    }
-    _reps_processed++;
-    // Set whether the adjoined one is in the semigroup or not
-    // i.e. whether the generators contain multiple elements in the top D
-    // class
-    bool flag = false;
-    for (internal_const_element_type x : _gens) {
-      if (_D_classes[0]->contains_NC(x)) {
-        if (flag) {
-          _adjoined_identity_contained = true;
-          break;
-        } else {
-          flag = true;
-        }
-      }
-    }
-
-    _run_initialised = true;
-  }
 
   template <typename Element, typename Traits>
   void Konieczny<Element, Traits>::run_report() {

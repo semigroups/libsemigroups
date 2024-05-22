@@ -1211,248 +1211,42 @@ namespace libsemigroups {
     // asserts its argument has lambda/rho values in the orbits.
     // modifies _tmp_lambda_value1
     // modifies _tmp_rho_value1
-    lambda_orb_index_type get_lambda_group_index(internal_const_reference x) {
-      auto lpos = get_lpos(x);
-      LIBSEMIGROUPS_ASSERT(lpos != UNDEFINED);
-
-      auto lval_scc_id = _lambda_orb.scc().id(lpos);
-
-      std::pair key(get_rpos(x), lval_scc_id);
-
-      if (_group_indices.find(key) != _group_indices.end()) {
-        return _group_indices.at(key);
-      }
-
-      PoolGuard             cg1(_element_pool);
-      PoolGuard             cg2(_element_pool);
-      internal_element_type tmp1 = cg1.get();
-      internal_element_type tmp2 = cg2.get();
-
-      Product()(this->to_external(tmp1),
-                this->to_external_const(x),
-                _lambda_orb.multiplier_to_scc_root(lpos));
-
-      for (auto const& val : _lambda_orb.scc().component(lval_scc_id)) {
-        Product()(this->to_external(tmp2),
-                  this->to_external(tmp1),
-                  _lambda_orb.multiplier_from_scc_root(val));
-        if (is_group_index(x, tmp2)) {
-          _group_indices.emplace(key, val);
-          return val;
-        }
-      }
-      _group_indices.emplace(key, UNDEFINED);
-      return UNDEFINED;
-    }
+    lambda_orb_index_type get_lambda_group_index(internal_const_reference x);
 
     // Finds a group index of a H-class in the L-class of \p x.
     // modifies _tmp_lambda_value1
     // modifies _tmp_rho_value1
-    rho_orb_index_type get_rho_group_index(internal_const_reference x) {
-      Rho()(_tmp_rho_value1, this->to_external_const(x));
-      Lambda()(_tmp_lambda_value1, this->to_external_const(x));
-
-      auto rpos = _rho_orb.position(_tmp_rho_value1);
-      LIBSEMIGROUPS_ASSERT(rpos != UNDEFINED);
-
-      auto rval_scc_id = _rho_orb.scc().id(rpos);
-
-      std::pair key(rval_scc_id, _lambda_orb.position(_tmp_lambda_value1));
-
-      if (_group_indices_rev.find(key) != _group_indices_rev.end()) {
-        return _group_indices_rev.at(key);
-      }
-
-      PoolGuard cg1(_element_pool);
-      PoolGuard cg2(_element_pool);
-
-      internal_element_type tmp1 = cg1.get();
-      internal_element_type tmp2 = cg2.get();
-
-      Product()(this->to_external(tmp1),
-                _rho_orb.multiplier_to_scc_root(rpos),
-                this->to_external_const(x));
-
-      for (auto const& val : _rho_orb.scc().component(rval_scc_id)) {
-        Product()(this->to_external(tmp2),
-                  _rho_orb.multiplier_from_scc_root(val),
-                  this->to_external(tmp1));
-        if (is_group_index(tmp2, x)) {
-          _group_indices_rev.emplace(key, val);
-          return val;
-        }
-      }
-      _group_indices_rev.emplace(key, UNDEFINED);
-      return UNDEFINED;
-    }
+    rho_orb_index_type get_rho_group_index(internal_const_reference x);
 
     //! Finds the idempotent in the H-class of \p x. Note that it is assumed
     //! that \p x is in a group H-class.
     // TODO(later): it must be possible to do better than this
     void idem_in_H_class(internal_reference       res,
-                         internal_const_reference x) const {
-      this->to_external(res) = this->to_external_const(x);
-      PoolGuard             cg(_element_pool);
-      internal_element_type tmp = cg.get();
-      do {
-        Swap()(this->to_external(res), this->to_external(tmp));
-        Product()(this->to_external(res),
-                  this->to_external_const(tmp),
-                  this->to_external_const(x));
-        Product()(this->to_external(tmp),
-                  this->to_external_const(res),
-                  this->to_external_const(res));
-      } while (!InternalEqualTo()(res, tmp));
-    }
+                         internal_const_reference x) const;
 
     //! Finds an idempotent in the \f$\mathscr{D}\f$-class of \c x, if \c x is
     //! regular, and modifies \c x in place to be this idempotent
     // modifies _tmp_lambda_value1
-    void make_idem(internal_reference x) {
-      LIBSEMIGROUPS_ASSERT(is_regular_element_NC(x));
-      PoolGuard             cg1(_element_pool);
-      internal_element_type tmp1 = cg1.get();
-
-      Product()(this->to_external(tmp1),
-                this->to_external_const(x),
-                this->to_external_const(x));
-      if (EqualTo()(this->to_external(tmp1), this->to_external_const(x))) {
-        return;
-      }
-
-      Lambda()(_tmp_lambda_value1, this->to_external_const(x));
-      auto pos = _lambda_orb.position(_tmp_lambda_value1);
-
-      PoolGuard             cg2(_element_pool);
-      internal_element_type tmp2 = cg2.get();
-
-      Product()(this->to_external(tmp1),
-                this->to_external_const(x),
-                _lambda_orb.multiplier_to_scc_root(pos));
-
-      auto i = get_lambda_group_index(x);
-      Product()(this->to_external(tmp2),
-                this->to_external(tmp1),
-                _lambda_orb.multiplier_from_scc_root(i));
-
-      idem_in_H_class(tmp1, tmp2);
-      this->to_external(x) = this->to_external_const(tmp1);
-    }
+    void make_idem(internal_reference x);
 
     //! Finds the group inverse of \p x in its H-class; i.e. the element \c y
     //! in the H-class of \p x such that <tt> xy = \p id</tt>. Will run
     //! forever if no such element exists.
     void group_inverse(internal_element_type&   res,
                        internal_const_reference id,
-                       internal_const_reference x) const {
-      PoolGuard             cg(_element_pool);
-      internal_element_type tmp = cg.get();
-      this->to_external(tmp)    = this->to_external_const(x);
-      do {
-        Swap()(this->to_external(res), this->to_external(tmp));
-        Product()(this->to_external(tmp),
-                  this->to_external_const(res),
-                  this->to_external_const(x));
-      } while (!InternalEqualTo()(tmp, id));
-    }
+                       internal_const_reference x) const;
 
     //! Determines whether <tt>(x, y)</tt> forms a group index.
     // modifies _tmp_lambda_value and _tmp_rho_value
     bool is_group_index(internal_const_reference x,
-                        internal_const_reference y) const {
-      PoolGuard             cg(_element_pool);
-      internal_element_type tmp = cg.get();
-
-      Product()(this->to_external(tmp),
-                this->to_external_const(y),
-                this->to_external_const(x));
-      Lambda()(_tmp_lambda_value1, this->to_external(tmp));
-      Lambda()(_tmp_lambda_value2, this->to_external_const(x));
-
-      if (_tmp_lambda_value1 != _tmp_lambda_value2) {
-        return false;
-      }
-
-      Rho()(_tmp_rho_value1, this->to_external(tmp));
-      Rho()(_tmp_rho_value2, this->to_external_const(y));
-
-      return _tmp_rho_value1 == _tmp_rho_value2;
-    }
+                        internal_const_reference y) const;
 
     // pass full_check = true to use the contains method of the D-classes
     // instead of the contains_NC
     D_class_index_type get_containing_D_class(internal_const_reference x,
-                                              bool const full_check = false) {
-      if (full_check) {
-        rank_type const rnk
-            = InternalRank()(_rank_state, this->to_external_const(x));
-        run_until([this, rnk]() -> bool { return max_rank() < rnk; });
-      }
+                                              bool const full_check = false);
 
-      Lambda()(_tmp_lambda_value1, this->to_external_const(x));
-      Rho()(_tmp_rho_value1, this->to_external_const(x));
-
-      auto lpos = _lambda_orb.position(_tmp_lambda_value1);
-      auto rpos = _rho_orb.position(_tmp_rho_value1);
-      if (lpos == UNDEFINED || rpos == UNDEFINED) {
-        // this should only be possible if this function was called from a
-        // public function, and hence full_check is true.
-        LIBSEMIGROUPS_ASSERT(full_check);
-        return UNDEFINED;
-      }
-      auto l_it = _lambda_to_D_map.find(lpos);
-      auto r_it = _rho_to_D_map.find(rpos);
-      if (l_it != _lambda_to_D_map.end() && r_it != _rho_to_D_map.end()) {
-        auto l_D_it  = l_it->second.cbegin();
-        auto l_D_end = l_it->second.cend();
-        auto r_D_it  = r_it->second.cbegin();
-        auto r_D_end = r_it->second.cend();
-        // the vectors should already be sorted given how we create them
-        LIBSEMIGROUPS_ASSERT(std::is_sorted(l_D_it, l_D_end));
-        LIBSEMIGROUPS_ASSERT(std::is_sorted(r_D_it, r_D_end));
-        while (l_D_it != l_D_end && r_D_it != r_D_end) {
-          if (*l_D_it < *r_D_it) {
-            ++l_D_it;
-          } else {
-            if (*r_D_it == *l_D_it) {
-              if (full_check) {
-                if (_D_classes[*l_D_it]->contains(
-                        this->to_external_const(x), lpos, rpos)) {
-                  return *l_D_it;
-                }
-              } else {
-                if (_D_classes[*l_D_it]->contains_NC(x, lpos, rpos)) {
-                  return *l_D_it;
-                }
-              }
-            }
-            ++r_D_it;
-          }
-        }
-      }
-      return UNDEFINED;
-    }
-
-    void add_to_D_maps(D_class_index_type d) {
-      LIBSEMIGROUPS_ASSERT(d < _D_classes.size());
-      DClass* D = _D_classes[d];
-
-      {
-        auto first = D->cbegin_left_indices();
-        auto last  = D->cend_left_indices();
-
-        for (auto it = first; it < last; ++it) {
-          _lambda_to_D_map[*it].push_back(d);
-        }
-      }
-      {
-        auto first = D->cbegin_right_indices();
-        auto last  = D->cend_right_indices();
-        for (auto it = first; it < last; ++it) {
-          _rho_to_D_map[*it].push_back(d);
-        }
-      }
-    }
+    void add_to_D_maps(D_class_index_type d);
 
     ////////////////////////////////////////////////////////////////////////
     // Konieczny - accessor member functions - private
@@ -1485,94 +1279,11 @@ namespace libsemigroups {
     ////////////////////////////////////////////////////////////////////////
     void init_run();
 
-    void init_data() {
-      if (_data_initialised) {
-        return;
-      }
-      if (_gens.empty()) {
-        LIBSEMIGROUPS_EXCEPTION("no generators have been added!");
-      }
-      LIBSEMIGROUPS_ASSERT(
-          _degree == UNDEFINED
-          || _degree == Degree()(this->to_external_const(_gens[0])));
-      _degree = Degree()(this->to_external_const(_gens[0]));
+    void init_data();
 
-      element_type x = this->to_external_const(_gens[0]);
+    void init_rank_state_and_rep_vecs();
 
-      _tmp_lambda_value1 = OneParamLambda()(x);
-      _tmp_lambda_value2 = OneParamLambda()(x);
-
-      _tmp_rho_value1 = OneParamRho()(x);
-      _tmp_rho_value2 = OneParamRho()(x);
-
-      // if _one is created but not immediately push into _gens
-      // it won't be freed if there are exceptions thrown!
-      _one = this->to_internal(One()(x));
-      _gens.push_back(_one);  // TODO(later): maybe not this
-
-      _element_pool.init(_one);
-
-      init_rank_state_and_rep_vecs();
-
-      _data_initialised = true;
-    }
-
-    void init_rank_state_and_rep_vecs() {
-      if (started() || _run_initialised) {
-        LIBSEMIGROUPS_EXCEPTION("too late to initialise rank/rep vecs!");
-      }
-
-      // We don't necessarily know how to update _rank_state with any
-      // new generators, so we will just delete it and create it anew.
-      if (_data_initialised) {
-        delete _rank_state;
-      }
-
-      _rank_state = new rank_state_type(cbegin_generators(), cend_generators());
-      LIBSEMIGROUPS_ASSERT((_rank_state == nullptr)
-                           == (std::is_void_v<rank_state_type>) );
-
-      // We can safely just replace the vectors without deleting their
-      // contents, since we know that the run has not been initialised and
-      // they are empty.
-      // FIXME these assertions fail
-      // LIBSEMIGROUPS_ASSERT(_nonregular_reps.empty());
-      _nonregular_reps = std::vector<std::vector<RepInfo>>(
-          InternalRank()(_rank_state, this->to_external_const(_one)) + 1,
-          std::vector<RepInfo>());
-
-      // FIXME these assertions fail
-      // LIBSEMIGROUPS_ASSERT(_reg_reps.empty());
-      _reg_reps = std::vector<std::vector<RepInfo>>(
-          InternalRank()(_rank_state, this->to_external_const(_one)) + 1,
-          std::vector<RepInfo>());
-    }
-
-    void compute_orbs() {
-      if (_lambda_orb.finished() && _rho_orb.finished()) {
-        return;
-      }
-      report_default("Computing orbits...\n");
-      detail::Timer t;
-      if (!_lambda_orb.started()) {
-        _lambda_orb.add_seed(OneParamLambda()(this->to_external_const(_one)));
-        for (auto const& g : _gens) {
-          _lambda_orb.add_generator(this->to_external_const(g));
-        }
-      }
-      if (!_rho_orb.started()) {
-        _rho_orb.add_seed(OneParamRho()(this->to_external_const(_one)));
-        for (auto const& g : _gens) {
-          _rho_orb.add_generator(this->to_external_const(g));
-        }
-      }
-      _lambda_orb.run_until([this]() { return stopped(); });
-      _rho_orb.run_until([this]() { return stopped(); });
-      report_default("found {} lambda-values and {} rho-values in {}\n",
-                     _lambda_orb.current_size(),
-                     _rho_orb.current_size(),
-                     t.string());
-    }
+    void compute_orbs();
 
     ////////////////////////////////////////////////////////////////////////
     // Konieczny - validation member functions - private
