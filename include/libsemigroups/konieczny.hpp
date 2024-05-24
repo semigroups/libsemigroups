@@ -1195,14 +1195,20 @@ namespace libsemigroups {
     }
 
     // TODO use this func
-    lambda_orb_index_type get_lpos(internal_const_reference x) const {
-      Lambda()(_tmp_lambda_value1, this->to_external_const(x));
+    lambda_orb_index_type get_lpos(internal_const_reference x,
+                                   bool lambda_stored = false) const {
+      if (!lambda_stored) {
+        Lambda()(_tmp_lambda_value1, this->to_external_const(x));
+      }
       return _lambda_orb.position(_tmp_lambda_value1);
     }
 
     // TODO use this func
-    rho_orb_index_type get_rpos(internal_const_reference x) const {
-      Rho()(_tmp_rho_value1, this->to_external_const(x));
+    rho_orb_index_type get_rpos(internal_const_reference x,
+                                bool rho_stored = false) const {
+      if (!rho_stored) {
+        Rho()(_tmp_rho_value1, this->to_external_const(x));
+      }
       return _rho_orb.position(_tmp_rho_value1);
     }
 
@@ -1211,12 +1217,19 @@ namespace libsemigroups {
     // asserts its argument has lambda/rho values in the orbits.
     // modifies _tmp_lambda_value1
     // modifies _tmp_rho_value1
-    lambda_orb_index_type get_lambda_group_index(internal_const_reference x);
+    lambda_orb_index_type get_lambda_group_index(internal_const_reference x,
+                                                 lambda_orb_index_type    lpos
+                                                 = UNDEFINED,
+                                                 rho_orb_index_type rpos
+                                                 = UNDEFINED);
 
     // Finds a group index of a H-class in the L-class of \p x.
     // modifies _tmp_lambda_value1
     // modifies _tmp_rho_value1
-    rho_orb_index_type get_rho_group_index(internal_const_reference x);
+    rho_orb_index_type get_rho_group_index(internal_const_reference x,
+                                           lambda_orb_index_type    lpos
+                                           = UNDEFINED,
+                                           rho_orb_index_type rpos = UNDEFINED);
 
     //! Finds the idempotent in the H-class of \p x. Note that it is assumed
     //! that \p x is in a group H-class.
@@ -1239,7 +1252,9 @@ namespace libsemigroups {
     //! Determines whether <tt>(x, y)</tt> forms a group index.
     // modifies _tmp_lambda_value and _tmp_rho_value
     bool is_group_index(internal_const_reference x,
-                        internal_const_reference y) const;
+                        internal_const_reference y,
+                        lambda_orb_index_type    lpos = UNDEFINED,
+                        rho_orb_index_type       rpos = UNDEFINED) const;
 
     // pass full_check = true to use the contains method of the D-classes
     // instead of the contains_NC

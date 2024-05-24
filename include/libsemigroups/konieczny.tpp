@@ -88,14 +88,16 @@ namespace libsemigroups {
 
   template <typename Element, typename Traits>
   typename Konieczny<Element, Traits>::lambda_orb_index_type
-  Konieczny<Element, Traits>::get_lambda_group_index(
-      internal_const_reference x) {
-    auto lpos = get_lpos(x);
+  Konieczny<Element, Traits>::get_lambda_group_index(internal_const_reference x,
+                                                     lambda_orb_index_type lpos,
+                                                     rho_orb_index_type rpos) {
+    lpos = lpos != UNDEFINED ? lpos : get_lpos(x);
+    rpos = rpos != UNDEFINED ? rpos : get_rpos(x);
     LIBSEMIGROUPS_ASSERT(lpos != UNDEFINED);
 
     auto lval_scc_id = _lambda_orb.scc().id(lpos);
 
-    std::pair key(get_rpos(x), lval_scc_id);
+    std::pair key(rpos, lval_scc_id);
 
     if (_group_indices.find(key) != _group_indices.end()) {
       return _group_indices.at(key);
@@ -114,7 +116,7 @@ namespace libsemigroups {
       Product()(this->to_external(tmp2),
                 this->to_external(tmp1),
                 _lambda_orb.multiplier_from_scc_root(val));
-      if (is_group_index(x, tmp2)) {
+      if (is_group_index(x, tmp2, lpos, UNDEFINED)) {
         _group_indices.emplace(key, val);
         return val;
       }
@@ -125,16 +127,16 @@ namespace libsemigroups {
 
   template <typename Element, typename Traits>
   typename Konieczny<Element, Traits>::rho_orb_index_type
-  Konieczny<Element, Traits>::get_rho_group_index(internal_const_reference x) {
-    Rho()(_tmp_rho_value1, this->to_external_const(x));
-    Lambda()(_tmp_lambda_value1, this->to_external_const(x));
-
-    auto rpos = _rho_orb.position(_tmp_rho_value1);
+  Konieczny<Element, Traits>::get_rho_group_index(internal_const_reference x,
+                                                  lambda_orb_index_type    lpos,
+                                                  rho_orb_index_type rpos) {
+    lpos = lpos != UNDEFINED ? lpos : get_lpos(x);
+    rpos = rpos != UNDEFINED ? rpos : get_rpos(x);
     LIBSEMIGROUPS_ASSERT(rpos != UNDEFINED);
 
     auto rval_scc_id = _rho_orb.scc().id(rpos);
 
-    std::pair key(rval_scc_id, _lambda_orb.position(_tmp_lambda_value1));
+    std::pair key(rval_scc_id, lpos);
 
     if (_group_indices_rev.find(key) != _group_indices_rev.end()) {
       return _group_indices_rev.at(key);
@@ -154,7 +156,7 @@ namespace libsemigroups {
       Product()(this->to_external(tmp2),
                 _rho_orb.multiplier_from_scc_root(val),
                 this->to_external(tmp1));
-      if (is_group_index(tmp2, x)) {
+      if (is_group_index(tmp2, x, UNDEFINED, rpos)) {
         _group_indices_rev.emplace(key, val);
         return val;
       }
@@ -232,24 +234,23 @@ namespace libsemigroups {
   template <typename Element, typename Traits>
   bool
   Konieczny<Element, Traits>::is_group_index(internal_const_reference x,
-                                             internal_const_reference y) const {
+                                             internal_const_reference y,
+                                             lambda_orb_index_type    lpos,
+                                             rho_orb_index_type rpos) const {
     PoolGuard             cg(_element_pool);
     internal_element_type tmp = cg.get();
 
     Product()(this->to_external(tmp),
               this->to_external_const(y),
               this->to_external_const(x));
-    Lambda()(_tmp_lambda_value1, this->to_external(tmp));
-    Lambda()(_tmp_lambda_value2, this->to_external_const(x));
 
-    if (_tmp_lambda_value1 != _tmp_lambda_value2) {
+    lpos = lpos != UNDEFINED ? lpos : get_lpos(x);
+    if (lpos != get_lpos(tmp)) {
       return false;
     }
 
-    Rho()(_tmp_rho_value1, this->to_external(tmp));
-    Rho()(_tmp_rho_value2, this->to_external_const(y));
-
-    return _tmp_rho_value1 == _tmp_rho_value2;
+    rpos = rpos != UNDEFINED ? rpos : get_rpos(y);
+    return rpos == get_rpos(tmp);
   }
 
   template <typename Element, typename Traits>
@@ -1935,13 +1936,16 @@ namespace libsemigroups {
 
       // TODO(later): use information from the looping through the left
       // indices in the loop through the right indices
+      auto lidx_it = this->cbegin_left_indices();
       for (auto lmult_it = this->cbegin_left_mults();
            lmult_it < this->cend_left_mults();
-           ++lmult_it) {
+           ++lmult_it, ++lidx_it) {
         Product()(this->to_external(tmp1),
                   this->rep(),
                   this->to_external_const(*lmult_it));
-        rho_orb_index_type k = this->parent()->get_rho_group_index(tmp1);
+
+        rho_orb_index_type k
+            = this->parent()->get_rho_group_index(tmp1, *lidx_it, UNDEFINED);
         LIBSEMIGROUPS_ASSERT(k != UNDEFINED);
         LIBSEMIGROUPS_ASSERT(_rho_index_positions.find(k)
                              != _rho_index_positions.end());
@@ -1955,13 +1959,15 @@ namespace libsemigroups {
         _left_idem_reps.push_back(this->internal_copy(tmp3));
       }
 
+      auto ridx_it = this->cbegin_right_indices();
       for (auto rmult_it = this->cbegin_right_mults();
            rmult_it < this->cend_right_mults();
-           ++rmult_it) {
+           ++rmult_it, ++ridx_it) {
         Product()(this->to_external(tmp1),
                   this->to_external_const(*rmult_it),
                   this->rep());
-        lambda_orb_index_type k = this->parent()->get_lambda_group_index(tmp1);
+        lambda_orb_index_type k
+            = this->parent()->get_lambda_group_index(tmp1, UNDEFINED, *ridx_it);
         LIBSEMIGROUPS_ASSERT(k != UNDEFINED);
         LIBSEMIGROUPS_ASSERT(_lambda_index_positions.find(k)
                              != _lambda_index_positions.end());
