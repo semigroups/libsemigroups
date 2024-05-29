@@ -1189,26 +1189,24 @@ namespace libsemigroups {
     ////////////////////////////////////////////////////////////////////////
 
     // assumes its argument has valid lambda/rho values
-    bool is_regular_element_NC(internal_const_reference x) {
+    bool is_regular_element_NC(internal_const_reference x,
+                               lambda_orb_index_type    lpos = UNDEFINED,
+                               rho_orb_index_type       rpos = UNDEFINED) {
       LIBSEMIGROUPS_ASSERT(_lambda_orb.finished() && _rho_orb.finished());
-      return get_lambda_group_index(x) != UNDEFINED;
+      lpos = lpos != UNDEFINED ? lpos : get_lpos(x);
+      rpos = rpos != UNDEFINED ? rpos : get_rpos(x);
+      return get_lambda_group_index(x, lpos, rpos) != UNDEFINED;
     }
 
     // TODO use this func
-    lambda_orb_index_type get_lpos(internal_const_reference x,
-                                   bool lambda_stored = false) const {
-      if (!lambda_stored) {
-        Lambda()(_tmp_lambda_value1, this->to_external_const(x));
-      }
+    lambda_orb_index_type get_lpos(internal_const_reference x) const {
+      Lambda()(_tmp_lambda_value1, this->to_external_const(x));
       return _lambda_orb.position(_tmp_lambda_value1);
     }
 
     // TODO use this func
-    rho_orb_index_type get_rpos(internal_const_reference x,
-                                bool rho_stored = false) const {
-      if (!rho_stored) {
-        Rho()(_tmp_rho_value1, this->to_external_const(x));
-      }
+    rho_orb_index_type get_rpos(internal_const_reference x) const {
+      Rho()(_tmp_rho_value1, this->to_external_const(x));
       return _rho_orb.position(_tmp_rho_value1);
     }
 

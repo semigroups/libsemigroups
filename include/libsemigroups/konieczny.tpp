@@ -352,7 +352,7 @@ namespace libsemigroups {
       internal_reference x = rep_info._elt;
       size_t rnk = InternalRank()(_rank_state, this->to_external_const(x));
       _ranks.insert(rnk);
-      if (is_regular_element_NC(x)) {
+      if (is_regular_element_NC(x, rep_info._lambda_idx, rep_info._rho_idx)) {
         _reg_reps[rnk].push_back(std::move(rep_info));
       } else {
         _nonregular_reps[rnk].push_back(std::move(rep_info));
@@ -620,7 +620,8 @@ namespace libsemigroups {
           rank_type          rnk
               = InternalRank()(_rank_state, this->to_external_const(x));
           _ranks.insert(rnk);
-          if (is_regular_element_NC(x)) {
+          if (is_regular_element_NC(
+                  x, rep_info2._lambda_idx, rep_info2._rho_idx)) {
             LIBSEMIGROUPS_ASSERT(rnk < mx_rank);
             _reg_reps[rnk].push_back(std::move(rep_info2));
           } else {
