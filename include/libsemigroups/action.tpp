@@ -132,6 +132,7 @@ namespace libsemigroups {
     _orb.clear();
     _pos = 0;
     _scc.init(_graph);
+    Runner::init();
     // Don't reset _tmp_point or _tmp_point_init
     return *this;
   }
