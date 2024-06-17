@@ -318,7 +318,7 @@ namespace libsemigroups {
 
   LIBSEMIGROUPS_TEST_CASE("Konieczny",
                           "043",
-                          "add_generator",
+                          "add_generator, init",
                           "[quick][transf][no-valgrind]") {
     auto rg      = ReportGuard(REPORT);
     using Transf = LeastTransf<16>;
@@ -329,6 +329,19 @@ namespace libsemigroups {
 
     REQUIRE(S.degree() == Degree<Transf>()(Transf({1, 2, 3, 4, 0})));
     REQUIRE(S.number_of_generators() == 2);
+
+    S.run();
+    REQUIRE(S.size() == 610);
+
+    S.init();
+    S.add_generator(Transf({1, 2, 3, 4, 0}));
+    S.run();
+    REQUIRE(S.size() == 5);
+
+    S.init();
+    S.add_generator(Transf({1, 2, 3, 4, 0}));
+    S.add_generator(Transf({0, 0, 2, 3, 4}));
+    REQUIRE(S.size() == 610);
   }
 
 }  // namespace libsemigroups

@@ -385,6 +385,18 @@ namespace libsemigroups {
       _rho_orb.cache_scc_multipliers(true);
     }
 
+    //! Initialise a Konieczny instance to its default state (or an
+    //! indistinguishable one).
+    //!
+    //! \parameters
+    //! (None)
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
+    //!
+    //! \sa add_generator and add_generators
+    Konieczny& init();
+
     //! Deleted.
     // TODO undelete
     Konieczny(Konieczny const&) = delete;
@@ -1290,6 +1302,9 @@ namespace libsemigroups {
     ////////////////////////////////////////////////////////////////////////
     // Konieczny - initialisation member functions - private
     ////////////////////////////////////////////////////////////////////////
+
+    void free_internals();
+
     void init_run();
 
     void init_data();

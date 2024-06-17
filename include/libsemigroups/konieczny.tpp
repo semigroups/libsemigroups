@@ -330,6 +330,56 @@ namespace libsemigroups {
   }
 
   template <typename Element, typename Traits>
+  void Konieczny<Element, Traits>::free_internals() {
+    for (DClass* D : _D_classes) {
+      delete D;
+    }
+    // _one is included in _gens
+    InternalVecFree()(_gens);
+    while (!_ranks.empty()) {
+      for (auto rep_info : _reg_reps[max_rank()]) {
+        this->internal_free(rep_info._elt);
+      }
+      for (auto rep_info : _nonregular_reps[max_rank()]) {
+        this->internal_free(rep_info._elt);
+      }
+      _ranks.erase(max_rank());
+    }
+    delete _rank_state;
+  }
+
+  template <typename Element, typename Traits>
+  Konieczny<Element, Traits>& Konieczny<Element, Traits>::init() {
+    free_internals();
+    _adjoined_identity_contained = false;
+    _D_classes.clear();
+    _D_rels.clear();
+    _data_initialised = false;
+    _degree           = UNDEFINED;
+    _gens.clear();
+    _group_indices.clear();
+    _group_indices_rev.clear();
+    _lambda_orb.init();
+    _lambda_to_D_map.clear();
+    _nonregular_reps.clear();
+    _rank_state = nullptr;
+    _ranks.clear();
+    _regular_D_classes.clear();
+    _reg_reps.clear();
+    _reps_processed = 0;
+    _rho_orb.init();
+    _rho_to_D_map.clear();
+    _run_initialised = false;
+    // TODO clear element pool, change one, _tmp*s?
+    _lambda_orb.cache_scc_multipliers(true);
+    _rho_orb.cache_scc_multipliers(true);
+
+    Runner::init();
+
+    return *this;
+  }
+
+  template <typename Element, typename Traits>
   void Konieczny<Element, Traits>::init_run() {
     if (_run_initialised) {
       return;
@@ -502,21 +552,7 @@ namespace libsemigroups {
 
   template <typename Element, typename Traits>
   Konieczny<Element, Traits>::~Konieczny() {
-    for (DClass* D : _D_classes) {
-      delete D;
-    }
-    // _one is included in _gens
-    InternalVecFree()(_gens);
-    while (!_ranks.empty()) {
-      for (auto rep_info : _reg_reps[max_rank()]) {
-        this->internal_free(rep_info._elt);
-      }
-      for (auto rep_info : _nonregular_reps[max_rank()]) {
-        this->internal_free(rep_info._elt);
-      }
-      _ranks.erase(max_rank());
-    }
-    delete _rank_state;
+    free_internals();
   }
 
   template <typename Element, typename Traits>
