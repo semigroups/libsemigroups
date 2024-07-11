@@ -31,7 +31,7 @@
 // * gap bindings
 
 // TODO(later):
-// * use Pruno in RepOrc + MinimalRepOrc
+// * use SimsRefinerFaithful in RepOrc + MinimalRepOrc
 // * a version which allows specifying the word_graph to Sims1 too
 // * implement maximum_2_sided_congruence_contained to compute the kernel of the
 //   associated homomorphism, which is the largest 2-sided congruence contained
@@ -1308,7 +1308,7 @@ namespace libsemigroups {
 
       uint64_t number_of_congruences(size_type n) const;
     };  // SimsBase
-  }     // namespace detail
+  }  // namespace detail
 
   namespace sims {
     class const_cgp_iterator;
@@ -1769,7 +1769,7 @@ namespace libsemigroups {
 
       using SimsBase::IteratorBase::stats;
     };  // class iterator_base
-  };    // Sims2
+  };  // Sims2
 
   //! \ingroup congruences_group
   //!
@@ -2049,42 +2049,6 @@ namespace libsemigroups {
     //!
     //! \exceptions \no_libsemigroups_except
     [[nodiscard]] Sims1::word_graph_type word_graph() const;
-  };
-
-  // This struct provides an alternative way of doing MinimalRepOrc, when the
-  // generating pairs of the minimal 2-sided congruences are known. These pairs
-  // should be added to forbid, and then your Pruno instance should be passed to
-  // a Sims1 object via add_pruner.
-  // TODO: probably rename this to describe functionality better
-  // TODO: Probably change interface to be consistent with Ideal finding
-  struct Pruno {
-    std::vector<word_type> forbid;
-    // TODO to cpp
-    bool operator()(Sims1::word_graph_type const& wg) {
-      auto first = forbid.cbegin(), last = forbid.cend();
-      // TODO use 1 felsch tree per excluded pairs, and use it to check if
-      // paths containing newly added edges, lead to the same place
-      for (auto it = first; it != last; it += 2) {
-        bool this_rule_compatible = true;
-        for (uint32_t n = 0; n < wg.number_of_active_nodes(); ++n) {
-          auto l = word_graph::follow_path_no_checks(wg, n, *it);
-          if (l != UNDEFINED) {
-            auto r = word_graph::follow_path_no_checks(wg, n, *(it + 1));
-            if (r == UNDEFINED || (r != UNDEFINED && l != r)) {
-              this_rule_compatible = false;
-              break;
-            }
-          } else {
-            this_rule_compatible = false;
-            break;
-          }
-        }
-        if (this_rule_compatible) {
-          return false;
-        }
-      }
-      return true;
-    }
   };
 
   namespace sims {
@@ -3053,6 +3017,92 @@ namespace libsemigroups {
     //   "libsemigroups"; dot_poset(tmp_dir.c_str(), fname, first, last);
     // }
   }  // namespace sims
+
+  //! \ingroup congruences_group
+  //!
+  //! \brief For pruning the search tree when looking for congruences arising
+  //! from right or two-sided congruences representing faithful actions.
+  //!
+  //! Defined in ``sims.hpp``.
+  //!
+  //! This class provides a pruner for pruning the search tree when looking for
+  //! right congruences representing faithful actions. A right congruence
+  //! represents a faithful action if and only if it does not contain any
+  //! non-trivial two-sided congruence. Equivalently, a word graph of a right
+  //! congruence represents a faithful action if and only if there is no
+  //! nontrivial pair of words \f$(u, v)\f$ such that every vertex of the word
+  //! graph is compatible with \f$(u, v)\f$.
+  //!
+  //! \sa \ref SimsSettings::pruners
+  //! \sa \ref SimsSettings::add_pruner
+  // This struct provides an alternative way of doing MinimalRepOrc, when the
+  // generating pairs of the minimal 2-sided congruences are known. These pairs
+  // should be added to forbid, and then your SimsRefinerFaithful instance
+  // should be passed to a Sims1 object via add_pruner.
+  // TODO: probably rename this to describe functionality better
+  // TODO: Probably change interface to be consistent with Ideal finding
+  class SimsRefinerFaithful {
+   private:
+    std::vector<word_type> _forbid;
+
+   public:
+    //! \brief Default constructor.
+    //!
+    //! Constructs a SimsRefinerFaithful pruner with respect to the set of
+    //! forbidden relations in \p forbid.
+    //!
+    //! If \p forbid contains no trivial pairs (i.e. pairs of words that are
+    //! equal in the underlying semigroup or monoid), then all word graphs
+    //! rejected by SimsRefinerFaithful are guaranteed to not be extendable to a
+    //! word graph representing a faithful congruence. Otherwise, the pruner
+    //! will incorrectly reject all word graphs.
+    //!
+    //! If in addition \p forbid is a set of relations
+    //! containing all minimal congruence generating pairs of a given semigroup
+    //! or monoid, then SimsRefinerFaithful will also correctly determine if a
+    //! complete word graph represents a faithful congruence. Otherwise, the
+    //! complete word graphs accepted by SimsRefinerFaithful are not guaranteed
+    //! to be faithful and must be checked by some other means.
+    //!
+    //! \warning
+    //! This method does not verify if \p forbid contains trivial pairs or not.
+    explicit SimsRefinerFaithful(std::vector<word_type> const& forbid)
+        : _forbid(forbid) {}
+
+    //! \brief Check if a word graph can be extended to one defining a faithful
+    //! congruence.
+    //!
+    //! Returns `false` if there is no way of adding edges and nodes to \par wg
+    //! which will result in a word graph defining a faithful congruence.
+    //! Otherwise returns `true`.
+    //!
+    // TODO to cpp
+    bool operator()(Sims1::word_graph_type const& wg) {
+      auto first = _forbid.cbegin(), last = _forbid.cend();
+      // TODO use 1 felsch tree per excluded pairs, and use it to check if
+      // paths containing newly added edges, lead to the same place
+      for (auto it = first; it != last; it += 2) {
+        bool this_rule_compatible = true;
+        for (uint32_t n = 0; n < wg.number_of_active_nodes(); ++n) {
+          auto l = word_graph::follow_path_no_checks(wg, n, *it);
+          if (l != UNDEFINED) {
+            auto r = word_graph::follow_path_no_checks(wg, n, *(it + 1));
+            if (r == UNDEFINED || (r != UNDEFINED && l != r)) {
+              this_rule_compatible = false;
+              break;
+            }
+          } else {
+            this_rule_compatible = false;
+            break;
+          }
+        }
+        if (this_rule_compatible) {
+          return false;
+        }
+      }
+      return true;
+    }
+  };
 
   //! \ingroup congruences_group
   //!

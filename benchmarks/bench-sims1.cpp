@@ -725,20 +725,19 @@ namespace libsemigroups {
     };
   }
 
-  void bench_pruno(std::string const&             name,
-                   Presentation<word_type> const& p,
-                   std::vector<word_type> const&  forbid,
-                   size_t                         target_size) {
-    Pruno pruno;
-    pruno.forbid = forbid;
-    Sims1 sims;
+  void bench_sims_refiner_faithful(std::string const&             name,
+                                   Presentation<word_type> const& p,
+                                   std::vector<word_type> const&  forbid,
+                                   size_t                         target_size) {
+    SimsRefinerFaithful pruno(forbid);
+    Sims1               sims;
     sims.presentation(p).add_pruner(pruno);
 
     size_t offset      = p.contains_empty_word() ? 0 : 1;
     auto   return_true = [](auto const&) { return true; };
 
     for (size_t i = 1; i <= std::thread::hardware_concurrency(); i *= 2) {
-      BENCHMARK(fmt::format(name + " - Pruno - {} / {} threads",
+      BENCHMARK(fmt::format(name + " - SimsRefinerFaithful - {} / {} threads",
                             i,
                             std::thread::hardware_concurrency())) {
         Sims1::word_graph_type wg;
@@ -816,7 +815,7 @@ namespace libsemigroups {
     }
   }
 
-  TEST_CASE("Pruno", "[Pruno]") {
+  TEST_CASE("SimsRefinerFaithful", "[SimsRefinerFaithful]") {
     auto rg = ReportGuard(false);
 
     FroidurePin<Bipartition> S;
@@ -852,7 +851,7 @@ namespace libsemigroups {
                                      {5, 9},
                                      {6, 9}};
 
-    bench_pruno("Singular Brauer", p, forbid, S.size());
+    bench_sims_refiner_faithful("Singular Brauer", p, forbid, S.size());
     bench_filter("Singular Brauer", p, forbid, S.size());
     bench_orc("Singular Brauer", p, S.size());
 

@@ -19,12 +19,15 @@
 #include "libsemigroups/detail/stl.hpp"
 #include "libsemigroups/word-graph.hpp"
 #include <cstdint>
+#include <iterator>
+#include <libsemigroups/constants.hpp>
 #define CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER
 #define CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER
 
 #include <cstddef>   // for size_t
 #include <iostream>  // for cout
-#include <vector>    // for vector
+#include <random>
+#include <vector>  // for vector
 
 #include "catch_amalgamated.hpp"  // for REQUIRE, REQUIRE_THROWS_AS, REQUI...
 #include "test-main.hpp"          // for LIBSEMIGROUPS_TEST_CASE
@@ -42,6 +45,7 @@
 #include "libsemigroups/types.hpp"            // for word_type
 
 #include "libsemigroups/detail/report.hpp"
+#include "libsemigroups/ranges.hpp"  // for operator|, to_vector
 
 namespace libsemigroups {
 
@@ -905,8 +909,7 @@ namespace libsemigroups {
     Sims1 sims;
     sims.presentation(p);
     {
-      Pruno pruno;
-      pruno.forbid = forbid;
+      SimsRefinerFaithful pruno(forbid);
 
       auto const& wg = sims.number_of_threads(1).add_pruner(pruno).find_if(
           82, [](auto const&) { return true; });
@@ -939,6 +942,20 @@ namespace libsemigroups {
       REQUIRE(d.number_of_nodes() == 18);
       REQUIRE(orc.target_size() == 82);
       REQUIRE(orc.stats().total_pending_now == 3'626'612);
+    }
+    {
+      MinimalRepOrc       orc;
+      SimsRefinerFaithful pruno(forbid);
+      p.contains_empty_word(true);
+      auto d
+          = orc.add_pruner(pruno)
+                .presentation(p)
+                .target_size(82)
+                //                 .number_of_threads(std::thread::hardware_concurrency())
+                .word_graph();
+      REQUIRE(d.number_of_nodes() == 18);
+      REQUIRE(orc.target_size() == 82);
+      REQUIRE(orc.stats().total_pending_now == 2'074'472);
     }
 
     //   // p.contains_empty_word(false);
@@ -1107,7 +1124,7 @@ namespace libsemigroups {
         {{4, 8}, {4, 5, 7}, {4, 7}, {5, 4, 7}};
     Sims1 sims;
     sims.presentation(p);
-    // TODO use Pruno instead
+    // TODO use SimsRefinerFaithful instead
     for (auto it = forbid.cbegin(); it != forbid.cend(); it += 2) {
       sims.exclude(*it, *(it + 1));
     }
@@ -3852,6 +3869,12 @@ namespace libsemigroups {
     Sims1 s(p);
     s.number_of_threads(1).add_pruner(ip);
     REQUIRE(s.number_of_congruences(15) == 15);  // correct value is 15
+    REQUIRE(s.number_of_threads(2).number_of_congruences(15)
+            == 15);  // correct value is 15
+    REQUIRE(s.number_of_threads(4).number_of_congruences(15)
+            == 15);  // correct value is 15
+    REQUIRE(s.number_of_threads(8).number_of_congruences(15)
+            == 15);  // correct value is 15
 
     // p  = partition_monoid(3, author::Machine);
     // ip = SimsRefinerIdeals(to_presentation<std::string>(p));
@@ -3890,6 +3913,12 @@ namespace libsemigroups {
     REQUIRE(s.number_of_congruences(7) == 12);  // computed using GAP
     for (size_t nr_classes = 8; nr_classes < 16; ++nr_classes)
       REQUIRE(s.number_of_congruences(nr_classes) == 12);  // computed using GAP
+    REQUIRE(s.number_of_threads(2).number_of_congruences(7)
+            == 12);  // computed using GAP
+    REQUIRE(s.number_of_threads(4).number_of_congruences(7)
+            == 12);  // computed using GAP
+    REQUIRE(s.number_of_threads(8).number_of_congruences(7)
+            == 12);  // computed using GAP
   }
 
   // about 2 seconds
