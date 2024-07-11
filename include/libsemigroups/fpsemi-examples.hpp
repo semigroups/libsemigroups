@@ -43,27 +43,27 @@ namespace libsemigroups {
     enum class author : uint64_t {
       Any        = 0,
       Machine    = 1,
-      Aizenstat  = 2,
-      Burnside   = 4,
-      Carmichael = 8,
-      Coxeter    = 16,
-      Easdown    = 32,
-      East       = 64,
-      Fernandes  = 128,
-      FitzGerald = 256,
-      Gay        = 512,
-      Godelle    = 1024,
-      Guralnick  = 2048,
-      Iwahori    = 4096,
-      Kantor     = 8192,
-      Kassabov   = 16'384,
-      Lubotzky   = 32'768,
-      Miller     = 65'536,
-      Mitchell   = 131'072,
-      Moore      = 262'144,
-      Moser      = 524'288,
-      Sutov      = 1'048'576,
-      Whyte      = 2'097'152
+      Aizenstat  = 1 << 1,
+      Burnside   = 1 << 2,
+      Carmichael = 1 << 3,
+      Coxeter    = 1 << 4,
+      Easdown    = 1 << 5,
+      East       = 1 << 6,
+      Fernandes  = 1 << 7,
+      FitzGerald = 1 << 8,
+      Gay        = 1 << 9,
+      Godelle    = 1 << 10,
+      Guralnick  = 1 << 11,
+      Iwahori    = 1 << 12,
+      Kantor     = 1 << 13,
+      Kassabov   = 1 << 14,
+      Lubotzky   = 1 << 15,
+      Mitchell   = 1 << 16,
+      Miller     = 1 << 17,
+      Moore      = 1 << 18,
+      Moser      = 1 << 19,
+      Sutov      = 1 << 20,
+      Whyte      = 1 << 21
     };
 
     //! This operator can be used arbitrarily to combine author values (see \ref
@@ -248,10 +248,39 @@ namespace libsemigroups {
                                                         author val
                                                         = author::Any);
 
-    // THIS IS UNDOCUMENTED
+    //! A presentation for the partial Brauer monoid.
+    //!
+    //! Returns a monoid presentation defining
+    //! the partial Brauer monoid of degree `n`, as described in Theorem 5.1 of
+    //! the paper [10.2478/s11533-006-0017-6][].
+    //!
+    //! \param n the degree
+    //!
+    //! \returns A `std::vector<relation_type>`
+    //!
+    //! [10.2478/s11533-006-0017-6]:
+    //! https://doi.org/10.2478/s11533-006-0017-6
     [[nodiscard]] Presentation<word_type> partial_brauer_monoid(size_t n,
                                                                 author val
                                                                 = author::Any);
+
+    //! A presentation for the Motzkin monoid.
+    //!
+    //! Returns a monoid presentation defining
+    //! the Motzkin monoid of degree `n`, as described in Theorem 4.1 of the
+    //! paper [10.48550/arXiv.1301.4518][], with the additional relations
+    //! \f$ r_i t_i l_i = r_i ^ 2 \f$ added to fix a hole in Lemma 4.10 which
+    //! rendered the presentation as stated in the paper incorrect.
+    //!
+    //! \param n the degree
+    //!
+    //! \returns A `std::vector<relation_type>`
+    //!
+    //! [10.48550/arXiv.1301.4518]:
+    //! https://doi.org/10.48550/arXiv.1301.4518
+    [[nodiscard]] Presentation<word_type> motzkin_monoid(size_t n,
+                                                         author val
+                                                         = author::Any);
 
     //! A presentation for a Fibonacci semigroup.
     //!
