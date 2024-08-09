@@ -168,6 +168,8 @@ namespace libsemigroups {
     REQUIRE(dual_symmetric_inverse_monoid(5).contains_empty_word());
     REQUIRE(uniform_block_bijection_monoid(5).contains_empty_word());
     REQUIRE(partition_monoid(5, author::East).contains_empty_word());
+    REQUIRE(partition_monoid(5, author::Halverson + author::Ram)
+                .contains_empty_word());
     REQUIRE(!partition_monoid(3, author::Machine).contains_empty_word());
     REQUIRE(!singular_brauer_monoid(5).contains_empty_word());
     REQUIRE(orientation_preserving_monoid(5).contains_empty_word());
@@ -344,6 +346,8 @@ namespace libsemigroups {
     REQUIRE_THROWS_AS(partition_monoid(4, author::Machine),
                       LibsemigroupsException);
     REQUIRE_THROWS_AS(partition_monoid(3, author::East),
+                      LibsemigroupsException);
+    REQUIRE_THROWS_AS(partition_monoid(0, author::Halverson + author::Ram),
                       LibsemigroupsException);
   }
 
@@ -676,7 +680,11 @@ namespace libsemigroups {
                           "partition_monoid(5)",
                           "[fpsemi-examples][standard]") {
     auto        rg = ReportGuard(REPORT);
-    ToddCoxeter tc(congruence_kind::twosided, partition_monoid(5));
+    ToddCoxeter tc(congruence_kind::twosided,
+                   partition_monoid(5, author::East));
+    REQUIRE(tc.number_of_classes() == 115'975);
+    tc.init(congruence_kind::twosided,
+            partition_monoid(5, author::Halverson + author::Ram));
     REQUIRE(tc.number_of_classes() == 115'975);
   }
 
@@ -713,12 +721,21 @@ namespace libsemigroups {
 
   LIBSEMIGROUPS_TEST_CASE("fpsemi-examples",
                           "039",
-                          "partition_monoid(3)",
+                          "partition_monoid(n), 1 <= n <= 3",
                           "[fpsemi-examples][quick]") {
     auto        rg = ReportGuard(REPORT);
     ToddCoxeter tc(congruence_kind::twosided,
                    partition_monoid(3, author::Machine));
     REQUIRE(tc.number_of_classes() == 203);
+    tc.init(congruence_kind::twosided,
+            partition_monoid(3, author::Halverson + author::Ram));
+    REQUIRE(tc.number_of_classes() == 203);
+    tc.init(congruence_kind::twosided,
+            partition_monoid(2, author::Halverson + author::Ram));
+    REQUIRE(tc.number_of_classes() == 15);
+    tc.init(congruence_kind::twosided,
+            partition_monoid(1, author::Halverson + author::Ram));
+    REQUIRE(tc.number_of_classes() == 2);
   }
 
   LIBSEMIGROUPS_TEST_CASE("fpsemi-examples",

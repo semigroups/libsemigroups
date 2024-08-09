@@ -54,16 +54,18 @@ namespace libsemigroups {
       Gay        = 1 << 9,
       Godelle    = 1 << 10,
       Guralnick  = 1 << 11,
-      Iwahori    = 1 << 12,
-      Kantor     = 1 << 13,
-      Kassabov   = 1 << 14,
-      Lubotzky   = 1 << 15,
-      Mitchell   = 1 << 16,
-      Miller     = 1 << 17,
-      Moore      = 1 << 18,
-      Moser      = 1 << 19,
-      Sutov      = 1 << 20,
-      Whyte      = 1 << 21
+      Halverson  = 1 << 12,
+      Iwahori    = 1 << 13,
+      Kantor     = 1 << 14,
+      Kassabov   = 1 << 15,
+      Lubotzky   = 1 << 16,
+      Mitchell   = 1 << 17,
+      Miller     = 1 << 18,
+      Moore      = 1 << 19,
+      Moser      = 1 << 20,
+      Sutov      = 1 << 21,
+      Ram        = 1 << 22,
+      Whyte      = 1 << 23
     };
 
     //! This operator can be used arbitrarily to combine author values (see \ref
@@ -144,6 +146,8 @@ namespace libsemigroups {
     //! * `author::Machine`
     //! * `author::East` (see Theorem 41 of
     //! [10.1016/j.jalgebra.2011.04.008][])
+    //! * `author::Halverson + author::Ram` (see Theorem 1.11 (b) of
+    //! [10.1016/j.ejc.2004.06.005][])
     //!
     //! The default for `val` is `author::East`.
     //!
@@ -157,9 +161,13 @@ namespace libsemigroups {
     //!
     //! \throws LibsemigroupsException if `val = author::Machine and n != 3`
     //! \throws LibsemigroupsException if `val = author::East and n < 4`
+    //! \throws LibsemigroupsException if `val = author::Halverson + author::Ram
+    //! and n < 1`
     //!
     //! [10.1016/j.jalgebra.2011.04.008]:
     //! https://doi.org/10.1016/j.jalgebra.2011.04.008
+    //! [10.1016/j.ejc.2004.06.005]:
+    //! https://doi.org/10.1016/j.ejc.2004.06.005
     [[nodiscard]] Presentation<word_type> partition_monoid(size_t n,
                                                            author val
                                                            = author::East);

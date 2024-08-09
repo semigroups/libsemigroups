@@ -769,6 +769,13 @@ namespace libsemigroups {
               "argument is author::East, found {}",
               n);
         }
+      } else if (val == author::Halverson + author::Ram) {
+        if (n < 1) {
+          LIBSEMIGROUPS_EXCEPTION(
+              "the 1st argument (degree) must be at least 1 when the 2nd "
+              "argument is author::Halverson + author::Ram, found {}",
+              n);
+        }
       } else {
         LIBSEMIGROUPS_EXCEPTION("the 2nd argument must be author::Machine "
                                 "or author::East, found {}",
@@ -825,51 +832,125 @@ namespace libsemigroups {
       }
 
       // author::East and n >= 4
-      p.alphabet(4);
-      p.contains_empty_word(true);
+      if (val == author::East) {
+        p.alphabet(4);
+        p.contains_empty_word(true);
 
-      // V1
-      presentation::add_rule_no_checks(p, pow(1_w, n), {});
-      presentation::add_rule_no_checks(p, pow(01_w, n - 1), {});
-      presentation::add_rule_no_checks(p, 00_w, {});
-      for (size_t i = 2; i <= n / 2; ++i) {
+        // V1
+        presentation::add_rule_no_checks(p, pow(1_w, n), {});
+        presentation::add_rule_no_checks(p, pow(01_w, n - 1), {});
+        presentation::add_rule_no_checks(p, 00_w, {});
+        for (size_t i = 2; i <= n / 2; ++i) {
+          presentation::add_rule_no_checks(
+              p, pow(pow(1_w, i) + 0_w + pow(1_w, n - i) + 0_w, 2), {});
+        }
+
+        // V2
+        presentation::add_rule_no_checks(p, 22_w, 2_w);
+        presentation::add_rule_no_checks(p, 232_w, 2_w);
+        presentation::add_rule_no_checks(p, 012_w + pow(1_w, n - 1) + 0_w, 2_w);
         presentation::add_rule_no_checks(
-            p, pow(pow(1_w, i) + 0_w + pow(1_w, n - i) + 0_w, 2), {});
+            p, 10_w + pow(1_w, n - 1) + 210_w + pow(1_w, n - 1), 2_w);
+
+        // V3
+        presentation::add_rule_no_checks(p, 33_w, 3_w);
+        presentation::add_rule_no_checks(p, 323_w, 3_w);
+        presentation::add_rule_no_checks(p, 30_w, 3_w);
+        presentation::add_rule_no_checks(p, 03_w, 3_w);
+        presentation::add_rule_no_checks(
+            p, 110_w + pow(1_w, n - 2) + 3110_w + pow(1_w, n - 2), 3_w);
+        presentation::add_rule_no_checks(p,
+                                         pow(1_w, n - 1) + 010_w
+                                             + pow(1_w, n - 1) + 310_w
+                                             + pow(1_w, n - 1) + 01_w,
+                                         3_w);
+
+        // V4
+        presentation::add_rule_no_checks(p, 0202_w, 202_w);
+        presentation::add_rule_no_checks(p, 2020_w, 202_w);
+
+        // V5
+        presentation::add_rule_no_checks(
+            p, 313_w + pow(1_w, n - 1), 13_w + pow(1_w, n - 1) + 3_w);
+
+        // V6
+        presentation::add_rule_no_checks(
+            p, 3113_w + pow(1_w, n - 2), 113_w + pow(1_w, n - 2) + 3_w);
+        // V7
+        presentation::add_rule_no_checks(
+            p, 3112_w + pow(1_w, n - 2), 112_w + pow(1_w, n - 2) + 3_w);
+        return p;
       }
 
-      // V2
-      presentation::add_rule_no_checks(p, 22_w, 2_w);
-      presentation::add_rule_no_checks(p, 232_w, 2_w);
-      presentation::add_rule_no_checks(p, 012_w + pow(1_w, n - 1) + 0_w, 2_w);
-      presentation::add_rule_no_checks(
-          p, 10_w + pow(1_w, n - 1) + 210_w + pow(1_w, n - 1), 2_w);
+      // author::Halverson + author::Ram and n >= 1
+      std::vector<word_type> s(n), r(n), q(n);
+      for (size_t i = 0; i < n; ++i) {
+        if (i != n - 1) {
+          s[i] = {i};
+          q[i] = {i + n - 1};
+        }
+        r[i] = {i + 2 * n - 2};
+      }
 
-      // V3
-      presentation::add_rule_no_checks(p, 33_w, 3_w);
-      presentation::add_rule_no_checks(p, 323_w, 3_w);
-      presentation::add_rule_no_checks(p, 30_w, 3_w);
-      presentation::add_rule_no_checks(p, 03_w, 3_w);
-      presentation::add_rule_no_checks(
-          p, 110_w + pow(1_w, n - 2) + 3110_w + pow(1_w, n - 2), 3_w);
-      presentation::add_rule_no_checks(p,
-                                       pow(1_w, n - 1) + 010_w + pow(1_w, n - 1)
-                                           + 310_w + pow(1_w, n - 1) + 01_w,
-                                       3_w);
+      p.alphabet(3 * n - 2);
+      p.contains_empty_word(true);
 
-      // V4
-      presentation::add_rule_no_checks(p, 0202_w, 202_w);
-      presentation::add_rule_no_checks(p, 2020_w, 202_w);
+      for (size_t i = 0; i < n - 1; ++i) {
+        presentation::add_rule_no_checks(p, pow(s[i], 2), {});    // (Q1)
+        presentation::add_rule_no_checks(p, pow(r[i], 2), r[i]);  // (Q4)
+        presentation::add_rule_no_checks(
+            p, s[i] + r[i], r[i + 1] + s[i]);  // (Q7)
+        presentation::add_rule_no_checks(
+            p, r[i] + r[i + 1] + s[i], r[i] + r[i + 1]);                // (Q8)
+        presentation::add_rule_no_checks(p, pow(q[i], 2), q[i]);        // (Q9)
+        presentation::add_rule_no_checks(p, q[i] + s[i], s[i] + q[i]);  // (Q13)
+        presentation::add_rule_no_checks(p, q[i] + s[i], q[i]);         // (Q13)
+        presentation::add_rule_no_checks(p, q[i] + r[i] + q[i], q[i]);  // (Q15)
+        presentation::add_rule_no_checks(
+            p, q[i] + r[i + 1] + q[i], q[i]);                           // (Q15)
+        presentation::add_rule_no_checks(p, r[i] + q[i] + r[i], r[i]);  // (Q16)
+        presentation::add_rule_no_checks(
+            p, r[i + 1] + q[i] + r[i + 1], r[i + 1]);  // (Q16)
+      }
+      presentation::add_rule_no_checks(p, pow(r[n - 1], 2), r[n - 1]);  // (Q4)
 
-      // V5
-      presentation::add_rule_no_checks(
-          p, 313_w + pow(1_w, n - 1), 13_w + pow(1_w, n - 1) + 3_w);
-
-      // V6
-      presentation::add_rule_no_checks(
-          p, 3113_w + pow(1_w, n - 2), 113_w + pow(1_w, n - 2) + 3_w);
-      // V7
-      presentation::add_rule_no_checks(
-          p, 3112_w + pow(1_w, n - 2), 112_w + pow(1_w, n - 2) + 3_w);
+      int64_t m = n;
+      for (int64_t i = 0; i < m - 1; ++i) {
+        for (int64_t j = 0; j < m - 1; ++j) {
+          auto d = std::abs(i - j);
+          if (d > 1) {
+            presentation::add_rule_no_checks(
+                p, s[i] + s[j], s[j] + s[i]);  // (Q2)
+            presentation::add_rule_no_checks(
+                p, s[i] + q[j], q[j] + s[i]);  // (Q11)
+          } else if (d == 1) {
+            presentation::add_rule_no_checks(
+                p, s[i] + s[j] + s[i], s[j] + s[i] + s[j]);  // (Q3)
+            presentation::add_rule_no_checks(
+                p, s[i] + s[j] + q[i], q[j] + s[i] + s[j]);  // (Q12)
+          }
+          if ((j != i) && (j != i + 1)) {
+            presentation::add_rule_no_checks(
+                p, s[i] + r[j], r[j] + s[i]);  // (Q6)
+            presentation::add_rule_no_checks(
+                p, q[i] + r[j], r[j] + q[i]);  // (Q14)
+          }
+          if (j != i) {
+            presentation::add_rule_no_checks(
+                p, r[i] + r[j], r[j] + r[i]);  // (Q5)
+            presentation::add_rule_no_checks(
+                p, q[i] + q[j], q[j] + q[i]);  // (Q10)
+          }
+        }
+        if ((n - 1 != i) && (n - 1 != i + 1)) {
+          presentation::add_rule_no_checks(
+              p, s[i] + r[n - 1], r[n - 1] + s[i]);  // (Q6)
+          presentation::add_rule_no_checks(
+              p, q[i] + r[n - 1], r[n - 1] + q[i]);  // (Q14)
+        }
+        presentation::add_rule_no_checks(
+            p, r[i] + r[n - 1], r[n - 1] + r[i]);  // (Q5)
+      }
       return p;
     }
 
