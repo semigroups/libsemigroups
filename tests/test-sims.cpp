@@ -21,11 +21,13 @@
 #include <cstdint>
 #include <iterator>
 #include <libsemigroups/constants.hpp>
+#include <libsemigroups/todd-coxeter.hpp>
 #define CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER
 #define CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER
 
-#include <cstddef>   // for size_t
-#include <iostream>  // for cout
+#include <cstddef>           // for size_t
+#include <initializer_list>  // for initializer_list
+#include <iostream>          // for cout
 #include <random>
 #include <vector>  // for vector
 
@@ -43,6 +45,7 @@
 #include "libsemigroups/to-presentation.hpp"  // for make
 #include "libsemigroups/transf.hpp"           // for Transf
 #include "libsemigroups/types.hpp"            // for word_type
+#include "libsemigroups/words.hpp"  // for operator""_w, operator+, pow
 
 #include "libsemigroups/detail/report.hpp"
 #include "libsemigroups/ranges.hpp"  // for operator|, to_vector
@@ -4153,6 +4156,746 @@ namespace libsemigroups {
     wg.number_of_active_nodes(2);
     REQUIRE(sims::is_two_sided_congruence(p, wg));
   }
+
+  namespace {
+    WordGraph<node_type> minimal_rep_orc_in_range(Presentation<word_type> p,
+                                                  size_t threads,
+                                                  size_t lo,
+                                                  size_t hi) {
+      ToddCoxeter tc(congruence_kind::twosided, p);
+      RepOrc      orc;
+
+      hi        = (p.contains_empty_word() ? hi : hi + 1);
+      auto best = orc.presentation(p)
+                      .number_of_threads(threads)
+                      .min_nodes(lo)
+                      .max_nodes(hi)
+                      .target_size(tc.number_of_classes())
+                      .word_graph();
+
+      if (best.number_of_nodes() < 1) {
+        return best;
+      }
+
+      hi        = best.number_of_nodes();
+      auto next = orc.max_nodes(hi - 1).word_graph();
+      while (next.number_of_nodes() != 0) {
+        hi   = next.number_of_nodes();
+        best = std::move(next);
+        next = orc.max_nodes(hi - 1).word_graph();
+      }
+      return best;
+    }
+
+    Presentation<word_type> theorem_32_presentation(size_t n) {
+      using words::operator+;
+      using words::pow;
+      Presentation<word_type> p;
+      if (n < 4) {
+        return p;
+      }
+      std::vector<word_type> s(n), r(n), q(n);
+      for (size_t i = 0; i < n; ++i) {
+        if (i != n - 1) {
+          s[i] = {i};
+          q[i] = {i + n - 1};
+        }
+        r[i] = {i + 2 * n - 2};
+      }
+
+      p.alphabet(3 * n - 2);
+      p.contains_empty_word(true);
+
+      for (size_t i = 0; i < n - 1; ++i) {
+        presentation::add_rule_no_checks(p, pow(s[i], 2), {});    // (Q1)
+        presentation::add_rule_no_checks(p, pow(r[i], 2), r[i]);  // (Q4)
+        presentation::add_rule_no_checks(
+            p, s[i] + r[i], r[i + 1] + s[i]);  // (Q7)
+        presentation::add_rule_no_checks(
+            p, r[i] + r[i + 1] + s[i], r[i] + r[i + 1]);                // (Q8)
+        presentation::add_rule_no_checks(p, pow(q[i], 2), q[i]);        // (Q9)
+        presentation::add_rule_no_checks(p, q[i] + s[i], s[i] + q[i]);  // (Q13)
+        presentation::add_rule_no_checks(p, q[i] + s[i], q[i]);         // (Q13)
+        presentation::add_rule_no_checks(p, q[i] + r[i] + q[i], q[i]);  // (Q15)
+        presentation::add_rule_no_checks(
+            p, q[i] + r[i + 1] + q[i], q[i]);                           // (Q15)
+        presentation::add_rule_no_checks(p, r[i] + q[i] + r[i], r[i]);  // (Q16)
+        presentation::add_rule_no_checks(
+            p, r[i + 1] + q[i] + r[i + 1], r[i + 1]);  // (Q16)
+      }
+      presentation::add_rule_no_checks(p, pow(r[n - 1], 2), r[n - 1]);  // (Q4)
+
+      int64_t m = n;
+      for (int64_t i = 0; i < m - 1; ++i) {
+        for (int64_t j = 0; j < m - 1; ++j) {
+          auto d = std::abs(i - j);
+          if (d > 1) {
+            presentation::add_rule_no_checks(
+                p, s[i] + s[j], s[j] + s[i]);  // (Q2)
+            presentation::add_rule_no_checks(
+                p, s[i] + q[j], q[j] + s[i]);  // (Q11)
+          } else if (d == 1) {
+            presentation::add_rule_no_checks(
+                p, s[i] + s[j] + s[i], s[j] + s[i] + s[j]);  // (Q3)
+            presentation::add_rule_no_checks(
+                p, s[i] + s[j] + q[i], q[j] + s[i] + s[j]);  // (Q12)
+          }
+          if ((j != i) && (j != i + 1)) {
+            presentation::add_rule_no_checks(
+                p, s[i] + r[j], r[j] + s[i]);  // (Q6)
+            presentation::add_rule_no_checks(
+                p, q[i] + r[j], r[j] + q[i]);  // (Q14)
+          }
+          if (j != i) {
+            presentation::add_rule_no_checks(
+                p, r[i] + r[j], r[j] + r[i]);  // (Q5)
+            presentation::add_rule_no_checks(
+                p, q[i] + q[j], q[j] + q[i]);  // (Q10)
+          }
+        }
+        if ((n - 1 != i) && (n - 1 != i + 1)) {
+          presentation::add_rule_no_checks(
+              p, s[i] + r[n - 1], r[n - 1] + s[i]);  // (Q6)
+          presentation::add_rule_no_checks(
+              p, q[i] + r[n - 1], r[n - 1] + q[i]);  // (Q14)
+        }
+        presentation::add_rule_no_checks(
+            p, r[i] + r[n - 1], r[n - 1] + r[i]);  // (Q5)
+      }
+      return p;
+    }
+  }  // namespace
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "256",
+                          "Partition monoid",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    Presentation<word_type> p;
+    ToddCoxeter             tc(congruence_kind::twosided);
+    // plusses indicate that the result was reached but could not be verified.
+    std::vector<size_t> results
+        = {1, 2, 7, 22, +84, +364, +1734, +8943, 8, 9, 10};
+    std::vector<size_t> estimates
+        = {1, 2, 7, 22, 84, 364, 1734, 8943, 49485, 291872, 1825502};
+    WordGraph<node_type> wg;
+    Sims1                sims;
+    // The forbid list depends on the presentation used by
+    // fpsemigroup::partition_monoid
+    // If this changes, then the test will no longer be correct.
+    // Currently uses the presrentation given in Theorem 32 of the following
+    // article:
+    // Generators and relations for partition monoids and algebras,
+    // J. East,
+    // https://doi.org/10.1016/j.jalgebra.2011.04.008
+    std::vector<word_type> forbid;
+    for (size_t n = 8; n <= 8; ++n) {
+      if (n < 4) {
+        p = partition_monoid(n, author::Machine);
+      } else {
+        // p = partition_monoid(n, author::East);
+        //
+        // FroidurePin<Bipartition> S;
+        // S.add_generator(Bipartition({{1, -2}, {2, -1}, {3, -3}, {4, -4}}));
+        // S.add_generator(Bipartition({{1, -4}, {2, -1}, {3, -2}, {4, -3}}));
+        // S.add_generator(Bipartition({std::vector<int>{1},
+        //                              std::vector<int>{-1},
+        //                              {2, -2},
+        //                              {3, -3},
+        //                              {4, -4}}));
+        // S.add_generator(Bipartition({{1, 2, -1, -2}, {3, -3}, {4, -4}}));
+        // S.add_generator(Bipartition({{1, -1}, {2, -2}, {3, -3}, {4, -4}}));
+        // S.run();
+        // REQUIRE(S.size() == 4141);
+        // p = to_presentation<word_type>(S);
+        p = theorem_32_presentation(n);
+        // REQUIRE(tc.init(congruence_kind::twosided, p).number_of_classes()
+        //         == tc.init(congruence_kind::twosided,
+        //                    partition_monoid(n, author::East))
+        //                .number_of_classes());
+      }
+      presentation::sort_rules(p);
+      presentation::remove_duplicate_rules(p);
+
+      sims.clear_pruners();
+      forbid.clear();
+      if (n >= 4) {
+        word_type alpha = {};
+        word_type beta  = {};
+        word_type q     = {n - 1};
+        for (size_t i = 0; i < n; ++i) {
+          if (i != n - 1) {
+            alpha.push_back(i + 2 * n - 2);
+          }
+          beta.push_back(i + 2 * n - 2);
+        }
+        forbid = {alpha, beta, beta + q, beta, q + beta, beta};
+      }
+
+      // TODO:
+      // [x] manually implement the finding logic given a hunch
+      // [x] use RepOrc + own method of iterative lowering
+      // [ ] find_if with pruner
+      // [ ] check size correct with FroidurePin at the end
+      //
+      // wg = minimal_rep_orc_in_range(p, 16, 1, estimates[n] + 2);
+      // RepOrc orc;
+      // wg = orc.presentation(p)
+      //          .number_of_threads(16)
+      //          .min_nodes(1)
+      //          .max_nodes(estimates[n] + 2)
+      //          .target_size(tc.number_of_classes())
+      //          .word_graph();
+      // REQUIRE(wg.number_of_nodes() == estimates[n]);
+      // wg = orc.max_nodes(wg.number_of_nodes() - 1).word_graph();
+      // REQUIRE(wg.number_of_nodes() == 0);
+
+      SimsRefinerFaithful pruno(forbid);
+      wg = sims.presentation(p).number_of_threads(16).add_pruner(pruno).find_if(
+          estimates[n], [](auto const&) { return true; });
+
+      auto S = to_froidure_pin<Transf<0, node_type>>(
+          wg, 0, wg.number_of_active_nodes());
+      // REQUIRE(S.size() == tc.number_of_classes());
+
+      REQUIRE(wg.number_of_nodes() == estimates[n]);
+
+      wg = sims.find_if(wg.number_of_nodes() - 1,
+                        [](auto const&) { return true; });
+      REQUIRE(wg.number_of_nodes() == 0);
+    }
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "257",
+                          "Temperley-Lieb monoid",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    Presentation<word_type> p;
+    ToddCoxeter             tc(congruence_kind::twosided);
+    // plusses indicate that the result was reached but could not be verified.
+    std::vector<size_t>  results   = {2,
+                                      2,
+                                      3,
+                                      4,
+                                      7,
+                                      10,
+                                      20,
+                                      29,
+                                      +63,
+                                      +91,
+                                      +208,
+                                      +298,
+                                      +705,
+                                      +1002,
+                                      +2432,
+                                      +3433,
+                                      +8503};
+    std::vector<size_t>  estimates = {2,
+                                      2,
+                                      3,
+                                      4,
+                                      7,
+                                      10,
+                                      20,
+                                      29,
+                                      63,
+                                      91,
+                                      208,
+                                      298,
+                                      705,
+                                      1002,
+                                      2432,
+                                      3433,
+                                      +8503};
+    WordGraph<node_type> wg;
+    Sims1                sims;
+    // The forbid list depends on the presentation used by
+    // fpsemigroup::temperley_lieb_monoid
+    // If this changes, then the test will no longer be correct.
+    // Currently uses the presentation given in Theorem 2.2 of the following
+    // article:
+    // Presentations for Temperley–Lieb Algebras,
+    // J. East,
+    // https://doi.org/10.1093/qmath/haab001
+    std::vector<word_type> forbid;
+    for (size_t n = 5; n <= 5; ++n) {
+      p = temperley_lieb_monoid(n);
+      presentation::sort_rules(p);
+      presentation::remove_duplicate_rules(p);
+
+      sims.clear_pruners();
+      forbid.clear();
+      word_type alpha = {};
+      word_type beta  = {};
+      word_type q     = {1};
+      for (size_t i = 0; i < n - 1; i += 2) {
+        if (i != n - 2) {
+          alpha.push_back(i);
+        }
+        beta.push_back(i);
+      }
+      if (n % 2 == 0) {
+        forbid = {alpha, beta, beta + q, beta, q + beta, beta};
+      } else {
+        forbid = {beta + q, beta, q + beta, beta};
+      }
+
+      // TODO:
+      // [x] manually implement the finding logic given a hunch
+      // [x] use RepOrc + own method of iterative lowering
+      // [ ] find_if with pruner
+      // [ ] check size correct with FroidurePin at the end
+      //
+      // wg = minimal_rep_orc_in_range(p, 16, 1, estimates[n] + 2);
+      // RepOrc orc;
+      // wg = orc.presentation(p)
+      //          .number_of_threads(16)
+      //          .min_nodes(1)
+      //          .max_nodes(estimates[n] + 2)
+      //          .target_size(tc.number_of_classes())
+      //          .word_graph();
+      // REQUIRE(wg.number_of_nodes() == estimates[n]);
+      // wg = orc.max_nodes(wg.number_of_nodes() - 1).word_graph();
+      // REQUIRE(wg.number_of_nodes() == 0);
+
+      SimsRefinerFaithful pruno(forbid);
+      wg = sims.presentation(p).number_of_threads(16).add_pruner(pruno).find_if(
+          estimates[n], [](auto const&) { return true; });
+
+      // auto S = to_froidure_pin<Transf<0, node_type>>(
+      //     wg, 0, wg.number_of_active_nodes());
+      // S.add_generator(one(S.generator(0)));
+      // REQUIRE(S.size()
+      //         == tc.init(congruence_kind::twosided, p).number_of_classes());
+      REQUIRE(wg.number_of_nodes() == estimates[n]);
+      // REQUIRE(sims.number_of_congruences(estimates[n]) == 0);
+
+      while (wg.number_of_nodes() != 0)
+        wg = sims.find_if(wg.number_of_nodes() - 1,
+                          [](auto const&) { return true; });
+      REQUIRE(wg.number_of_nodes() == 0);
+    }
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "258",
+                          "Partial Brauer monoid",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    Presentation<word_type> p;
+    ToddCoxeter             tc(congruence_kind::twosided);
+    // plusses indicate that the result was reached but could not be verified.
+    std::vector<size_t> results
+        = {1, 2, 6, 14, +39, +117, +383, +1311, +7080, 9, 10};
+    std::vector<size_t> estimates
+        = {2, 3, 6, 14, 39, 117, 383, 1311, +7080, +4000, +5000};
+    WordGraph<node_type> wg;
+    Sims1                sims;
+    // The forbid list depends on the presentation used by
+    // fpsemigroup::temperley_lieb_monoid
+    // If this changes, then the test will no longer be correct.
+    // Currently uses the presentation given in Theorem 5.1 of the following
+    // article:
+    // On presentations of Brauer-type monoids
+    // Ganna Kudryavtseva, Volodymyr Mazorchuk
+    // https://link.springer.com/content/pdf/10.2478/s11533-006-0017-6.pdf
+    std::vector<word_type> forbid;
+    for (size_t n = 3; n <= 3; ++n) {
+      p = fpsemigroup::partial_brauer_monoid(n);
+      presentation::sort_rules(p);
+      presentation::remove_duplicate_rules(p);
+
+      sims.clear_pruners();
+      forbid.clear();
+      word_type alpha = {};
+      word_type beta  = {};
+      word_type q     = {n - 1};
+      for (size_t i = 0; i < n; ++i) {
+        if (i != n - 1) {
+          alpha.push_back(i + 2 * n - 2);
+        }
+        beta.push_back(i + 2 * n - 2);
+      }
+      forbid = {alpha, beta, beta + q, beta, q + beta, beta};
+
+      // TODO:
+      // [x] manually implement the finding logic given a hunch
+      // [x] use RepOrc + own method of iterative lowering
+      // [ ] find_if with pruner
+      // [ ] check size correct with FroidurePin at the end
+      //
+      // wg = minimal_rep_orc_in_range(p, 16, 1, estimates[n] + 2);
+      // RepOrc orc;
+      // wg = orc.presentation(p)
+      //          .number_of_threads(16)
+      //          .min_nodes(1)
+      //          .max_nodes(estimates[n] + 2)
+      //          .target_size(tc.number_of_classes())
+      //          .word_graph();
+      // REQUIRE(wg.number_of_nodes() == estimates[n]);
+      // wg = orc.max_nodes(wg.number_of_nodes() - 1).word_graph();
+      // REQUIRE(wg.number_of_nodes() == 0);
+
+      SimsRefinerFaithful pruno(forbid);
+      wg = sims.presentation(p).number_of_threads(16).add_pruner(pruno).find_if(
+          estimates[n], [](auto const&) { return true; });
+
+      // auto S = to_froidure_pin<Transf<0, node_type>>(
+      //     wg, 0, wg.number_of_active_nodes());
+      // REQUIRE(S.size()
+      //         == tc.init(congruence_kind::twosided, p).number_of_classes());
+      REQUIRE(wg.number_of_nodes() == estimates[n]);
+
+      while (wg.number_of_nodes() != 0)
+        wg = sims.find_if(wg.number_of_nodes() - 1,
+                          [](auto const&) { return true; });
+      REQUIRE(wg.number_of_nodes() == 0);
+    }
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "259",
+                          "Motzkin monoid",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    Presentation<word_type> p;
+    ToddCoxeter             tc(congruence_kind::twosided);
+    // plusses indicate that the result was reached but could not be verified.
+    std::vector<size_t> results
+        = {1, 2, 6, 13, +31, +77, +197, +513, +1354, +3611, +9714};
+    std::vector<size_t> estimates
+        = {2, 3, 6, 13, 31, 77, 197, 513, 1354, 3611, +9714};
+    WordGraph<node_type> wg;
+    Sims1                sims;
+    // The forbid list depends on the presentation used by
+    // fpsemigroup::temperley_lieb_monoid
+    // If this changes, then the test will no longer be correct.
+    // Currently uses the presentation given in Theorem 4.1 (with some extra
+    // relations added to fix it) of the following article:
+    // PRESENTATION OF THE MOTZKIN MONOID
+    // KRIS HATCH, MEGAN LY, ELIEZER POSNER
+    // https://arxiv.org/pdf/1301.4518
+    std::vector<word_type> forbid;
+    for (size_t n = 10; n <= 10; ++n) {
+      p = fpsemigroup::motzkin_monoid(n);
+      presentation::sort_rules(p);
+      presentation::remove_duplicate_rules(p);
+
+      sims.clear_pruners();
+      forbid.clear();
+      word_type alpha = {};
+      word_type beta  = {};
+      word_type q     = {0};
+      for (size_t i = 0; i < n - 1; ++i) {
+        if (i != n - 2) {
+          alpha.push_back(i + n - 1);
+          alpha.push_back(i + n - 1);
+        }
+        beta.push_back(i + n - 1);
+        beta.push_back(i + n - 1);
+      }
+      forbid = {alpha, beta, beta + q, beta, q + beta, beta};
+
+      // TODO:
+      // [x] manually implement the finding logic given a hunch
+      // [x] use RepOrc + own method of iterative lowering
+      // [ ] find_if with pruner
+      // [ ] check size correct with FroidurePin at the end
+      //
+      // wg = minimal_rep_orc_in_range(p, 16, 1, estimates[n] + 2);
+      // RepOrc orc;
+      // wg = orc.presentation(p)
+      //          .number_of_threads(16)
+      //          .min_nodes(1)
+      //          .max_nodes(estimates[n] + 2)
+      //          .target_size(tc.number_of_classes())
+      //          .word_graph();
+      // REQUIRE(wg.number_of_nodes() == estimates[n]);
+      // wg = orc.max_nodes(wg.number_of_nodes() - 1).word_graph();
+      // REQUIRE(wg.number_of_nodes() == 0);
+
+      SimsRefinerFaithful pruno(forbid);
+      wg = sims.presentation(p).number_of_threads(16).add_pruner(pruno).find_if(
+          estimates[n], [](auto const&) { return true; });
+      REQUIRE(wg.number_of_nodes() != 0);
+
+      // auto S = to_froidure_pin<Transf<0, node_type>>(
+      //     wg, 0, wg.number_of_active_nodes());
+      // S.add_generator(one(S.generator(0)));
+      // REQUIRE(S.size()
+      //         == tc.init(congruence_kind::twosided, p).number_of_classes());
+      REQUIRE(wg.number_of_nodes() == estimates[n]);
+
+      while (wg.number_of_nodes() != 0)
+        wg = sims.find_if(wg.number_of_nodes() - 1,
+                          [](auto const&) { return true; });
+      REQUIRE(wg.number_of_nodes() == 0);
+    }
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "260",
+                          "Brauer monoid",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    Presentation<word_type> p;
+    ToddCoxeter             tc(congruence_kind::twosided);
+    // plusses indicate that the result was reached but could not be verified.
+    std::vector<size_t> results = {1, 1, 3, 7, 22, 46, +196, +523, 8, 9, 10};
+    std::vector<size_t> estimates
+        = {1, 1, 3, 7, 22, 46, 196, 523, 3000, 800, 1600};
+    WordGraph<node_type> wg;
+    Sims1                sims;
+    // The forbid list depends on the presentation used by
+    // fpsemigroup::temperley_lieb_monoid
+    // If this changes, then the test will no longer be correct.
+    std::vector<word_type> forbid;
+    for (size_t n = 6; n <= 6; ++n) {
+      p = fpsemigroup::brauer_monoid(n);
+      presentation::sort_rules(p);
+      presentation::remove_duplicate_rules(p);
+
+      sims.clear_pruners();
+      forbid.clear();
+      word_type alpha = {};
+      word_type beta  = {};
+      word_type q     = {n};
+      word_type s     = {n - 2};
+      for (size_t i = 0; i < n - 1; i += 2) {
+        if (i != n - 2) {
+          alpha.push_back(i + n - 1);
+        }
+        beta.push_back(i + n - 1);
+      }
+      if (n % 2 == 0) {
+        forbid = {alpha + s, alpha, beta + q, beta, q + beta, beta};
+      } else {
+        forbid = {beta + q, beta, q + beta, beta};
+      }
+
+      // TODO:
+      // [x] manually implement the finding logic given a hunch
+      // [x] use RepOrc + own method of iterative lowering
+      // [ ] find_if with pruner
+      // [ ] check size correct with FroidurePin at the end
+      //
+      // wg = minimal_rep_orc_in_range(p, 16, 1, estimates[n] + 2);
+      // RepOrc orc;
+      // wg = orc.presentation(p)
+      //          .number_of_threads(16)
+      //          .min_nodes(1)
+      //          .max_nodes(estimates[n] + 2)
+      //          .target_size(tc.number_of_classes())
+      //          .word_graph();
+      // REQUIRE(wg.number_of_nodes() == estimates[n]);
+      // wg = orc.max_nodes(wg.number_of_nodes() - 1).word_graph();
+      // REQUIRE(wg.number_of_nodes() == 0);
+
+      SimsRefinerFaithful pruno(forbid);
+      wg = sims.presentation(p).number_of_threads(16).add_pruner(pruno).find_if(
+          estimates[n], [](auto const&) { return true; });
+      REQUIRE(wg.number_of_active_nodes() != 0);
+
+      // REQUIRE(sims.number_of_congruences(estimates[n]) == 0);
+      //  auto S = to_froidure_pin<Transf<0, node_type>>(
+      //      wg, 0, wg.number_of_active_nodes());
+      //  S.add_generator(one(S.generator(0)));
+      //  REQUIRE(S.size()
+      //          == tc.init(congruence_kind::twosided, p).number_of_classes());
+      REQUIRE(wg.number_of_active_nodes() == estimates[n]);
+
+      while (wg.number_of_active_nodes() != 0)
+        wg = sims.find_if(wg.number_of_active_nodes() - 1,
+                          [](auto const&) { return true; });
+      REQUIRE(wg.number_of_active_nodes() == 0);
+    }
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "261",
+                          "motzkin_monoid(3) congruences",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    size_t                  n = 3;
+    Presentation<word_type> p = fpsemigroup::motzkin_monoid(n);
+    std::vector<word_type>  forbid;
+
+    presentation::sort_rules(p);
+    presentation::remove_duplicate_rules(p);
+
+    word_type alpha = {};
+    word_type beta  = {};
+    word_type q     = {0};
+    for (size_t i = 0; i < n - 1; ++i) {
+      if (i != n - 2) {
+        alpha.push_back(i + n - 1);
+        alpha.push_back(i + n - 1);
+      }
+      beta.push_back(i + n - 1);
+      beta.push_back(i + n - 1);
+    }
+    forbid = {alpha, beta, beta + q, beta, q + beta, beta};
+
+    Sims1               sims(p);
+    SimsRefinerFaithful pruno(forbid);
+    ToddCoxeter         tc(congruence_kind::twosided, p);
+
+    sims.number_of_threads(16).add_pruner(pruno);
+    REQUIRE(sims.number_of_congruences(13) == 18);
+    auto it = sims.cbegin(13);
+    for (size_t i = 0; i < 18; ++i) {
+      std::cout << (sims::right_generating_pairs(*it) | rx::to_vector())
+                << "\n\n";
+      it++;
+    }
+
+    // REQUIRE(*(it++) == to_word_graph<node_type>(13, {}));
+    //  for (auto it = sims.cbegin(5); it != sims.cend(5); it++) {
+    //    wg     = *it;
+    //    auto S = to_froidure_pin<Transf<0, node_type>>(
+    //        wg, 0, wg.number_of_active_nodes());
+    //    S.add_generator(one(S.generator(0)));
+    //    if (S.size() == tc.number_of_classes()) {
+    //    }
+    //  }
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "262",
+                          "Brauer monoid minimal separating right congs",
+                          "[extreme][low-index]") {
+    auto rg = ReportGuard(true);
+
+    using words::operator+;
+
+    Presentation<word_type> p;
+    ToddCoxeter             tc(congruence_kind::twosided);
+    // plusses indicate that the result was reached but could not be verified.
+    WordGraph<node_type> wg, prev_wg;
+    Sims1                sims;
+    // The forbid list depends on the presentation used by
+    // fpsemigroup::temperley_lieb_monoid
+    // If this changes, then the test will no longer be correct.
+    std::vector<word_type> forbid;
+
+    std::vector<size_t> results_alpha_zeta
+        = {0, 0, 0, 5, 5, 32, +47, 317, 632, 3782, 9452};
+    std::vector<size_t> estimates_alpha_zeta
+        = {0, 0, 0, 5, 5, 32, 47, 317, 632, 3782, 9452};
+    std::vector<size_t> results_beta_zeta
+        = {0, 0, 0, 3, 3, 15, 15, 105, 105, 945, 945};
+    std::vector<size_t> estimates_beta_zeta
+        = {0, 0, 0, 3, 3, 15, 15, 105, 105, 945, 945};
+    std::vector<size_t> results_gamma_gamma_p
+        = {0, 0, 0, 0, 13, 0, +91, 0, 841, 0, 9451};
+    std::vector<size_t> estimates_gamma_gamma_p
+        = {0, 0, 0, 0, 13, 0, +91, 0, 841, 0, 9451};
+    for (size_t n = 8; n <= 10; ++n) {
+      p = fpsemigroup::brauer_monoid(n);
+      presentation::sort_rules(p);
+      presentation::remove_duplicate_rules(p);
+
+      forbid.clear();
+      word_type alpha = {};
+      word_type beta  = {};
+      word_type q     = {n};
+      word_type s     = {n - 2};
+      for (size_t i = 0; i < n - 1; i += 2) {
+        if (i != n - 2) {
+          alpha.push_back(i + n - 1);
+        }
+        beta.push_back(i + n - 1);
+      }
+      if (n % 2 == 0) {
+        forbid = {alpha + s, alpha, beta + q, beta, q + beta, beta};
+      } else {
+        forbid = {beta + q, beta, q + beta, beta};
+      }
+
+      // alpha, zeta
+      sims.clear_exclude();
+      wg = sims.presentation(p)
+               .number_of_threads(16)
+               .exclude(q + beta, beta)
+               .find_if(estimates_alpha_zeta[n],
+                        [](auto const&) { return true; });
+      REQUIRE(wg.number_of_active_nodes() == estimates_alpha_zeta[n]);
+
+      if (estimates_alpha_zeta[n] < 47) {
+        prev_wg = wg;
+        while (wg.number_of_active_nodes() > 1) {
+          prev_wg = wg;
+          wg      = sims.find_if(wg.number_of_nodes() - 1,
+                            [](auto const&) { return true; });
+        }
+
+        REQUIRE(prev_wg.number_of_active_nodes() == results_alpha_zeta[n]);
+        REQUIRE(wg.number_of_active_nodes() <= 1);
+      }
+
+      // beta, zeta
+      sims.clear_exclude();
+      wg = sims.presentation(p)
+               .number_of_threads(16)
+               .exclude(beta + q, beta)
+               .find_if(estimates_beta_zeta[n],
+                        [](auto const&) { return true; });
+      REQUIRE(wg.number_of_active_nodes() == estimates_beta_zeta[n]);
+
+      prev_wg = wg;
+      while (wg.number_of_active_nodes() != 0) {
+        prev_wg = wg;
+        wg      = sims.find_if(wg.number_of_active_nodes() - 1,
+                          [](auto const&) { return true; });
+      }
+
+      REQUIRE(prev_wg.number_of_active_nodes() == results_beta_zeta[n]);
+      REQUIRE(wg.number_of_active_nodes() == 0);
+
+      // gamma, gamma_p
+      if (n % 2 == 0) {
+        sims.clear_exclude();
+        wg = sims.presentation(p)
+                 .number_of_threads(16)
+                 .exclude(alpha + s, alpha)
+                 .find_if(estimates_gamma_gamma_p[n],
+                          [](auto const&) { return true; });
+        REQUIRE(wg.number_of_active_nodes() == estimates_gamma_gamma_p[n]);
+
+        if (estimates_gamma_gamma_p[n] < 91) {
+          prev_wg = wg;
+          while (wg.number_of_active_nodes() != 0) {
+            prev_wg = wg;
+            wg      = sims.find_if(wg.number_of_active_nodes() - 1,
+                              [](auto const&) { return true; });
+          }
+
+          REQUIRE(prev_wg.number_of_active_nodes() == results_gamma_gamma_p[n]);
+          REQUIRE(wg.number_of_active_nodes() == 0);
+        }
+      }
+    }
+  }
+
 }  // namespace libsemigroups
 
 // [[[0, 0, 0]],            #1#
