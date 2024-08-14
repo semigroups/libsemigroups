@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+// TOOD(later) replace Transf(...) with Transf::make
 
 #include <cstddef>  // for size_t
 
@@ -303,7 +304,7 @@ namespace libsemigroups {
                           "add_generator",
                           "[quick][transf][no-valgrind]") {
     auto rg      = ReportGuard(REPORT);
-    using Transf = LeastTransf<16>;
+    using Transf = LeastTransf<5>;
 
     Konieczny<Transf> S({Transf({1, 0, 2, 3, 4})});
     S.add_generator(Transf({1, 2, 3, 4, 0}));
@@ -321,7 +322,7 @@ namespace libsemigroups {
                           "add_generator, init",
                           "[quick][transf][no-valgrind]") {
     auto rg      = ReportGuard(REPORT);
-    using Transf = LeastTransf<16>;
+    using Transf = LeastTransf<5>;
 
     Konieczny<Transf> S;
     S.add_generator(Transf({1, 2, 3, 4, 0}));
