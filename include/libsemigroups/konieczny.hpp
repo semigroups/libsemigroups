@@ -1,6 +1,6 @@
 //
 // libsemigroups - C++ library for semigroups and monoids
-// Copyright (C) 2019-20 Finn Smith
+// Copyright (C) 2019-24 Finn Smith
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,10 +28,6 @@
 #ifndef LIBSEMIGROUPS_KONIECZNY_HPP_
 #define LIBSEMIGROUPS_KONIECZNY_HPP_
 
-#ifndef PARSED_BY_DOXYGEN
-#define NOT_PARSED_BY_DOXYGEN
-#endif
-
 #include <algorithm>      // for binary_search
 #include <cstddef>        // for size_t
 #include <set>            // for set
@@ -55,6 +51,12 @@
 #include "detail/bruidhinn-traits.hpp"  // for BruidhinnTraits
 
 namespace libsemigroups {
+  //! \defgroup konieczny_group Konieczny
+  //!
+  //! TODO
+
+  //! \ingroup konieczny_group
+  //!
   //! Defined in ``konieczny.hpp``.
   //!
   //! This is a traits class for use with Konieczny.
@@ -128,6 +130,8 @@ namespace libsemigroups {
     using Degree = ::libsemigroups::Degree<element_type>;
   };
 
+  //! \ingroup konieczny_group
+  //!
   //! Defined in ``konieczny.hpp``.
   //!
   //! The class template Konieczny implements %Konieczny's algorithm as
