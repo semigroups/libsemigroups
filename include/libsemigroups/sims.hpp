@@ -20,7 +20,7 @@
 // congruence" algorithm for 1-sided or 2-sided congruences of semigroups and
 // monoids.
 
-// TODO:
+// TODO(0):
 // * review the function aliases, and remove them if they are unnecessary
 // * doc
 // * iwyu
@@ -30,7 +30,7 @@
 // * python bindings
 // * gap bindings
 
-// TODO(later):
+// TODO(2)(later):
 // * use SimsRefinerFaithful in RepOrc + MinimalRepOrc
 // * a version which allows specifying the word_graph to Sims1 too
 // * implement maximum_2_sided_congruence_contained to compute the kernel of the
@@ -40,7 +40,7 @@
 //   first (by using generating pairs), and then to try and find a right
 //   congruence not containing any of the minimal 2-sided congruences.
 //
-// TODO(far future):
+// TODO(3)(far future):
 // * Figure out a way of making refining functions possible. A refining function
 // differs from a pruner in that it is also allowed to modify the word graph.
 // * Implement one and two sided compatibility checking as refiners, following
@@ -119,7 +119,7 @@ namespace libsemigroups {
     //!
     //! \sa \ref stats_check_point
     //! \sa \ref count_now
-    // TODO(0) might be better to have a mutex here and just lock it in
+    // TODO(2) might be better to have a mutex here and just lock it in
     // check_point below
     std::atomic_uint64_t count_last;
 
@@ -182,6 +182,8 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats();
+
+    // TODO(0) add an init function
 
     //! Copy constructor.
     //!
@@ -266,6 +268,7 @@ namespace libsemigroups {
     }
 
    private:
+    // TODO(0) should this be public and called just "init"?
     SimsStats& init_from(SimsStats const& that);
   };
 
@@ -345,7 +348,7 @@ namespace libsemigroups {
     //!
     //! \exception
     //! \no_libsemigroups_except
-    // TODO(tests)
+    // TODO(0)(tests)
     Subclass& init();
 
     //! Copy constructor.
@@ -423,7 +426,7 @@ namespace libsemigroups {
     //! Sims1, Sims2, RepOrc, and MinimalRepOrc, which are currently:
     //! * \ref presentation
     //! * \ref long_rules
-    // TODO change above to an actual function that exists, or add such a
+    // TODO(1) change above to an actual function that exists, or add such a
     // function
     //! * \ref number_of_threads
     //!
@@ -496,7 +499,7 @@ namespace libsemigroups {
     //!
     //! \throws LibsemigroupsException if the alphabet of `p` is non-empty and
     //! not equal to that of \ref long_rules or \ref presentation.
-    // TODO review the previous exception
+    // TODO(1) review the previous exception
     //!
     //! \throws LibsemigroupsException if `p` has 0-generators and 0-relations.
     template <typename Word>
@@ -669,8 +672,8 @@ namespace libsemigroups {
     template <typename Func>
     Subclass& add_pruner(Func&& func) {
       _pruners.emplace_back(func);
-      // TODO could return an iterator to the inserted func in case we want to
-      // remove it again
+      // TODO(2) could return an iterator to the inserted func in case we want
+      // to remove it again
       return static_cast<Subclass&>(*this);
     }
 
@@ -781,7 +784,7 @@ namespace libsemigroups {
     //! \warning
     //! This function replaces all previously set `include` pairs with
     //! those found in \p c.
-    // TODO move to helper namespace
+    // TODO(1) move to helper namespace
     template <typename Container>
     Subclass& include(Container const& c) {
       include(std::begin(c), std::end(c));
@@ -850,8 +853,8 @@ namespace libsemigroups {
     //! \warning
     //! This function replaces all previously set `exclude` pairs with
     //! those found in `[first, last)`.
-    // TODO maybe should add instead of replacing similar to exclude of r pair?
-    // Replaces current exclude with [first, last)
+    // TODO(1) maybe should add instead of replacing similar to exclude of r
+    // pair? Replaces current exclude with [first, last)
     template <typename Iterator>
     Subclass& exclude(Iterator first, Iterator last) {
       return include_exclude(first, last, _exclude);
@@ -898,7 +901,7 @@ namespace libsemigroups {
     //! \warning
     //! This function replaces all previously set `exclude` pairs with
     //! those found in \p c.
-    // TODO move to helper namespace
+    // TODO(1) move to helper namespace
     template <typename Container>
     Subclass& exclude(Container const& c) {
       exclude(std::begin(c), std::end(c));
@@ -912,12 +915,12 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     Subclass& clear_exclude() {
-      // TODO remove the pruner
+      // TODO(2) remove the pruner
       _exclude.clear();
       return static_cast<Subclass&>(*this);
     }
 
-    // TODO(later) ranges version of include/exclude?
+    // TODO(2)(later) ranges version of include/exclude?
 
     //! \brief Get the current stats object.
     //!
@@ -968,7 +971,6 @@ namespace libsemigroups {
     //!
     //! \throws LibsemigroupsException if the argument \p val is 0.
     // Number of times an idle thread will attempt to restart before yielding.
-    // TODO doc
     Subclass& idle_thread_restarts(size_t val);
 
    protected:
@@ -1086,7 +1088,7 @@ namespace libsemigroups {
       // We use WordGraph, even though the iterators produced by this class
       // hold FelschGraph's, none of the features of FelschGraph are useful
       // for the output, only for the implementation
-      // TODO use SimsSettings::word_graph_type
+      // TODO(1) use SimsSettings::word_graph_type
       using word_graph_type = WordGraph<uint32_t>;
 
       //! Type for the nodes in the associated WordGraph objects.
@@ -1121,7 +1123,7 @@ namespace libsemigroups {
 
        protected:
         using PendingDef = typename Sims1or2::PendingDef;
-        // TODO(Sims1) ensure that _felsch_graph's settings are
+        // TODO(1)(Sims1) ensure that _felsch_graph's settings are
         // properly initialised
         using Definition = std::pair<node_type, label_type>;
 
@@ -1385,10 +1387,10 @@ namespace libsemigroups {
 
    public:
     //! Default constructor
-    // TODO(doc)
+    // TODO(0)(doc)
     Sims1() = default;
 
-    // TODO(doc)
+    // TODO(0)(doc)
     using SimsBase::init;
 
     //! \brief Construct from a presentation.
@@ -1462,7 +1464,7 @@ namespace libsemigroups {
       presentation(p);
       return *this;
     }
-    // TODO init from rvalue reference presentation
+    // TODO(0) init from rvalue reference presentation
 
 #ifdef PARSED_BY_DOXYGEN
     //! \brief Returns the number of one-sided congruences with up to a given
@@ -1582,7 +1584,7 @@ namespace libsemigroups {
     //! significantly cheaper than postfix incrementing \c it++.
     //!
     //! \sa cend
-    // TODO(Sims1) it'd be good to remove node 0 to avoid confusion. This
+    // TODO(2)(Sims1) it'd be good to remove node 0 to avoid confusion. This
     // seems complicated however, and so isn't done at present.
     [[nodiscard]] iterator cbegin(size_type n) const;
 
@@ -1734,7 +1736,7 @@ namespace libsemigroups {
       std::vector<word_type>         _2_sided_words;
 
      protected:
-      // TODO delete after ensuring that compilation with GCC works
+      // TODO(0) delete after ensuring that compilation with GCC works
       // using SimsBase::IteratorBase::init;
       // using SimsBase::IteratorBase::try_pop;
 
@@ -1758,7 +1760,7 @@ namespace libsemigroups {
       iterator_base& operator=(iterator_base&& that);
       ~iterator_base();
 
-      // TODO delete after ensuring that compilation with GCC works
+      // TODO(0) delete after ensuring that compilation with GCC works
       // using SimsBase::IteratorBase::operator==;
       // using SimsBase::IteratorBase::operator!=;
       // using SimsBase::IteratorBase::operator*;
@@ -2070,7 +2072,7 @@ namespace libsemigroups {
     // Right Congruence Generating Pairs (rcgp)
     class const_rcgp_iterator {
      public:
-      // TODO(doc)
+      // TODO(0)(doc)
       using size_type = typename std::vector<relation_type>::size_type;
       using difference_type =
           typename std::vector<relation_type>::difference_type;
@@ -2144,7 +2146,7 @@ namespace libsemigroups {
                                                 WordGraph<Node> const&);
 
      public:
-      // TODO add noexcept?
+      // TODO(0) add noexcept?
       // NOTE(RC): Not sure if noexcept, initializing the _tree field of type
       // Forest allocates memory
       //! Default constructor
@@ -2247,7 +2249,7 @@ namespace libsemigroups {
 
       //! No doc
       // prefix
-      // TODO to cpp file
+      // TODO(1) to cpp file
       const_cgp_iterator const& operator++() {
         size_type start = _reconstructed_word_graph.definitions().size();
         const_rcgp_iterator::operator++();
@@ -2829,7 +2831,7 @@ namespace libsemigroups {
           auto wy = tree.path_to_root(y);
           std::reverse(wy.begin(), wy.end());
           auto copy = wg;
-          // TODO avoid the copy here
+          // TODO(2) avoid the copy here
           copy.induced_subgraph_no_checks(static_cast<Node>(0),
                                           wg.number_of_active_nodes());
           todd_coxeter::add_generating_pair(
@@ -3066,6 +3068,8 @@ namespace libsemigroups {
     //!
     //! \warning
     //! This method does not verify if \p forbid contains trivial pairs or not.
+    // TODO(2): Construct from std::vector<std::string>
+    // TODO(2): Template constructor on typename Word
     explicit SimsRefinerFaithful(std::vector<word_type> const& forbid)
         : _forbid(forbid) {}
 
@@ -3076,10 +3080,10 @@ namespace libsemigroups {
     //! which will result in a word graph defining a faithful congruence.
     //! Otherwise returns `true`.
     //!
-    // TODO to cpp
+    // TODO(1) to cpp
     bool operator()(Sims1::word_graph_type const& wg) {
       auto first = _forbid.cbegin(), last = _forbid.cend();
-      // TODO use 1 felsch tree per excluded pairs, and use it to check if
+      // TODO(2) use 1 felsch tree per excluded pairs, and use it to check if
       // paths containing newly added edges, lead to the same place
       for (auto it = first; it != last; it += 2) {
         bool this_rule_compatible = true;
@@ -3134,11 +3138,52 @@ namespace libsemigroups {
     explicit SimsRefinerIdeals(Presentation<std::string> const& p)
         : _knuth_bendix(congruence_kind::twosided, p) {}
 
-    //! \copydoc SimsRefinerIdeals::SimsRefinerIdeals(Presentation<std::string>
-    //! const&)
-    explicit SimsRefinerIdeals(Presentation<word_type> const& p)
-        : _knuth_bendix(congruence_kind::twosided,
-                        to_presentation<std::string>(p)) {}
+    //! \brief Reinitialize an existing SimsRefinerIdeals object from a
+    //! presentation.
+    //!
+    //! This function puts an object back into the same state as if it had
+    //! been newly constructed from the presentation \p p.
+    //!
+    //! \returns A reference to \c *this.
+    //!
+    //! \throws LibsemigroupsException if `p` is not valid
+    //! \throws LibsemigroupsException if `p` has 0-generators and 0-relations.
+    //!
+    //! \warning This function has no exception guarantee, the object will be
+    //! in the same state as if it was default constructed if an exception is
+    //! thrown.
+    //!
+    //! \warning
+    //! This method assumes that KnuthBendix terminates on the input
+    //! presentation \p p. If this is not the case then th pruner may not
+    //! terminate on certain inputs.
+    //!
+    //! \sa presentation(Presentation<std::string> const&)
+    // TODO(0): template on typename Word so that we can handle string and
+    // word_type in a single function
+    template <typename Word>
+    SimsRefinerIdeals& init(Presentation<Word> const& p) {
+      _knuth_bendix.init(congruence_kind::twosided, p);
+      return *this;
+    }
+
+    //! \brief Get the presentation over which the refiner is defined.
+    //!
+    //! \anchor presentation
+    //! Returns a const reference to the current relations of the underlying
+    //! presentation.
+    //!
+    //! This function returns the defining presentation of a SimsRefinerIdeals
+    //! instance.
+    //!
+    //! \returns A const reference to `Presentation<std::string>`.
+    //!
+    //! \exceptions
+    //! \noexcept
+    [[nodiscard]] Presentation<std::string> const&
+    presentation() const noexcept {
+      return _knuth_bendix.presentation();
+    }
 
     //! \brief Check if a word graph can be extended to one defining a Rees
     //! congruence.
@@ -3186,13 +3231,6 @@ namespace libsemigroups {
       }
       return true;
     }
-
-    // TODO
-    // Check if the incoming word graph has any generating pairs (via the
-    // functionality below) that are not equal in the underlying semigroup.
-    // Require us to store either a KnuthBendix or Kambites object in this
-    // using a presentation (also requires that the word problem is decidable
-    // in the underlying semigroup).
   };
 
 }  // namespace libsemigroups

@@ -1031,7 +1031,7 @@ namespace libsemigroups {
     ~RuleContainer() = default;
 
     void resize(size_t m) {
-      // TODO should we use resize?
+      // TODO(0) should we use resize?
       _used_slots.assign(m, UNDEFINED);
       if (m > 0) {
         _used_slots[0] = 0;
@@ -1096,7 +1096,7 @@ namespace libsemigroups {
         // protected
         _2_sided_include(new RuleContainer()),
         _2_sided_words() {
-    // TODO could be slightly less space allocated here
+    // TODO(2) could be slightly less space allocated here
     size_t const m = SimsBase::IteratorBase::maximum_number_of_classes();
     Presentation<word_type> const& p = this->_felsch_graph.presentation();
     _2_sided_include->resize(2 * m * p.alphabet().size());
@@ -1112,7 +1112,7 @@ namespace libsemigroups {
         _2_sided_words(that._2_sided_words) {}
 
   Sims2::iterator_base::iterator_base(Sims2::iterator_base&& that)
-      : SimsBase::IteratorBase(std::move(that)),  // TODO std::move correct?
+      : SimsBase::IteratorBase(std::move(that)),  // TODO(0) std::move correct?
         _2_sided_include(std::move(that._2_sided_include)),
         _2_sided_words(std::move(that._2_sided_words)) {}
 
@@ -1127,7 +1127,8 @@ namespace libsemigroups {
 
   typename Sims2::iterator_base&
   Sims2::iterator_base::operator=(Sims2::iterator_base&& that) {
-    SimsBase::IteratorBase::operator=(std::move(that));  // TODO std::move ok?
+    SimsBase::IteratorBase::operator=(
+        std::move(that));  // TODO(0) std::move ok?
     _2_sided_include = std::move(that._2_sided_include);
     _2_sided_words   = std::move(that._2_sided_words);
     return *this;
@@ -1304,7 +1305,7 @@ namespace libsemigroups {
   // doesn't construct a FroidurePin object for these). So, it seems to be
   // best to just search through the digraphs with [1, 57) nodes once.
   //
-  // TODO(later) perhaps find minimal 2-sided congruences first (or try to)
+  // TODO(2)(later) perhaps find minimal 2-sided congruences first (or try to)
   // and then run MinimalRepOrc for right congruences excluding all the
   // generating pairs from the minimal 2-sided congruences. Also with this
   // approach FroidurePin wouldn't be required in RepOrc. This might not work,
