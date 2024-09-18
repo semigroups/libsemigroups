@@ -771,6 +771,9 @@ namespace libsemigroups {
     //! underlying semigroup (defined by the presentation returned by \ref
     //! presentation) represented by the relations returned by \ref include.
     //!
+    //! \tparam Container the type of the argument, an container of
+    //! word_type objects.
+    //!
     //! \param c A container of rules to be included.
     //!
     //! \returns A reference to \c this.
@@ -887,6 +890,9 @@ namespace libsemigroups {
     //! presentation) represented by the relations returned by `exclude()`.
     //! \brief Define a set of pairs that should be included in every
     //! congruence.
+    //!
+    //! \tparam Container the type of the argument, an container of
+    //! word_type objects.
     //!
     //! \param c A container of rules to be excluded.
     //!
@@ -1408,8 +1414,9 @@ namespace libsemigroups {
     //! \throws LibsemigroupsException if `p` is not valid
     //! \throws LibsemigroupsException if `p` has 0-generators and 0-relations.
     //!
-    //! \tparam Word the type of the words in the presentation \p p
-    //! \param p the presentation
+    //! \tparam Word the type of the words in the presentation \p p .
+    //!
+    //! \param p the presentation.
     //!
     //! \sa presentation
     //! \sa init
@@ -1436,7 +1443,7 @@ namespace libsemigroups {
     //! Default move assignment operator.
     Sims1& operator=(Sims1&&) = default;
 
-    // No doc
+    //! No doc
     ~Sims1() = default;
 
     //! \brief Reinitialize an existing Sims1 object.
@@ -1444,8 +1451,9 @@ namespace libsemigroups {
     //! This function puts an object back into the same state as if it had
     //! been newly constructed from the presentation \p p.
     //!
-    //! \tparam Word the type of the words in the presentation \p p
-    //! \param p the presentation
+    //! \tparam Word the type of the words in the presentation \p p .
+    //!
+    //! \param p the presentation.
     //!
     //! \returns A reference to \c *this.
     //!
@@ -1803,7 +1811,18 @@ namespace libsemigroups {
     RepOrc() : _min(), _max(), _size() {
       init();
     }
-    // TODO(doc)
+
+    //! \brief Reinitialize an existing RepOrc object.
+    //!
+    //! This function puts a RepOrc object back into the same state as if
+    //! it had been newly default constructed.
+    //!
+    //! \parameters (None)
+    //!
+    //! \returns A reference to \c this.
+    //!
+    //! \exception
+    //! \no_libsemigroups_except
     RepOrc& init();
 
     //! \brief Construct from Sims1, Sims2 or MinimalRepOrc.
@@ -1825,7 +1844,20 @@ namespace libsemigroups {
       SimsSettings<RepOrc>::init(s);
     }
 
-    // TODO(doc)
+    //! \brief Initialize an existing RepOrc object from Sims1, Sims2 or
+    //! MinimalRepOrc.
+    //!
+    //! This function reinitializes a RepOrc instance with
+    //! the same SimsSettings as \p s .
+    //!
+    //! \tparam S the type of the argument \p s (which is
+    //! derived from `SimsSettings<S>`).
+    //!
+    //! \param s the Sims1, Sims2 or MinimalRepOrc whose settings
+    //! should be used.
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
     template <typename OtherSubclass>
     RepOrc& init(SimsSettings<OtherSubclass> const& s) {
       SimsSettings<RepOrc>::init(s);
@@ -1892,7 +1924,7 @@ namespace libsemigroups {
 
     //! \brief Set the target size.
     //!
-    //! This function sets the target size, i.e. the desired size of the
+    //! This function sets the target size, i.e. the size of the
     //! transformation semigroup corresponding to the WordGraph returned by the
     //! function \ref word_graph.
     //!
@@ -1910,7 +1942,7 @@ namespace libsemigroups {
     //! \brief Get the current target size.
     //!
     //! This function returns the current value for the target size, i.e. the
-    //! desired size of the transformation semigroup corresponding to the
+    //! size of the transformation semigroup corresponding to the
     //! WordGraph returned by the function \ref word_graph.
     //!
     //! \returns A value of type `size_t`.
@@ -1942,8 +1974,7 @@ namespace libsemigroups {
     //! \c 1, then the value returned by this function is non-deterministic, and
     //! may vary even for the same parameters.
     //!
-    //! \tparam T the type of the nodes in the returned word graph. \param
-    //! (None) this function has no parameters.
+    //! \param (None) this function has no parameters.
     //!
     //! \returns A value of type `WordGraph`.
     //!
@@ -1977,7 +2008,17 @@ namespace libsemigroups {
     //! Default constructor
     MinimalRepOrc() = default;
 
-    // TODO(doc)
+    //! \brief Reinitialize an existing MinimalRepOrc object.
+    //!
+    //! This function puts a MinimalRepOrc object back into the same state as if
+    //! it had been newly default constructed.
+    //!
+    //! \parameters (None)
+    //!
+    //! \returns A reference to \c this.
+    //!
+    //! \exception
+    //! \no_libsemigroups_except
     MinimalRepOrc& init() {
       _size = 0;
       return *this;
@@ -3041,8 +3082,6 @@ namespace libsemigroups {
   // generating pairs of the minimal 2-sided congruences are known. These pairs
   // should be added to forbid, and then your SimsRefinerFaithful instance
   // should be passed to a Sims1 object via add_pruner.
-  // TODO: probably rename this to describe functionality better
-  // TODO: Probably change interface to be consistent with Ideal finding
   class SimsRefinerFaithful {
    private:
     std::vector<word_type> _forbid;
