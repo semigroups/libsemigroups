@@ -2007,7 +2007,9 @@ namespace libsemigroups {
     using SimsSettings<MinimalRepOrc>::stats;
 
     //! Default constructor
-    MinimalRepOrc() = default;
+    MinimalRepOrc() : _size() {
+      init();
+    }
 
     //! \brief Reinitialize an existing MinimalRepOrc object.
     //!
@@ -3088,7 +3090,21 @@ namespace libsemigroups {
     std::vector<word_type> _forbid;
 
    public:
-    //! \brief Default constructor.
+    //! Default constructor.
+    explicit SimsRefinerFaithful() : _forbid() {}
+
+    //! \brief Reinitialize an existing SimsRefinerFaithful object.
+    //!
+    //! This function puts an object back into the same state as if it had
+    //! been newly default constructed.
+    //!
+    //! \returns A reference to \c *this.
+    SimsRefinerFaithful& init() {
+      _forbid.clear();
+      return *this;
+    }
+
+    //! \brief Construct from set of forbidden pairs.
     //!
     //! Constructs a SimsRefinerFaithful pruner with respect to the set of
     //! forbidden relations in \p forbid.
@@ -3112,6 +3128,38 @@ namespace libsemigroups {
     // TODO(2): Template constructor on typename Word
     explicit SimsRefinerFaithful(std::vector<word_type> const& forbid)
         : _forbid(forbid) {}
+
+    //! \brief Reinitialize an existing SimsRefinerFaithful object from a set of
+    //! forbidden pairs.
+    //!
+    //! This function puts an object back into the same state as if it had
+    //! been newly constructed from set of forbidden pairs \p forbid.
+    //!
+    //! \returns A reference to \c *this.
+    //!
+    //! \warning
+    //! This method does not verify if \p forbid contains trivial pairs or not.
+    SimsRefinerFaithful& init(std::vector<word_type> const& forbid) {
+      _forbid.clear();
+      _forbid = forbid;
+      return *this;
+    }
+
+    //! \brief Get the forbidden pairs defining the refiner.
+    //!
+    //! \anchor forbid
+    //! Returns a const reference to the current forbidden pairs.
+    //!
+    //! This function returns the defining forbidden pairs of a
+    //! SimsRefinerFaithful instance.
+    //!
+    //! \returns A const reference to `std::vector<word_type>`.
+    //!
+    //! \exceptions
+    //! \noexcept
+    [[nodiscard]] std::vector<word_type> const& forbid() const noexcept {
+      return _forbid;
+    }
 
     //! \brief Check if a word graph can be extended to one defining a faithful
     //! congruence.
@@ -3166,7 +3214,22 @@ namespace libsemigroups {
     KnuthBendix<> _knuth_bendix;
 
    public:
-    //! \brief Default constructor.
+    //! Default constructor.
+    explicit SimsRefinerIdeals() : _knuth_bendix(congruence_kind::twosided) {}
+
+    //! \brief Reinitialize an existing SimsRefinerIdeals object.
+    //!
+    //! This function puts an object back into the same state as if it had
+    //! been newly default constructed.
+    //!
+    //! \returns A reference to \c *this.
+    template <typename Word>
+    SimsRefinerIdeals& init() {
+      _knuth_bendix.init(congruence_kind::twosided);
+      return *this;
+    }
+
+    //! \brief Construct from presentation.
     //!
     //! Constructs a SimsRefinerIdeals pruner for the semigroup or monoid
     //! defined by \p p.
@@ -3175,7 +3238,8 @@ namespace libsemigroups {
     //! This method assumes that KnuthBendix terminates on the input
     //! presentation \p p. If this is not the case then th pruner may not
     //! terminate on certain inputs.
-    explicit SimsRefinerIdeals(Presentation<std::string> const& p)
+    template <typename Word>
+    explicit SimsRefinerIdeals(Presentation<Word> const& p)
         : _knuth_bendix(congruence_kind::twosided, p) {}
 
     //! \brief Reinitialize an existing SimsRefinerIdeals object from a
@@ -3272,6 +3336,109 @@ namespace libsemigroups {
       return true;
     }
   };
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a SimsStats object.
+  //!
+  //! Return a human readable representation of a SimsStats object.
+  //!
+  //! \param x the SimsStats object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string to_human_readable_repr(SimsStats const& x);
+
+  // TODO(0): Remove
+  // //! \ingroup congruence_group
+  // //!
+  // //! \brief Return a human readable representation of a SimsSettings object.
+  // //!
+  // //! Return a human readable representation of a SimsSettings object.
+  // //!
+  // //! \param x the SimsSettings object.
+  // //!
+  // //! \exceptions
+  // //! \no_libsemigroups_except
+  // // TODO(1) to tpp
+  // template <typename Subclass>
+  // [[nodiscard]] std::string
+  // target size 0 and  to_human_readable_repr(SimsSettings<Subclass> const& x);
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a Sims1 object.
+  //!
+  //! Return a human readable representation of a Sims1 object.
+  //!
+  //! \param x the Sims1 object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string to_human_readable_repr(Sims1 const& x);
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a Sims2 object.
+  //!
+  //! Return a human readable representation of a Sims2 object.
+  //!
+  //! \param x the Sims2 object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string to_human_readable_repr(Sims2 const& x);
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a RepOrc object.
+  //!
+  //! Return a human readable representation of a RepOrc object.
+  //!
+  //! \param x the RepOrc object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string to_human_readable_repr(RepOrc const& x);
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a MinimalRepOrc object.
+  //!
+  //! Return a human readable representation of a MinimalRepOrc object.
+  //!
+  //! \param x the MinimalRepOrc object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string to_human_readable_repr(MinimalRepOrc const& x);
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a SimsRefinerIdeals
+  //! object.
+  //!
+  //! Return a human readable representation of a SimsRefinerIdeals object.
+  //!
+  //! \param x the SimsRefinerIdeals object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string to_human_readable_repr(SimsRefinerIdeals const& x);
+
+  //! \ingroup congruence_group
+  //!
+  //! \brief Return a human readable representation of a SimsRefinerFaithful
+  //! object.
+  //!
+  //! Return a human readable representation of a SimsRefinerFaithful object.
+  //!
+  //! \param x the SimsRefinerIdeals object.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  [[nodiscard]] std::string
+  to_human_readable_repr(SimsRefinerFaithful const& x);
 
 }  // namespace libsemigroups
 #endif  // LIBSEMIGROUPS_SIMS_HPP_
