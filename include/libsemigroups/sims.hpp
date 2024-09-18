@@ -310,6 +310,7 @@ namespace libsemigroups {
 
    private:
     std::vector<word_type>                 _exclude;
+    bool                                   _exclude_pruner_added;
     size_t                                 _idle_thread_restarts;
     std::vector<word_type>                 _include;
     std::vector<word_type>::const_iterator _longs_begin;

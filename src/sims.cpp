@@ -107,27 +107,35 @@ namespace libsemigroups {
     _exclude.clear();
     _idle_thread_restarts = 64;
     _include.clear();
-    _longs_begin = _presentation.rules.cend();
     _num_threads = 1;
     _presentation.init();
     _pruners.clear();
-    auto pruner = [this](auto const& wg) {
-      auto      first = _exclude.cbegin();
-      auto      last  = _exclude.cend();
-      node_type root  = 0;
 
-      for (auto it = first; it != last; it += 2) {
-        auto l = word_graph::follow_path_no_checks(wg, root, *it);
-        if (l != UNDEFINED) {
-          auto r = word_graph::follow_path_no_checks(wg, root, *(it + 1));
-          if (l == r) {
-            return false;
-          }
-        }
-      }
-      return true;
-    };
-    add_pruner(pruner);
+    // Need to set after presentation is initialized to avoid out of bound
+    // access.
+    _longs_begin = _presentation.rules.cend();
+
+    // TODO(0) does not seem to be a way of clearing _stats
+    // _stats.init();
+
+    // TODO(0) move to exclude function
+    // auto pruner = [this](auto const& wg) {
+    //   auto      first = _exclude.cbegin();
+    //   auto      last  = _exclude.cend();
+    //   node_type root  = 0;
+    //
+    //   for (auto it = first; it != last; it += 2) {
+    //     auto l = word_graph::follow_path_no_checks(wg, root, *it);
+    //     if (l != UNDEFINED) {
+    //       auto r = word_graph::follow_path_no_checks(wg, root, *(it + 1));
+    //       if (l == r) {
+    //         return false;
+    //       }
+    //     }
+    //   }
+    //   return true;
+    // };
+    // add_pruner(pruner);
     return static_cast<Subclass&>(*this);
   }
 
