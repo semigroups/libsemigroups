@@ -942,7 +942,7 @@ namespace libsemigroups {
                 p, q[i] + q[j], q[j] + q[i]);  // (Q10)
           }
         }
-        if ((n - 1 != i) && (n - 1 != i + 1)) {
+        if ((m - 1 != i) && (m - 1 != i + 1)) {
           presentation::add_rule_no_checks(
               p, s[i] + r[n - 1], r[n - 1] + s[i]);  // (Q6)
           presentation::add_rule_no_checks(
