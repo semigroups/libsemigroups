@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+// TODO(later) replace Transf(...) with Transf::make
 
 #include <cstddef>  // for size_t
 
@@ -303,7 +304,7 @@ namespace libsemigroups {
                           "add_generator",
                           "[quick][transf][no-valgrind]") {
     auto rg      = ReportGuard(REPORT);
-    using Transf = LeastTransf<16>;
+    using Transf = LeastTransf<5>;
 
     Konieczny<Transf> S({Transf({1, 0, 2, 3, 4})});
     S.add_generator(Transf({1, 2, 3, 4, 0}));
@@ -318,10 +319,10 @@ namespace libsemigroups {
 
   LIBSEMIGROUPS_TEST_CASE("Konieczny",
                           "043",
-                          "add_generator",
+                          "add_generator, init",
                           "[quick][transf][no-valgrind]") {
     auto rg      = ReportGuard(REPORT);
-    using Transf = LeastTransf<16>;
+    using Transf = LeastTransf<5>;
 
     Konieczny<Transf> S;
     S.add_generator(Transf({1, 2, 3, 4, 0}));
@@ -329,6 +330,19 @@ namespace libsemigroups {
 
     REQUIRE(S.degree() == Degree<Transf>()(Transf({1, 2, 3, 4, 0})));
     REQUIRE(S.number_of_generators() == 2);
+
+    S.run();
+    REQUIRE(S.size() == 610);
+
+    S.init();
+    S.add_generator(Transf({1, 2, 3, 4, 0}));
+    S.run();
+    REQUIRE(S.size() == 5);
+
+    S.init();
+    S.add_generator(Transf({1, 2, 3, 4, 0}));
+    S.add_generator(Transf({0, 0, 2, 3, 4}));
+    REQUIRE(S.size() == 610);
   }
 
 }  // namespace libsemigroups
