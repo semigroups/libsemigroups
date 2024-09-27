@@ -92,7 +92,7 @@ namespace libsemigroups {
   template <typename Subclass>
   SimsSettings<Subclass>::SimsSettings()
       : _exclude(),
-        _exclude_pruner_added(false),
+        _exclude_pruner_index(UNDEFINED),
         _idle_thread_restarts(64),
         _include(),
         _longs_begin(),
@@ -106,7 +106,7 @@ namespace libsemigroups {
   template <typename Subclass>
   Subclass& SimsSettings<Subclass>::init() {
     _exclude.clear();
-    _exclude_pruner_added = false;
+    _exclude_pruner_index = UNDEFINED;
     _idle_thread_restarts = 64;
     _include.clear();
     _num_threads = 1;
@@ -197,6 +197,32 @@ namespace libsemigroups {
     }
     _idle_thread_restarts = val;
     return static_cast<Subclass&>(*this);
+  }
+
+  template <typename Subclass>
+  size_t SimsSettings<Subclass>::add_exclude_pruner() {
+    if (_exclude_pruner_index != UNDEFINED) {
+      return _exclude_pruner_index;
+    }
+    auto pruner = [this](auto const& wg) {
+      auto      first = _exclude.cbegin();
+      auto      last  = _exclude.cend();
+      node_type root  = 0;
+
+      for (auto it = first; it != last; it += 2) {
+        auto l = word_graph::follow_path_no_checks(wg, root, *it);
+        if (l != UNDEFINED) {
+          auto r = word_graph::follow_path_no_checks(wg, root, *(it + 1));
+          if (l == r) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+    add_pruner(pruner);
+    _exclude_pruner_index = _pruners.size() - 1;
+    return _exclude_pruner_index;
   }
 
   template <typename Subclass>
@@ -1455,7 +1481,11 @@ namespace libsemigroups {
 
       result += fmt::format("object over {} with",
                             to_human_readable_repr(x.presentation()));
-      std::string comma = x.pruners().empty() && extra_text.empty() ? "" : ",";
+      std::string comma = (x.pruners().empty()
+                           || (x.pruners().size() == 1 && !x.exclude().empty()))
+                                  && extra_text.empty()
+                              ? ""
+                              : ",";
       if ((x.include().size() > 0) && (x.exclude().size() > 0)) {
         result += fmt::format(" {} include and {} exclude pairs{}",
                               x.include().size() / 2,
@@ -1481,9 +1511,11 @@ namespace libsemigroups {
         needs_and = true;
       }
 
-      if (x.pruners().size() > 0) {
+      if (x.pruners().size() > 1
+          || (x.exclude().empty() && !x.pruners().empty())) {
         result += fmt::format(" {} pruner{}",
-                              x.pruners().size(),
+                              x.exclude().size() == 0 ? x.pruners().size()
+                                                      : x.pruners().size() - 1,
                               x.pruners().size() == 1 ? "" : "s");
         needs_and = true;
       }

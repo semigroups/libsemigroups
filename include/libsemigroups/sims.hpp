@@ -310,7 +310,7 @@ namespace libsemigroups {
 
    private:
     std::vector<word_type>                 _exclude;
-    bool                                   _exclude_pruner_added;
+    size_t                                 _exclude_pruner_index;
     size_t                                 _idle_thread_restarts;
     std::vector<word_type>                 _include;
     std::vector<word_type>::const_iterator _longs_begin;
@@ -685,7 +685,15 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     Subclass& clear_pruners() {
-      _pruners.clear();
+      if (_exclude_pruner_index == UNDEFINED) {
+        _pruners.clear();
+      } else {
+        LIBSEMIGROUPS_ASSERT(_exclude_pruner_index < _pruners.size());
+        _pruners.erase(_pruners.cbegin(),
+                       _pruners.cbegin() + _exclude_pruner_index);
+        _exclude_pruner_index = 0;
+        _pruners.erase(_pruners.cbegin() + 1, _pruners.cend());
+      }
       return static_cast<Subclass&>(*this);
     }
 
@@ -861,6 +869,7 @@ namespace libsemigroups {
     // pair? Replaces current exclude with [first, last)
     template <typename Iterator>
     Subclass& exclude(Iterator first, Iterator last) {
+      add_exclude_pruner();
       return include_exclude(first, last, _exclude);
     }
 
@@ -876,6 +885,7 @@ namespace libsemigroups {
     //!
     //! \sa \ref exclude
     Subclass& exclude(word_type const& lhs, word_type const& rhs) {
+      add_exclude_pruner();
       return include_exclude(lhs, rhs, _exclude);
     }
 
@@ -922,8 +932,11 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     Subclass& clear_exclude() {
-      // TODO(2) remove the pruner
-      _exclude.clear();
+      if (_exclude_pruner_index != UNDEFINED) {
+        _exclude.clear();
+        _pruners.erase(_pruners.cbegin() + _exclude_pruner_index);
+        _exclude_pruner_index = UNDEFINED;
+      }
       return static_cast<Subclass&>(*this);
     }
 
@@ -998,6 +1011,8 @@ namespace libsemigroups {
     Subclass& include_exclude(word_type const&        lhs,
                               word_type const&        rhs,
                               std::vector<word_type>& include_or_exclude);
+
+    size_t add_exclude_pruner();
   };
 
   ////////////////////////////////////////////////////////////////////////
