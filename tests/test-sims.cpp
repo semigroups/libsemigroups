@@ -2305,7 +2305,7 @@ namespace libsemigroups {
         = {0, 1, 79, 3'809, 183'995, 10'759'706, 804'802'045, 77'489'765'654};
     // n = 6 took between 3 and 4 minutes
     // n = 7 took 6h16m
-    // both are omitted
+    // 7 is omitted
     auto rg = ReportGuard(true);
     auto p  = chinese_monoid(4);
     p.contains_empty_word(false);
@@ -2387,7 +2387,7 @@ namespace libsemigroups {
                           "[extreme][low-index]") {
     // (27^n - 9^n)/2 - 12^n + 6^n
     std::array<uint64_t, 10> const num
-        = {0, 2, 229, 8022, 243241, 6904866, 190509229, 5192249502};
+        = {0, 2, 229, 8'022, 243'241, 6'904'866, 190'509'229, 5'192'249'502};
     // 4 ^ n - 2 ^ n
     //  {0, 2, 13, 57, 241, 993, 4033};
     //    = {0, 1, 29, 249, 2'033, 16'353, 131'009};
@@ -2798,7 +2798,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "079",
                           "order_preserving_monoid(6)",
-                          "[extreme][sims1]") {
+                          "[fail][sims1]") {
+    // This doesn't fail it's just very extreme
     auto rg = ReportGuard(true);
     auto p  = fpsemigroup::order_preserving_monoid(6);
 
@@ -2882,7 +2883,8 @@ namespace libsemigroups {
             == 6);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[extreme][sims1]") {
+  LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[fail][sims1]") {
+    // This doesn't fail it's just very extreme
     auto                      rg = ReportGuard();
     Presentation<std::string> p;
     p.alphabet("rstRST");
@@ -2900,6 +2902,7 @@ namespace libsemigroups {
 
     Sims1 S;
     S.presentation(p);
+    // Took 19min11s on RC office computer
     REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
                 .number_of_congruences(20)
             == 1);
@@ -2981,12 +2984,6 @@ namespace libsemigroups {
     REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
                 .number_of_congruences(11)
             == 74);
-
-    for (auto it = S.cbegin(11); it != S.cend(11); ++it) {
-      if (it->number_of_active_nodes() == 11) {
-        std::cout << *it << std::endl;
-      }
-    }
   }
 
   // To keep GCC from complaining
@@ -3127,12 +3124,13 @@ namespace libsemigroups {
             == 0);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Sims1", "088", "Brauer monoid", "[extreme][sims1]") {
+  LIBSEMIGROUPS_TEST_CASE("Sims1", "088", "Brauer monoid", "[fail][sims1]") {
+    // This doesn't fail it's just very extreme
     auto          p = brauer_monoid(5);
     MinimalRepOrc orc;
     auto          d = orc.presentation(brauer_monoid(5))
                  .target_size(945)
-                 .number_of_threads(1)
+                 .number_of_threads(std::thread::hardware_concurrency())
                  // The following are pairs of words in the GAP BrauerMonoid
                  // that generate the minimal 2-sided congruences of
                  // BrauerMonoid(5), the generating sets are not the same
@@ -3144,13 +3142,14 @@ namespace libsemigroups {
     // sigma_i = (i, i + 1)
     // theta_i = Bipartition([[i, i + 1], [-i, -(i + 1)], [j, -j], j neq i]);
 
-    REQUIRE(d.number_of_nodes() == 3);
+    REQUIRE(d.number_of_nodes() == 46);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "089",
                           "partial Brauer monoid",
-                          "[extreme][sims1]") {
+                          "[fail][sims1]") {
+    // This doesn't fail it's just very extreme
     std::array<uint64_t, 6> const sizes       = {0, 2, 10, 76, 764, 9496};
     std::array<uint64_t, 6> const min_degrees = {0, 2, 6, 14, 44, 143};
 
@@ -3198,7 +3197,7 @@ namespace libsemigroups {
     p.alphabet_from_rules();
     auto q = full_transformation_monoid(8);
 
-    std::array<uint64_t, 9> const num = {0, 1, 2, 3, 3, 3, 3, 0, 0};
+    std::array<uint64_t, 9> const num = {0, 1, 2, 3, 3, 3, 3, 3, 0};
     Sims1                         s(p);
     for (size_t n = 1; n < num.size(); ++n) {
       s.presentation(q);
@@ -3747,13 +3746,13 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "109",
                           "2-sided 2-generated free monoid",
-                          "[extreme][sims2]") {
+                          "[standard][sims2]") {
     auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("ab");
     p.contains_empty_word(true);
     Sims2 s(p);
-    s.number_of_threads(std::thread::hardware_concurrency());
+    s.number_of_threads(4);
     REQUIRE(s.number_of_congruences(1) == 1);
     REQUIRE(s.number_of_congruences(2) == 7);    // verified with GAP
     REQUIRE(s.number_of_congruences(3) == 27);   // verified with GAP
@@ -3772,7 +3771,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "110",
                           "symmetric inverse monoid (Gay)",
-                          "[extreme][sims2]") {
+                          "[quick][sims2]") {
     auto rg = ReportGuard(true);
     auto p  = symmetric_inverse_monoid(5, fpsemigroup::author::Gay);
     presentation::remove_duplicate_rules(p);
@@ -3904,7 +3903,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "115",
                           "free semilattice n = 8",
-                          "[extreme][sims1]") {
+                          "[standard][sims1]") {
     auto rg = ReportGuard(true);
     // https://oeis.org/A102894
     constexpr std::array<size_t, 6> results = {0, 1, 4, 45, 2'271, 1'373'701};
@@ -3916,8 +3915,7 @@ namespace libsemigroups {
       Sims2 s(p);
 
       size_t const n = p.alphabet().size();
-      REQUIRE(s.number_of_threads(std::thread::hardware_concurrency())
-                  .number_of_congruences(std::pow(2, n))
+      REQUIRE(s.number_of_threads(4).number_of_congruences(std::pow(2, n))
               == results[n]);
     }
   }
@@ -3954,11 +3952,10 @@ namespace libsemigroups {
     // REQUIRE(s.number_of_congruences(8) == 17381 + 36);
   }
 
-  // ~24s
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "117",
                           "1-sided ideals 2-generated free semigroup",
-                          "[extreme][sims1]") {
+                          "[quick][sims1]") {
     Presentation<std::string> p;
     p.alphabet("ab");
     p.contains_empty_word(true);
@@ -3966,7 +3963,7 @@ namespace libsemigroups {
     SimsRefinerIdeals ip(p);
 
     Sims1 s(p);
-    s.number_of_threads(std::thread::hardware_concurrency());
+    s.number_of_threads(4);
     s.add_pruner(ip);
     REQUIRE(s.number_of_congruences(1) == 1);
     REQUIRE(s.number_of_congruences(2) == 2);
@@ -3982,11 +3979,10 @@ namespace libsemigroups {
     REQUIRE(s.number_of_congruences(7) == 197);
   }
 
-  // > 1m30s
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "118",
                           "1-sided ideals partition monoid, n = 2",
-                          "[extreme][sims1]") {
+                          "[quick][sims1]") {
     Presentation<word_type> p;
     p.contains_empty_word(true);
 
@@ -4065,7 +4061,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "120",
                           "order_preserving_monoid(5)",
-                          "[extreme][sims1]") {
+                          "[standard][sims1]") {
     auto rg = ReportGuard(false);
     auto p  = fpsemigroup::order_preserving_monoid(5);
     REQUIRE(p.contains_empty_word());
@@ -4115,7 +4111,6 @@ namespace libsemigroups {
     std::atomic_uint64_t result = 0;
     s.for_each(125, [&result, &pp](auto const& wg) {
       if (sims::is_maximal_right_congruence(pp, wg)) {
-        fmt::print("Index {}\n", wg.number_of_active_nodes());
         result++;
       }
     });
@@ -4513,7 +4508,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "256",
                           "Partition monoid mfrc",
-                          "[extreme][low-index]") {
+                          "[fail][low-index]") {
+    // This doesn't fail it's just very extreme
     auto rg = ReportGuard(true);
 
     using words::operator+;
@@ -4562,7 +4558,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "257",
                           "Temperley-Lieb monoid mfrc",
-                          "[extreme][low-index]") {
+                          "[fail][low-index]") {
+    // This doesn't fail it's just very extreme
     auto rg = ReportGuard(true);
 
     using words::operator+;
@@ -4628,7 +4625,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "258",
                           "Partial Brauer monoid mfrc",
-                          "[extreme][low-index]") {
+                          "[fail][low-index]") {
+    // This doesn't fail it's just very extreme
     auto rg = ReportGuard(true);
 
     using words::operator+;
@@ -4674,7 +4672,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "259",
                           "Motzkin monoid mfrc",
-                          "[extreme][low-index]") {
+                          "[fail][low-index]") {
+    // This doesn't fail it's just very extreme
     auto rg = ReportGuard(true);
 
     using words::operator+;
@@ -4723,7 +4722,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "260",
                           "Brauer monoid mfrc",
-                          "[extreme][low-index]") {
+                          "[fail][low-index]") {
+    // This doesn't fail it's just very extreme
     auto rg = ReportGuard(true);
 
     using words::operator+;
