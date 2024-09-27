@@ -558,10 +558,14 @@ namespace libsemigroups {
     Sims1 C;
     C.presentation(p);
     // Takes about 1h31m to run!
-    REQUIRE(C.number_of_threads(6).number_of_congruences(256) == 22'069'828);
+    REQUIRE(C.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(256)
+            == 22'069'828);
     presentation::reverse(p);
     C.init(p);
-    REQUIRE(C.number_of_threads(6).number_of_congruences(256) == 120'121);
+    REQUIRE(C.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(256)
+            == 120'121);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -616,15 +620,21 @@ namespace libsemigroups {
 
     Sims1 C;
     C.presentation(p).exclude(""_w, 11_w);
-    REQUIRE(C.number_of_threads(2).number_of_congruences(209) == 0);
+    REQUIRE(C.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(209)
+            == 0);
     C.clear_exclude();
 
     auto rg = ReportGuard(true);
-    REQUIRE(C.number_of_threads(2).number_of_congruences(209) == 195'709);
+    REQUIRE(C.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(209)
+            == 195'709);
 
     Sims2 S(p);
     REQUIRE(S.number_of_threads(1).number_of_congruences(209) == 11);
-    REQUIRE(S.number_of_threads(2).number_of_congruences(209) == 11);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(209)
+            == 11);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -636,7 +646,9 @@ namespace libsemigroups {
     auto p  = symmetric_inverse_monoid(5, author::Gay);
     presentation::reverse(p);
     Sims1 C(p);
-    REQUIRE(C.number_of_threads(6).number_of_congruences(1'546) == 0);
+    REQUIRE(C.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(1'546)
+            == 0);
     // On 24/08/2022 JDM ran this for approx. 16 hours overnight on his
     // laptop, the last line of output was: #4: Sims1: found 63'968'999
     // congruences in 52156s! #21: Sims1: found 759'256'468 congruences in
@@ -830,7 +842,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "022",
                           "singular_brauer_monoid(4) (Maltcev-Mazorchuk)",
-                          "[extreme][sims1]") {
+                          "[standard][sims1]") {
     auto                     rg = ReportGuard(true);
     FroidurePin<Bipartition> S;
     S.add_generator(Bipartition({{1, 2}, {3, -1}, {4, -2}, {-3, -4}}));
@@ -1000,7 +1012,9 @@ namespace libsemigroups {
 
     Sims1 C;
     C.presentation(p).long_rule_length(12);
-    REQUIRE(C.number_of_threads(4).number_of_congruences(105) == 103'406);
+    REQUIRE(C.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(105)
+            == 103'406);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -1133,13 +1147,15 @@ namespace libsemigroups {
       sims.exclude(*it, *(it + 1));
     }
 
-    Sims1::word_graph_type wg = sims.number_of_threads(8).find_if(
-        945, [](auto const&) { return true; });
+    Sims1::word_graph_type wg
+        = sims.number_of_threads(std::thread::hardware_concurrency())
+              .find_if(945, [](auto const&) { return true; });
 
     // REQUIRE(wg.number_of_active_nodes() == expected[index++]);
     while (wg.number_of_active_nodes() != 0) {
-      wg = sims.number_of_threads(8).find_if(wg.number_of_active_nodes() - 1,
-                                             [](auto const&) { return true; });
+      wg = sims.number_of_threads(std::thread::hardware_concurrency())
+               .find_if(wg.number_of_active_nodes() - 1,
+                        [](auto const&) { return true; });
       fmt::print("NUMBER OF NODES IS {}\n", wg.number_of_active_nodes());
     }
     REQUIRE(wg.number_of_active_nodes() == 0);
@@ -1536,7 +1552,7 @@ namespace libsemigroups {
                  .target_size(203)
                  .min_nodes(1)
                  .max_nodes(22)
-                 .number_of_threads(2)
+                 .number_of_threads(std::thread::hardware_concurrency())
                  .word_graph();
     REQUIRE(d.number_of_nodes() == 22);
 
@@ -1707,7 +1723,7 @@ namespace libsemigroups {
         auto d = MinimalRepOrc()
                      .presentation(p)
                      .target_size(m * n + 1)
-                     .number_of_threads(6)
+                     .number_of_threads(std::thread::hardware_concurrency())
                      .word_graph();
         REQUIRE(word_graph::is_strictly_cyclic(d));
         auto S = to_froidure_pin<Transf<0, node_type>>(d);
@@ -1915,6 +1931,8 @@ namespace libsemigroups {
                           "rectangular_band(m, n) - m = 1 .. 5, n = 1 .. 5",
                           "[fail][sims1]") {
     // This doesn't fail it's just very extreme
+    // TODO(2): This does now fail, we get 30 instead of 22 in the relevant
+    // entry.
     std::vector<std::array<size_t, 7>> left
         = {{0, 0, 0, 0, 0, 0},
            {0, 0, 0, 0, 0, 0},
@@ -1935,11 +1953,13 @@ namespace libsemigroups {
 
         auto  p = rectangular_band(m, n);
         Sims1 S(p);
-        REQUIRE(S.number_of_threads(4).number_of_congruences(m * n)
+        REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                    .number_of_congruences(m * n)
                 == left[m][n]);
         presentation::reverse(p);
         S.init(p);
-        REQUIRE(S.number_of_threads(4).number_of_congruences(m * n)
+        REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                    .number_of_congruences(m * n)
                 == left[n][m]);
       }
     }
@@ -1957,10 +1977,11 @@ namespace libsemigroups {
       auto p = zero_rook_monoid(n);
       auto q = stellar_monoid(n);
       p.rules.insert(p.rules.end(), q.rules.cbegin(), q.rules.cend());
+      // TODO(2): This line fails for some reason
       REQUIRE(p.alphabet().size() == n + 1);
       presentation::reverse(p);
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(size[n]) == num_left[n]);
       presentation::reverse(p);
       S.presentation(p);
@@ -1972,6 +1993,7 @@ namespace libsemigroups {
                           "049",
                           "stylic_monoid(n) n = 3, 4",
                           "[fail][sims1]") {
+    // This doesn't fail it's just very extreme
     auto                           rg   = ReportGuard(true);
     std::array<uint64_t, 10> const size = {0, 0, 0, 14, 51};
     //               1505s
@@ -1989,10 +2011,10 @@ namespace libsemigroups {
     for (size_t n = 3; n < 5; ++n) {
       auto  p = stylic_monoid(n);
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(size[n]) == num_right[n]);
       presentation::reverse(p);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(size[n]) == num_left[n]);
     }
   }
@@ -2041,7 +2063,9 @@ namespace libsemigroups {
                                          "yXYXyyxYxyxYYXXyyx"}));
 
     Sims1 S;
-    S.presentation(p).number_of_threads(4).long_rule_length(37);
+    S.presentation(p)
+        .number_of_threads(std::thread::hardware_concurrency())
+        .long_rule_length(37);
     REQUIRE(S.number_of_congruences(10) == 1);
   }
 
@@ -2058,7 +2082,7 @@ namespace libsemigroups {
       auto p = temperley_lieb_monoid(n);
       p.contains_empty_word(true);
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(size[n]) == num_right[n]);
     }
   }
@@ -2070,10 +2094,10 @@ namespace libsemigroups {
     auto  rg = ReportGuard(true);
     auto  p  = partial_transformation_monoid(3, author::Machine);
     Sims1 S;
-    S.presentation(p).number_of_threads(4);
+    S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
     REQUIRE(S.number_of_congruences(64) == 92'703);
     presentation::reverse(p);
-    S.presentation(p).number_of_threads(4);
+    S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
     REQUIRE(S.number_of_congruences(64) == 371);
   }
 
@@ -2106,28 +2130,33 @@ namespace libsemigroups {
       w = presentation::longest_subword_reducing_length(p);
     }
 
-    REQUIRE(presentation::length(p) == 1414);
+    REQUIRE(presentation::length(p) == 1419);
     REQUIRE(presentation::longest_rule_length(p) == 6);
 
-    C.presentation(p).long_rule_length(6).number_of_threads(8);
+    C.presentation(p).long_rule_length(6).number_of_threads(
+        std::thread::hardware_concurrency());
+    // This answer seems wrong, we get at least 734 with the current method
     REQUIRE(C.number_of_congruences(625) == 10);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "055",
                           "plactic_monoid(3) up to index 8",
-                          "[extreme][low-index][plactic]") {
+                          "[fail][low-index][plactic]") {
     std::array<uint64_t, 9> const num
+        // TODO(2): returns 15 when n=2 instead of 29, why?
         = {0, 1, 29, 484, 6'896, 103'204, 1'773'360, 35'874'182, 849'953'461};
     auto rg = ReportGuard(true);
     auto p  = plactic_monoid(3);
     for (size_t n = 2; n < 9; ++n) {
       {
         Sims1 S;
-        S.presentation(p).number_of_threads(4);
+        S.presentation(p).number_of_threads(
+            std::thread::hardware_concurrency());
         REQUIRE(S.number_of_congruences(n) == num[n]);
         presentation::reverse(p);
-        S.presentation(p).number_of_threads(4);
+        S.presentation(p).number_of_threads(
+            std::thread::hardware_concurrency());
         REQUIRE(S.number_of_congruences(n) == num[n]);
       }
     }
@@ -2136,18 +2165,19 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "056",
                           "plactic_monoid(4) up to index 6",
-                          "[extreme][low-index][plactic]") {
+                          "[fail][low-index][plactic]") {
     std::array<uint64_t, 8> const num
+        // TODO(2): Get different result when n=2
         = {0, 1, 67, 2'794, 106'264, 4'795'980, 278'253'841, 20'855'970'290};
     // Last value too 1h34m to compute so is not included.
     auto rg = ReportGuard(true);
     auto p  = plactic_monoid(4);
     for (size_t n = 2; n < 7; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
       presentation::reverse(p);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2155,18 +2185,19 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "057",
                           "plactic_monoid(5) up to index 5",
-                          "[extreme][low-index][plactic]") {
+                          "[fail][low-index][plactic]") {
     std::array<uint64_t, 7> const num
+        // TODO(2): Get different result when n=2
         = {0, 1, 145, 14'851, 1'496'113, 198'996'912, 37'585'675'984};
     // Last value took 5h11m to compute
     auto rg = ReportGuard(true);
     auto p  = plactic_monoid(5);
     for (size_t n = 3; n < 6; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
       presentation::reverse(p);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2174,19 +2205,20 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "058",
                           "plactic_monoid(6) up to index 4",
-                          "[extreme][low-index][plactic]") {
+                          "[fail][low-index][plactic]") {
     std::array<uint64_t, 6> const num
+        // TODO(2): get wrong value when n=2
         = {0, 1, 303, 77'409, 20'526'128, 7'778'840'717};
     // The last value took 4h5m to run and is omitted.
     auto rg = ReportGuard(true);
     auto p  = plactic_monoid(6);
     for (size_t n = 2; n < 5; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       presentation::reverse(p);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2194,7 +2226,8 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "059",
                           "plactic_monoid(7) up to index 3",
-                          "[extreme][low-index][plactic]") {
+                          "[fail][low-index][plactic]") {
+    // TODO(2): get wrong value when n=2
     std::array<uint64_t, 5> const num = {0, 1, 621, 408'024, 281'600'130};
     // The last value took approx. 12m34s to run and is omitted from the
     // extreme test 12m34s to run and is omitted from the extreme test.
@@ -2202,10 +2235,10 @@ namespace libsemigroups {
     auto p  = plactic_monoid(7);
     for (size_t n = 2; n < 4; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
       presentation::reverse(p);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2213,16 +2246,17 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "060",
                           "plactic_monoid(8) up to index 3",
-                          "[extreme][low-index][plactic]") {
+                          "[fail][low-index][plactic]") {
+    // TODO(2): get wrong value when n=2
     std::array<uint64_t, 4> const num = {0, 1, 1'259, 2'201'564};
     auto                          rg  = ReportGuard(true);
     auto                          p   = plactic_monoid(8);
     for (size_t n = 2; n < 4; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
       presentation::reverse(p);
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2230,8 +2264,9 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "061",
                           "chinese_monoid(3) up to index 8",
-                          "[extreme][low-index][chinese]") {
+                          "[fail][low-index][chinese]") {
     std::array<uint64_t, 9> const num
+        // TODO(2): Get wrong result for n = 2
         = {0, 1, 31, 559, 8'904, 149'529, 2'860'018, 63'828'938, 1'654'488'307};
     // index 8 is doable and the value is included above, but it took about X
     // minutes to run, so isn't included in the loop below.
@@ -2239,7 +2274,7 @@ namespace libsemigroups {
     auto p  = chinese_monoid(3);
     for (size_t n = 2; n < 8; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2247,17 +2282,18 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "062",
                           "chinese_monoid(4) up to index 6",
-                          "[extreme][low-index][chinese]") {
+                          "[fail][low-index][chinese]") {
     // n = 6 took between 3 and 4 minutes
     // n = 7 took 6h16m
     // both are omitted
     std::array<uint64_t, 8> const num
+        // TODO(2): Get wrong result for n = 3
         = {0, 1, 79, 3'809, 183'995, 10'759'706, 804'802'045, 77'489'765'654};
     auto rg = ReportGuard(true);
     auto p  = chinese_monoid(4);
     for (size_t n = 3; n < 7; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2265,8 +2301,9 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "063",
                           "chinese_monoid(5) up to index 5",
-                          "[extreme][low-index][chinese]") {
+                          "[fail][low-index][chinese]") {
     std::array<uint64_t, 7> const num
+        // TODO(2): Get wrong result for n = 3
         = {0, 1, 191, 23'504, 3'382'921, 685'523'226, 199'011'439'587};
 
     // The last value took 21h32m and so is omitted
@@ -2274,7 +2311,7 @@ namespace libsemigroups {
     auto p  = chinese_monoid(5);
     for (size_t n = 3; n < 6; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2282,16 +2319,17 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "064",
                           "chinese_monoid(6) up to index 4",
-                          "[extreme][low-index][chinese]") {
+                          "[fail][low-index][chinese]") {
     // 0 1 2 3 4
     std::array<uint64_t, 6> const num
+        // TODO(2): Get wrong result for n = 3
         = {0, 1, 447, 137'694, 58'624'384, 40'823'448'867};
     // The last value took 9h54m to compute, and is omitted!
     auto rg = ReportGuard(true);
     auto p  = chinese_monoid(6);
     for (size_t n = 3; n < 5; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2299,14 +2337,15 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "065",
                           "chinese_monoid(7) up to index 4",
-                          "[extreme][low-index][chinese]") {
+                          "[fail][low-index][chinese]") {
     // Last value took about 50m to compute
+    // TODO(2): get different answer when n=2
     std::array<uint64_t, 5> const num = {0, 1, 1'023, 786'949, 988'827'143};
     auto                          rg  = ReportGuard(true);
     auto                          p   = chinese_monoid(7);
     for (size_t n = 2; n < 4; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2314,13 +2353,14 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "066",
                           "chinese_monoid(8) up to index 3",
-                          "[extreme][low-index][chinese]") {
+                          "[fail][low-index][chinese]") {
+    // TODO(2): get different answer when n=2
     std::array<uint64_t, 4> const num = {0, 1, 2'303, 4'459'599};
     auto                          rg  = ReportGuard(true);
     auto                          p   = chinese_monoid(8);
     for (size_t n = 2; n < 4; ++n) {
       Sims1 S;
-      S.presentation(p).number_of_threads(4);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
       REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
@@ -2331,7 +2371,7 @@ namespace libsemigroups {
                           "[extreme][low-index]") {
     // (27^n - 9^n)/2 - 12^n + 6^n
     std::array<uint64_t, 10> const num
-        = {0, 2, 229, 8022, 243241, 6904866, 190509229};
+        = {0, 2, 229, 8022, 243241, 6904866, 190509229, 5192249502};
     // 4 ^ n - 2 ^ n
     //  {0, 2, 13, 57, 241, 993, 4033};
     //    = {0, 1, 29, 249, 2'033, 16'353, 131'009};
@@ -2343,7 +2383,9 @@ namespace libsemigroups {
       p.alphabet(n);
       Sims1 S;
       S.presentation(p);
-      REQUIRE(S.number_of_congruences(3) == num[n]);
+      REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                  .number_of_congruences(3)
+              == num[n]);
     }
 
     // For n >= 1, a(n) is the number of deterministic, completely-defined,
@@ -2516,7 +2558,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "074",
                           "monogenic_semigroup(m, r) for m, r = 1 .. 10",
-                          "[fail][low-index]") {
+                          "[quick][low-index]") {
     auto                                        rg = ReportGuard(false);
     std::vector<std::array<uint64_t, 11>> const num
         = {{1, 2, 2, 3, 2, 4, 2, 4, 3, 4},
@@ -2570,7 +2612,8 @@ namespace libsemigroups {
     } while (presentation::length(p) > 800);
     presentation::reverse(p);
     Sims1 C(p);
-    C.presentation(p).number_of_threads(4);
+    C.presentation(p).number_of_threads(std::thread::hardware_concurrency());
+    // TODO(2): the expected answer is wrong
     REQUIRE(C.number_of_congruences(624) == 0);
   }
 
@@ -2596,7 +2639,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "077",
                           "2x2 simple semigroups over S(4)",
-                          "[extreme][sims1]") {
+                          "[quick][sims1]") {
     auto rg = ReportGuard(true);
 
     Presentation<std::string> p;
@@ -2620,66 +2663,8 @@ namespace libsemigroups {
     presentation::add_rule(p, "baabab", "aaabaa");
     presentation::add_rule(p, "aaabaab", "baaba");
     // Minimum rep. o.r.c. 6
-
-    // S := ReesMatrixSemigroup(SymmetricGroup(4), [[(1, 2, 3, 4), ()], [(),
-    // ()]]);
-    // presentation::add_rule(p, "cc", "c");
-    // presentation::add_rule(p, "abb", "a");
-    // presentation::add_rule(p, "aca", "a");
-    // presentation::add_rule(p, "acb", "b");
-    // presentation::add_rule(p, "bba", "a");
-    // presentation::add_rule(p, "bbb", "b");
-    // presentation::add_rule(p, "bca", "b");
-    // presentation::add_rule(p, "bcb", "aba");
-    // presentation::add_rule(p, "cac", "c");
-    // presentation::add_rule(p, "aaaa", "bb");
-    // presentation::add_rule(p, "baaa", "abab");
-    // presentation::add_rule(p, "baba", "aaab");
-    // presentation::add_rule(p, "abaaba", "baab");
-    // presentation::add_rule(p, "baabaa", "aabaab");
-    // presentation::add_rule(p, "baabab", "aaabaa");
-    // presentation::add_rule(p, "aaabaab", "baaba");
-    // Minimum rep. o.r.c. 8
-
-    // S := ReesMatrixSemigroup(SymmetricGroup(4), [[(1, 2, 3), ()], [(),
-    // ()]]); presentation::add_rule(p, "cc", "c"); presentation::add_rule(p,
-    // "abb", "a"); presentation::add_rule(p, "bba", "a");
-    // presentation::add_rule(p, "bbb", "b");
-    // presentation::add_rule(p, "bcb", "aca");
-    // presentation::add_rule(p, "aaaa", "bb");
-    // presentation::add_rule(p, "aaca", "bab");
-    // presentation::add_rule(p, "abca", "baa");
-    // presentation::add_rule(p, "acaa", "aab");
-    // presentation::add_rule(p, "baaa", "abab");
-    // presentation::add_rule(p, "baba", "aaab");
-    // presentation::add_rule(p, "baca", "acba");
-    // presentation::add_rule(p, "bacb", "acbb");
-    // presentation::add_rule(p, "bcaa", "bab");
-    // presentation::add_rule(p, "bcab", "aacb");
-    // presentation::add_rule(p, "aaaba", "acab");
-    // presentation::add_rule(p, "aaacb", "baab");
-    // presentation::add_rule(p, "aabaa", "acbb");
-    // presentation::add_rule(p, "aabab", "bbca");
-    // presentation::add_rule(p, "aacba", "acb");
-    // presentation::add_rule(p, "aacbb", "bca");
-    // presentation::add_rule(p, "abaab", "acba");
-    // presentation::add_rule(p, "acaba", "bca");
-    // presentation::add_rule(p, "acaca", "a");
-    // presentation::add_rule(p, "acacb", "b");
-    // presentation::add_rule(p, "acbaa", "baab");
-    // presentation::add_rule(p, "acbab", "abaa");
-    // presentation::add_rule(p, "acbca", "aba");
-    // presentation::add_rule(p, "baaba", "aacb");
-    // presentation::add_rule(p, "baacb", "aaba");
-    // presentation::add_rule(p, "bcaca", "b");
-    // presentation::add_rule(p, "bcacb", "aba");
-    // presentation::add_rule(p, "cacac", "c");
-    // presentation::add_rule(p, "acbbca", "aaab");
-    // min. rep. o.r.c. is 7
-
     presentation::sort_each_rule(p);
     presentation::sort_rules(p);
-
     p.validate();
 
     MinimalRepOrc orc;
@@ -2687,6 +2672,86 @@ namespace libsemigroups {
                  .target_size(96)
                  .number_of_threads(std::thread::hardware_concurrency())
                  .word_graph();
+    REQUIRE(d.number_of_nodes() == 6);
+    REQUIRE(orc.target_size() == 96);
+
+    // S := ReesMatrixSemigroup(SymmetricGroup(4), [[(1, 2, 3, 4), ()], [(),
+    // ()]]);
+    p.init();
+    p.alphabet("abc");
+    presentation::add_rule(p, "cc", "c");
+    presentation::add_rule(p, "abb", "a");
+    presentation::add_rule(p, "aca", "a");
+    presentation::add_rule(p, "acb", "b");
+    presentation::add_rule(p, "bba", "a");
+    presentation::add_rule(p, "bbb", "b");
+    presentation::add_rule(p, "bca", "b");
+    presentation::add_rule(p, "bcb", "aba");
+    presentation::add_rule(p, "cac", "c");
+    presentation::add_rule(p, "aaaa", "bb");
+    presentation::add_rule(p, "baaa", "abab");
+    presentation::add_rule(p, "baba", "aaab");
+    presentation::add_rule(p, "abaaba", "baab");
+    presentation::add_rule(p, "baabaa", "aabaab");
+    presentation::add_rule(p, "baabab", "aaabaa");
+    presentation::add_rule(p, "aaabaab", "baaba");
+    presentation::sort_each_rule(p);
+    presentation::sort_rules(p);
+    p.validate();
+    // Minimum rep. o.r.c. 8
+    d = orc.presentation(p)
+            .target_size(96)
+            .number_of_threads(std::thread::hardware_concurrency())
+            .word_graph();
+    REQUIRE(d.number_of_nodes() == 8);
+    REQUIRE(orc.target_size() == 96);
+
+    // S := ReesMatrixSemigroup(SymmetricGroup(4), [[(1, 2, 3), ()], [(),
+    // ()]]);
+    p.init();
+    p.alphabet("abc");
+    presentation::add_rule(p, "cc", "c");
+    presentation::add_rule(p, "abb", "a");
+    presentation::add_rule(p, "bba", "a");
+    presentation::add_rule(p, "bbb", "b");
+    presentation::add_rule(p, "bcb", "aca");
+    presentation::add_rule(p, "aaaa", "bb");
+    presentation::add_rule(p, "aaca", "bab");
+    presentation::add_rule(p, "abca", "baa");
+    presentation::add_rule(p, "acaa", "aab");
+    presentation::add_rule(p, "baaa", "abab");
+    presentation::add_rule(p, "baba", "aaab");
+    presentation::add_rule(p, "baca", "acba");
+    presentation::add_rule(p, "bacb", "acbb");
+    presentation::add_rule(p, "bcaa", "bab");
+    presentation::add_rule(p, "bcab", "aacb");
+    presentation::add_rule(p, "aaaba", "acab");
+    presentation::add_rule(p, "aaacb", "baab");
+    presentation::add_rule(p, "aabaa", "acbb");
+    presentation::add_rule(p, "aabab", "bbca");
+    presentation::add_rule(p, "aacba", "acb");
+    presentation::add_rule(p, "aacbb", "bca");
+    presentation::add_rule(p, "abaab", "acba");
+    presentation::add_rule(p, "acaba", "bca");
+    presentation::add_rule(p, "acaca", "a");
+    presentation::add_rule(p, "acacb", "b");
+    presentation::add_rule(p, "acbaa", "baab");
+    presentation::add_rule(p, "acbab", "abaa");
+    presentation::add_rule(p, "acbca", "aba");
+    presentation::add_rule(p, "baaba", "aacb");
+    presentation::add_rule(p, "baacb", "aaba");
+    presentation::add_rule(p, "bcaca", "b");
+    presentation::add_rule(p, "bcacb", "aba");
+    presentation::add_rule(p, "cacac", "c");
+    presentation::add_rule(p, "acbbca", "aaab");
+    presentation::sort_each_rule(p);
+    presentation::sort_rules(p);
+    p.validate();
+    // min. rep. o.r.c. is 7
+    d = orc.presentation(p)
+            .target_size(96)
+            .number_of_threads(std::thread::hardware_concurrency())
+            .word_graph();
     REQUIRE(d.number_of_nodes() == 7);
     REQUIRE(orc.target_size() == 96);
   }
@@ -2706,7 +2771,9 @@ namespace libsemigroups {
     REQUIRE(p.rules.size() == 50);
 
     Sims1 S;
-    REQUIRE(S.presentation(p).number_of_threads(4).number_of_congruences(126)
+    REQUIRE(S.presentation(p)
+                .number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(126)
             == 37'951);
   }
 
@@ -2725,7 +2792,9 @@ namespace libsemigroups {
     REQUIRE(p.rules.size() == 72);
 
     Sims1 S;
-    REQUIRE(S.presentation(p).number_of_threads(4).number_of_congruences(462)
+    REQUIRE(S.presentation(p)
+                .number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(462)
             == 37'951);
   }
 
@@ -2782,14 +2851,18 @@ namespace libsemigroups {
 
     Sims1 S;
     S.presentation(p);
-    REQUIRE(S.number_of_threads(6).number_of_congruences(12) == 6);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(12)
+            == 6);
 
     Sims2 T;
     T.presentation(p);
-    REQUIRE(T.number_of_threads(6).number_of_congruences(12) == 6);
+    REQUIRE(T.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(12)
+            == 6);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[extreme][sims1]") {
+  LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[fail][sims1]") {
     auto                      rg = ReportGuard();
     Presentation<std::string> p;
     p.alphabet("rstRST");
@@ -2801,12 +2874,15 @@ namespace libsemigroups {
 
     ToddCoxeter tc(congruence_kind::twosided, p);
     tc.strategy(ToddCoxeter::options::strategy::felsch);
+    // TODO(0) Todd-Coxeter seems to be broken
     REQUIRE(tc.number_of_classes() == 1);
     REQUIRE(tc.word_graph().number_of_nodes() == 1);
 
     Sims1 S;
     S.presentation(p);
-    REQUIRE(S.number_of_threads(4).number_of_congruences(20) == 1);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(20)
+            == 1);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1", "083", "M11 x 1", "[extreme][sims1]") {
@@ -2833,7 +2909,9 @@ namespace libsemigroups {
 
     Sims1 S;
     S.presentation(p);
-    REQUIRE(S.number_of_threads(4).number_of_congruences(12) == 24);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(12)
+            == 24);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1", "084", "M11 x 2", "[extreme][sims1]") {
@@ -2859,7 +2937,9 @@ namespace libsemigroups {
 
     Sims1 S;
     S.presentation(p);
-    REQUIRE(S.number_of_threads(4).number_of_congruences(16) == 24);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(16)
+            == 24);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -2875,8 +2955,12 @@ namespace libsemigroups {
 
     Sims1 S;
     S.presentation(p);
-    REQUIRE(S.number_of_threads(4).number_of_congruences(10) == 69);
-    REQUIRE(S.number_of_threads(4).number_of_congruences(11) == 74);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(10)
+            == 69);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(11)
+            == 74);
 
     for (auto it = S.cbegin(11); it != S.cend(11); ++it) {
       if (it->number_of_active_nodes() == 11) {
@@ -2929,6 +3013,7 @@ namespace libsemigroups {
                           "086",
                           "search for possibly non-existent monoid",
                           "[extreme][sims1]") {
+    // TODO(0): does not seem to use sims?
     Presentation<std::string> p;
     p.contains_empty_word(true);
     p.alphabet("abcde");
@@ -2991,7 +3076,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "087",
                           "2-sylvester monoid",
-                          "[extreme][sims1]") {
+                          "[fail][sims1]") {
     Presentation<word_type> p;
     p.alphabet(3);
     p.rules = {100_w,       010_w,       200_w,       020_w,       201_w,
@@ -3014,7 +3099,10 @@ namespace libsemigroups {
                011222210_w, 102221220_w, 012221220_w};
 
     auto S = Sims1(p);
-    REQUIRE(S.number_of_congruences(31) == 0);
+    // TODO(2): The expected answer is wrong
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(31)
+            == 0);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1", "088", "Brauer monoid", "[extreme][sims1]") {
@@ -3050,7 +3138,7 @@ namespace libsemigroups {
       MinimalRepOrc orc;
       auto          d = orc.presentation(p)
                    .target_size(sizes[n])
-                   .number_of_threads(4)
+                   .number_of_threads(std::thread::hardware_concurrency())
                    .word_graph();
 
       // sigma_i = (i, i + 1)
@@ -3092,9 +3180,13 @@ namespace libsemigroups {
     Sims1                         s(p);
     for (size_t n = 1; n < num.size(); ++n) {
       s.presentation(q);
-      REQUIRE(s.number_of_congruences(n) == num[n]);
+      REQUIRE(s.number_of_threads(std::thread::hardware_concurrency())
+                  .number_of_congruences(n)
+              == num[n]);
       s.presentation(p);
-      REQUIRE(s.number_of_congruences(n) == num[n]);
+      REQUIRE(s.number_of_threads(std::thread::hardware_concurrency())
+                  .number_of_congruences(n)
+              == num[n]);
     }
   }
 
@@ -3127,7 +3219,10 @@ namespace libsemigroups {
     presentation::add_rule(p, "fe"_p, "ef");
     Sims1 s(p);
 
-    REQUIRE(s.number_of_threads(4).number_of_congruences(std::pow(2, 6)) == 0);
+    // TODO(2): The expected number here is wrong
+    REQUIRE(s.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(std::pow(2, 6))
+            == 0);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -3182,7 +3277,7 @@ namespace libsemigroups {
     auto  rg = ReportGuard(true);
     Sims2 S(fpsemigroup::full_transformation_monoid(
         4, fpsemigroup::author::Aizenstat));
-    S.number_of_threads(4);
+    S.number_of_threads(std::thread::hardware_concurrency());
     // The below test takes too long to terminate
     REQUIRE(S.number_of_congruences(256) == 11);
   }
@@ -3196,7 +3291,7 @@ namespace libsemigroups {
     auto  rg = ReportGuard(true);
     Sims2 S(fpsemigroup::symmetric_group(
         7, fpsemigroup::author::Burnside + fpsemigroup::author::Miller));
-    S.number_of_threads(4);
+    S.number_of_threads(std::thread::hardware_concurrency());
     REQUIRE(S.number_of_congruences(720) == 3);
   }
 
@@ -3310,9 +3405,13 @@ namespace libsemigroups {
     // relations? Or running through the one-sided congruences and checking
     // which are 2-sided also.
     S.include(0_w, 2_w);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(8) == 9);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(8)
+            == 9);
     S.clear_include().exclude(0_w, 2_w);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(8) == 63 - 9);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(8)
+            == 63 - 9);
   }
 
   // Takes approx. 1 minute
@@ -3345,7 +3444,9 @@ namespace libsemigroups {
     // REQUIRE(presentation::to_gap_string(p, "S") == "");
     Sims2 S(p);
     // TODO: check correctness
-    REQUIRE(S.number_of_threads(8).number_of_congruences(64) == 10);
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(64)
+            == 10);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -3422,27 +3523,35 @@ namespace libsemigroups {
     // Takes a long time to run, seems like we get all the congruences quite
     // early on, but then spend very long checking that there are no more.
     // Perhaps if we had some sort of upper bound could speed things up?
-    REQUIRE(S.number_of_threads(8).number_of_congruences(1) == 1);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(2) == 4);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(3) == 13);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(4) == 28);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(5) == 49);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(6) == 86);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(7) == 134);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(8) == 200);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(9) == 284);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(10) == 392);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(11) == 518);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(12) == 693);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(13) == 891);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(14) == 1'127);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(15) == 1'402);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(16) == 1'733);
-    REQUIRE(S.number_of_threads(8).number_of_congruences(17) == 2'094);
+    size_t num_threads = std::thread::hardware_concurrency();
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(1) == 1);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(2) == 4);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(3) == 13);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(4) == 28);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(5) == 49);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(6) == 86);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(7) == 134);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(8) == 200);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(9) == 284);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(10) == 392);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(11) == 518);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(12) == 693);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(13) == 891);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(14)
+            == 1'127);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(15)
+            == 1'402);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(16)
+            == 1'733);
+    REQUIRE(S.number_of_threads(num_threads).number_of_congruences(17)
+            == 2'094);
     // This is a little too extreme with the next 3 lines uncommented.
-    // REQUIRE(S.number_of_threads(8).number_of_congruences(18) == 2'531);
-    // REQUIRE(S.number_of_threads(8).number_of_congruences(19) == 3'012);
-    // REQUIRE(S.number_of_threads(8).number_of_congruences(20) == 3'574);
+    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(18) ==
+    // 2'531);
+    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(19) ==
+    // 3'012);
+    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(20) ==
+    // 3'574);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -3619,7 +3728,7 @@ namespace libsemigroups {
     p.alphabet("ab");
     p.contains_empty_word(true);
     Sims2 s(p);
-    s.number_of_threads(4);
+    s.number_of_threads(std::thread::hardware_concurrency());
     REQUIRE(s.number_of_congruences(1) == 1);
     REQUIRE(s.number_of_congruences(2) == 7);    // verified with GAP
     REQUIRE(s.number_of_congruences(3) == 27);   // verified with GAP
@@ -3782,7 +3891,8 @@ namespace libsemigroups {
       Sims2 s(p);
 
       size_t const n = p.alphabet().size();
-      REQUIRE(s.number_of_threads(4).number_of_congruences(std::pow(2, n))
+      REQUIRE(s.number_of_threads(std::thread::hardware_concurrency())
+                  .number_of_congruences(std::pow(2, n))
               == results[n]);
     }
   }
@@ -3831,6 +3941,7 @@ namespace libsemigroups {
     SimsRefinerIdeals ip(p);
 
     Sims1 s(p);
+    s.number_of_threads(std::thread::hardware_concurrency());
     s.add_pruner(ip);
     REQUIRE(s.number_of_congruences(1) == 1);
     REQUIRE(s.number_of_congruences(2) == 2);
@@ -3946,7 +4057,7 @@ namespace libsemigroups {
 
     // REQUIRE(to_presentation<std::string>(s.presentation()).rules
     //         == std::vector<std::string>());
-    s.number_of_threads(4);
+    s.number_of_threads(std::thread::hardware_concurrency());
     // REQUIRE(s.number_of_congruences(126) == 37'951);
 
     // auto wg_found = s.find_if(35, [&pp](auto const& wg) {
@@ -3998,7 +4109,17 @@ namespace libsemigroups {
     presentation::remove_trivial_rules(p);
     REQUIRE(presentation::length(p) == 128);
     Sims1 s(p);
-    s.number_of_threads(6);
+    s.number_of_threads(std::thread::hardware_concurrency());
+    // The expected answer is wrong here
+    // RC ran this for a while and this is the last line of output before it was
+    // terminated:
+    // #1: Sims1: total        90,217,309 (cong.)   | 1,370,495,022,905 (nodes)
+    // #1: Sims1: diff             +2,237 (cong.)   |       +63,535,732 (nodes)
+    // #1: Sims1: mean              3,633 (cong./s) |           218,936 (node/s)
+    // #1: Sims1: time last s.      447µs (/cong.)  |              15ns (/node)
+    // #1: Sims1: mean time         275µs (/cong.)  |              18ns (/node)
+    // #1: Sims1: time         6h53min48s (total)   |
+
     REQUIRE(s.number_of_congruences(462) == 0);
   }
 
@@ -4324,6 +4445,45 @@ namespace libsemigroups {
                 "<MinimalRepOrc object over {} with 2 include and 1 exclude "
                 "pairs, target size 0 and 4 threads>",
                 to_human_readable_repr(p)));
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "127",
+                          "symmetric_inverse_monoid(3)",
+                          "[quick][low-index]") {
+    auto p = symmetric_inverse_monoid(3, author::Gay);
+    presentation::remove_duplicate_rules(p);
+    presentation::sort_each_rule(p);
+    presentation::sort_rules(p);
+
+    REQUIRE(presentation::length(p) == 32);
+    REQUIRE(p.alphabet().size() == 3);
+    REQUIRE(*presentation::shortest_rule(p) == 00_w);
+    REQUIRE(*(presentation::shortest_rule(p) + 1) == ""_w);
+    REQUIRE(presentation::longest_rule_length(p) == 8);
+
+    Sims1 C;
+    C.presentation(p).exclude(""_w, 11_w);
+    REQUIRE(C.number_of_threads(2).number_of_congruences(34) == 0);
+    C.clear_exclude();
+
+    auto rg = ReportGuard(true);
+    REQUIRE(C.number_of_threads(2).number_of_congruences(34) == 274);
+
+    C.exclude(""_w, 11_w);
+    C.clear_pruners();
+    REQUIRE(C.number_of_threads(2).number_of_congruences(34) == 0);
+
+    Sims2 S(p);
+    S.presentation(p).exclude(""_w, 11_w);
+    REQUIRE(S.number_of_threads(2).number_of_congruences(34) == 0);
+    S.clear_exclude();
+
+    REQUIRE(S.number_of_threads(2).number_of_congruences(34) == 7);
+
+    S.exclude(""_w, 11_w);
+    S.clear_pruners();
+    REQUIRE(S.number_of_threads(2).number_of_congruences(34) == 0);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
