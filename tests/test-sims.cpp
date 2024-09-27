@@ -2760,7 +2760,8 @@ namespace libsemigroups {
                           "078",
                           "order_preserving_monoid(5)",
                           "[extreme][sims1]") {
-    auto p = fpsemigroup::order_preserving_monoid(5);
+    auto rg = ReportGuard(true);
+    auto p  = fpsemigroup::order_preserving_monoid(5);
 
     REQUIRE(p.rules.size() == 50);
     presentation::sort_each_rule(p);
@@ -2781,7 +2782,8 @@ namespace libsemigroups {
                           "079",
                           "order_preserving_monoid(6)",
                           "[extreme][sims1]") {
-    auto p = fpsemigroup::order_preserving_monoid(6);
+    auto rg = ReportGuard(true);
+    auto p  = fpsemigroup::order_preserving_monoid(6);
 
     REQUIRE(p.rules.size() == 72);
     presentation::sort_each_rule(p);
@@ -2795,6 +2797,7 @@ namespace libsemigroups {
     REQUIRE(S.presentation(p)
                 .number_of_threads(std::thread::hardware_concurrency())
                 .number_of_congruences(462)
+            // TODO(2): This answer is likely wrong
             == 37'951);
   }
 
