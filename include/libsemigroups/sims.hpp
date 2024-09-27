@@ -30,7 +30,7 @@
 // * python bindings
 // * gap bindings
 
-// TODO(2)(later):
+// TODO(2) (later):
 // * use SimsRefinerFaithful in RepOrc + MinimalRepOrc
 // * a version which allows specifying the word_graph to Sims1 too
 // * implement maximum_2_sided_congruence_contained to compute the kernel of the
@@ -40,7 +40,7 @@
 //   first (by using generating pairs), and then to try and find a right
 //   congruence not containing any of the minimal 2-sided congruences.
 //
-// TODO(3)(far future):
+// TODO(3) (far future):
 // * Figure out a way of making refining functions possible. A refining function
 // differs from a pruner in that it is also allowed to modify the word graph.
 // * Implement one and two sided compatibility checking as refiners, following
@@ -349,7 +349,7 @@ namespace libsemigroups {
     //!
     //! \exception
     //! \no_libsemigroups_except
-    // TODO(0)(tests)
+    // TODO(0) (tests)
     Subclass& init();
 
     //! Copy constructor.
@@ -940,7 +940,7 @@ namespace libsemigroups {
       return static_cast<Subclass&>(*this);
     }
 
-    // TODO(2)(later) ranges version of include/exclude?
+    // TODO(2) (later) ranges version of include/exclude?
 
     //! \brief Get the current stats object.
     //!
@@ -1145,7 +1145,7 @@ namespace libsemigroups {
 
        protected:
         using PendingDef = typename Sims1or2::PendingDef;
-        // TODO(1)(Sims1) ensure that _felsch_graph's settings are
+        // TODO(1) (Sims1) ensure that _felsch_graph's settings are
         // properly initialised
         using Definition = std::pair<node_type, label_type>;
 
@@ -1409,10 +1409,10 @@ namespace libsemigroups {
 
    public:
     //! Default constructor
-    // TODO(0)(doc)
+    // TODO(0) (doc)
     Sims1() = default;
 
-    // TODO(0)(doc)
+    // TODO(0) (doc)
     using SimsBase::init;
 
     //! \brief Construct from a presentation.
@@ -1608,7 +1608,7 @@ namespace libsemigroups {
     //! significantly cheaper than postfix incrementing \c it++.
     //!
     //! \sa cend
-    // TODO(2)(Sims1) it'd be good to remove node 0 to avoid confusion. This
+    // TODO(2) (Sims1) it'd be good to remove node 0 to avoid confusion. This
     // seems complicated however, and so isn't done at present.
     [[nodiscard]] iterator cbegin(size_type n) const;
 
@@ -2131,7 +2131,7 @@ namespace libsemigroups {
     // Right Congruence Generating Pairs (rcgp)
     class const_rcgp_iterator {
      public:
-      // TODO(0)(doc)
+      // TODO(0) (doc)
       using size_type = typename std::vector<relation_type>::size_type;
       using difference_type =
           typename std::vector<relation_type>::difference_type;

@@ -1933,10 +1933,12 @@ namespace libsemigroups {
     // This doesn't fail it's just very extreme
     // TODO(2): This does now fail, we get 30 instead of 22 in the relevant
     // entry.
-    std::vector<std::array<size_t, 7>> left
+    // Note: num_congs[n][m] is the number of right congruences of
+    // rectangular_band(m, n)
+    std::vector<std::array<size_t, 6>> num_congs
         = {{0, 0, 0, 0, 0, 0},
            {0, 0, 0, 0, 0, 0},
-           {0, 0, 6, 22, 94, 454, 2'430},
+           {0, 0, 6, 22, 94, 454},
            {0, 0, 30, 205, 1'555, 12'880},
            {0, 0, 240, 4'065, 72'465, 1'353'390},
            {0, 0, 2'756, 148'772, 8'174'244, 456'876'004}};
@@ -1946,7 +1948,7 @@ namespace libsemigroups {
 
     auto rg = ReportGuard(true);
     for (size_t m = 2; m <= 5; ++m) {
-      for (size_t n = 2; n <= 6; ++n) {
+      for (size_t n = 2; n <= 5; ++n) {
         std::cout << std::string(72, '#') << "\n"
                   << "CASE m, n = " << m << ", " << n << "\n"
                   << std::string(72, '#') << std::endl;
@@ -1955,38 +1957,33 @@ namespace libsemigroups {
         Sims1 S(p);
         REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
                     .number_of_congruences(m * n)
-                == left[m][n]);
+                == num_congs[n][m]);
         presentation::reverse(p);
         S.init(p);
         REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
                     .number_of_congruences(m * n)
-                == left[n][m]);
+                == num_congs[m][n]);
       }
     }
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "048",
-                          "stellar_monoid(n) n = 3 .. 4",
-                          "[fail][sims1][babbage]") {
-    std::array<uint64_t, 10> const size      = {0, 0, 0, 16, 65};
-    std::array<uint64_t, 10> const num_left  = {0, 0, 0, 1'550, 0};
-    std::array<uint64_t, 10> const num_right = {0, 0, 0, 1'521, 0};
-
-    for (size_t n = 3; n < 5; ++n) {
-      auto p = zero_rook_monoid(n);
-      auto q = stellar_monoid(n);
-      p.rules.insert(p.rules.end(), q.rules.cbegin(), q.rules.cend());
-      // TODO(2): This line fails for some reason
-      REQUIRE(p.alphabet().size() == n + 1);
-      presentation::reverse(p);
-      Sims1 S;
-      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
-      REQUIRE(S.number_of_congruences(size[n]) == num_left[n]);
-      presentation::reverse(p);
-      S.presentation(p);
-      REQUIRE(S.number_of_congruences(size[n]) == num_right[n]);
-    }
+                          "stellar_monoid(n) n = 3",
+                          "[quick][sims1][babbage]") {
+    size_t n = 3;
+    auto   p = zero_rook_monoid(n);
+    auto   q = stellar_monoid(n);
+    p.rules.insert(p.rules.end(), q.rules.cbegin(), q.rules.cend());
+    p.validate();
+    REQUIRE(p.alphabet().size() == n);
+    presentation::reverse(p);
+    Sims1 S;
+    S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
+    REQUIRE(S.number_of_congruences(16) == 1'550);
+    presentation::reverse(p);
+    S.presentation(p);
+    REQUIRE(S.number_of_congruences(16) == 1'521);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -2135,8 +2132,8 @@ namespace libsemigroups {
 
     C.presentation(p).long_rule_length(6).number_of_threads(
         std::thread::hardware_concurrency());
-    // This answer seems wrong, we get at least 734 with the current method
-    REQUIRE(C.number_of_congruences(625) == 10);
+    // NOTE: Never ran to completion, if you do, change the 0 to the answer.
+    REQUIRE(C.number_of_congruences(625) == 0);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -2146,19 +2143,31 @@ namespace libsemigroups {
     std::array<uint64_t, 9> const num
         // TODO(2): returns 15 when n=2 instead of 29, why?
         = {0, 1, 29, 484, 6'896, 103'204, 1'773'360, 35'874'182, 849'953'461};
-    auto rg = ReportGuard(true);
-    auto p  = plactic_monoid(3);
+    auto                    rg = ReportGuard(true);
+    auto                    p  = plactic_monoid(3);
+    Sims1                   S, SF;
+    Presentation<word_type> F;
+    F.alphabet(3);
     for (size_t n = 2; n < 9; ++n) {
-      {
-        Sims1 S;
-        S.presentation(p).number_of_threads(
-            std::thread::hardware_concurrency());
-        REQUIRE(S.number_of_congruences(n) == num[n]);
-        presentation::reverse(p);
-        S.presentation(p).number_of_threads(
-            std::thread::hardware_concurrency());
-        REQUIRE(S.number_of_congruences(n) == num[n]);
-      }
+      std::atomic<size_t> count = 0;
+      S.init(p);
+      SF.init(F);
+      SF.number_of_threads(std::thread::hardware_concurrency());
+      SF.for_each(n, [&n, &p, &count](auto const& wg) {
+        count += word_graph::is_compatible(wg,
+                                           wg.cbegin_nodes(),
+                                           wg.cbegin_nodes()
+                                               + wg.number_of_active_nodes(),
+                                           p.rules.cbegin(),
+                                           p.rules.cend());
+      });
+      // REQUIRE(presentation::to_gap_string(p, "S") == "");
+      REQUIRE(count == num[n]);
+      S.number_of_threads(1);
+      REQUIRE(S.number_of_congruences(n) == num[n]);
+      presentation::reverse(p);
+      S.presentation(p).number_of_threads(std::thread::hardware_concurrency());
+      REQUIRE(S.number_of_congruences(n) == num[n]);
     }
   }
 
@@ -2865,7 +2874,7 @@ namespace libsemigroups {
             == 6);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[fail][sims1]") {
+  LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[extreme][sims1]") {
     auto                      rg = ReportGuard();
     Presentation<std::string> p;
     p.alphabet("rstRST");
@@ -2879,6 +2888,7 @@ namespace libsemigroups {
     tc.strategy(ToddCoxeter::options::strategy::felsch);
     // TODO(0) Todd-Coxeter seems to be broken
     REQUIRE(tc.number_of_classes() == 1);
+    tc.shrink_to_fit();
     REQUIRE(tc.word_graph().number_of_nodes() == 1);
 
     Sims1 S;

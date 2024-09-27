@@ -220,8 +220,10 @@ namespace libsemigroups {
       }
       return true;
     };
+    // NOTE:: setting _exclude_pruner_index here depends on the implementation
+    // of add_pruner, if that changes bad things may happen.
+    _exclude_pruner_index = _pruners.size();
     add_pruner(pruner);
-    _exclude_pruner_index = _pruners.size() - 1;
     return _exclude_pruner_index;
   }
 
