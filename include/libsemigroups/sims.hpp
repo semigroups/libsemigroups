@@ -65,10 +65,13 @@
 // #include <filesystem>  // for path, create_directories, temp_directory_path
 #include <functional>  // for function
 #include <iterator>    // for forward_iterator_tag
-#include <mutex>       // for mutex
-#include <string>      // for operator+, basic_string
-#include <utility>     // for move
-#include <vector>      // for vector
+#include <libsemigroups/detail/report.hpp>
+#include <libsemigroups/knuth-bendix.hpp>
+#include <mutex>   // for mutex
+#include <string>  // for operator+, basic_string
+#include <thread>
+#include <utility>  // for move
+#include <vector>   // for vector
 
 #include <fstream>
 
@@ -183,7 +186,21 @@ namespace libsemigroups {
     //! \no_libsemigroups_except
     SimsStats();
 
-    // TODO(0) add an init function
+    //! \brief Reinitialize an existing SimsStats object.
+    //!
+    //! This function puts a SimsStats object back into the same state as if
+    //! it had been newly default constructed.
+    //!
+    //! \parameters (None)
+    //!
+    //! \returns A reference to \c this.
+    //!
+    //! \exception
+    //! \no_libsemigroups_except
+    SimsStats& init() {
+      stats_zero();
+      return *this;
+    }
 
     //! Copy constructor.
     //!
@@ -196,7 +213,7 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats(SimsStats const& that) : SimsStats() {
-      init_from(that);
+      init(that);
     }
 
     //! Copy assignment operator.
@@ -210,7 +227,7 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats& operator=(SimsStats const& that) {
-      return init_from(that);
+      return init(that);
     }
 
     //! Move constructor.
@@ -224,7 +241,7 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats(SimsStats&& that) : SimsStats() {
-      init_from(that);
+      init(that);
     }
 
     //! Move assignment operator.
@@ -238,8 +255,11 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats& operator=(SimsStats&& that) {
-      return init_from(that);
+      return init(that);
     }
+
+    //! Initialize from SimsStats.
+    SimsStats& init(SimsStats const& that);
 
     //! \brief Set all statistics to zero.
     //!
@@ -266,10 +286,6 @@ namespace libsemigroups {
       total_pending_last = total_pending_now.load();
       return *this;
     }
-
-   private:
-    // TODO(0) should this be public and called just "init"?
-    SimsStats& init_from(SimsStats const& that);
   };
 
   //! \ingroup congruences_group
@@ -456,9 +472,9 @@ namespace libsemigroups {
     //!
     //! \throws LibsemigroupsException if the argument \p val is 0.
     //!
-    //! \warning If \p val exceeds `std::thread::hardware_concurrency()`, then
-    //! this is likely to have a negative impact on the performance of the
-    //! algorithms implemented by Sims1 or Sims2.
+    //! \note The value of \p val is capped at
+    //! `std::thread::hardware_concurrency()`. Trying to set a higher value is
+    //! equivalent to setting `std::thread::hardware_concurrency()`.
     Subclass& number_of_threads(size_t val);
 
     //! \brief Get the number of threads.
@@ -670,6 +686,10 @@ namespace libsemigroups {
     //! \noexcept
     //!
     //! \sa \ref pruners
+    //!
+    //! \warning When running the Sims low-index backtrack with multiple
+    //! threads, each added pruner must be guaranteed thread safe. Failing to do
+    //! so could cause bad things to happen.
     template <typename Func>
     Subclass& add_pruner(Func&& func) {
       _pruners.emplace_back(func);
@@ -1000,9 +1020,6 @@ namespace libsemigroups {
     }
 
    private:
-    template <typename OtherSubclass>
-    SimsSettings& init_from(SimsSettings<OtherSubclass> const& that);
-
     template <typename Iterator>
     Subclass& include_exclude(Iterator                first,
                               Iterator                last,
@@ -1409,7 +1426,6 @@ namespace libsemigroups {
 
    public:
     //! Default constructor
-    // TODO(0) (doc)
     Sims1() = default;
 
     // TODO(0) (doc)
@@ -3225,12 +3241,17 @@ namespace libsemigroups {
   //! \sa \ref SimsSettings::add_pruner
   class SimsRefinerIdeals {
    private:
-    using node_type = uint32_t;
-    KnuthBendix<> _knuth_bendix;
+    using node_type    = uint32_t;
+    using KnuthBendix_ = KnuthBendix<detail::RewriteFromLeft>;
+    std::vector<KnuthBendix_> _knuth_bendices;
 
    public:
     //! Default constructor.
-    explicit SimsRefinerIdeals() : _knuth_bendix(congruence_kind::twosided) {}
+    explicit SimsRefinerIdeals()
+        : _knuth_bendices(std::thread::hardware_concurrency() + 1,
+                          KnuthBendix_(congruence_kind::twosided)) {
+      init();
+    }
 
     //! \brief Reinitialize an existing SimsRefinerIdeals object.
     //!
@@ -3238,9 +3259,11 @@ namespace libsemigroups {
     //! been newly default constructed.
     //!
     //! \returns A reference to \c *this.
-    template <typename Word>
     SimsRefinerIdeals& init() {
-      _knuth_bendix.init(congruence_kind::twosided);
+      _knuth_bendices[0].init(congruence_kind::twosided).run();
+      std::fill(_knuth_bendices.begin() + 1,
+                _knuth_bendices.end(),
+                _knuth_bendices[0]);
       return *this;
     }
 
@@ -3255,7 +3278,10 @@ namespace libsemigroups {
     //! terminate on certain inputs.
     template <typename Word>
     explicit SimsRefinerIdeals(Presentation<Word> const& p)
-        : _knuth_bendix(congruence_kind::twosided, p) {}
+        : _knuth_bendices(std::thread::hardware_concurrency() + 1,
+                          KnuthBendix_(congruence_kind::twosided)) {
+      init(p);
+    }
 
     //! \brief Reinitialize an existing SimsRefinerIdeals object from a
     //! presentation.
@@ -3278,11 +3304,12 @@ namespace libsemigroups {
     //! terminate on certain inputs.
     //!
     //! \sa presentation(Presentation<std::string> const&)
-    // TODO(0): template on typename Word so that we can handle string and
-    // word_type in a single function
     template <typename Word>
     SimsRefinerIdeals& init(Presentation<Word> const& p) {
-      _knuth_bendix.init(congruence_kind::twosided, p);
+      _knuth_bendices[0].init(congruence_kind::twosided, p).run();
+      std::fill(_knuth_bendices.begin() + 1,
+                _knuth_bendices.end(),
+                _knuth_bendices[0]);
       return *this;
     }
 
@@ -3301,7 +3328,7 @@ namespace libsemigroups {
     //! \noexcept
     [[nodiscard]] Presentation<std::string> const&
     presentation() const noexcept {
-      return _knuth_bendix.presentation();
+      return _knuth_bendices[0].presentation();
     }
 
     //! \brief Check if a word graph can be extended to one defining a Rees
@@ -3316,15 +3343,22 @@ namespace libsemigroups {
     //! presentation that was used to construct the SimsRefinerIdeals object. If
     //! this is not the case then th pruner may not terminate on certain inputs.
     bool operator()(Sims1::word_graph_type const& wg) {
+      // TODO(2) Make knuth bendix thread safe to use here without the bodge
       using sims::right_generating_pairs_no_checks;
-      _knuth_bendix.run();
 
       node_type sink = UNDEFINED;
 
+      LIBSEMIGROUPS_ASSERT(detail::this_threads_id()
+                           < std::thread::hardware_concurrency() + 1);
+      // TODO(1) change this to be const& when we have const_contains for knuth
+      // bendix
+      auto& kb = _knuth_bendices[detail::this_threads_id()];
       for (auto const& p : right_generating_pairs_no_checks(wg)) {
         auto const& u = p.first;
         auto const& v = p.second;
-        if (!knuth_bendix::contains(_knuth_bendix, u, v)) {
+        // TODO(1) change this to be const_contains for knuth
+        // bendix when we have it
+        if (!kb.contains(u, v)) {
           auto beta
               = word_graph::follow_path_no_checks(wg, 0, u.cbegin(), u.cend());
           if (sink == UNDEFINED) {
@@ -3363,22 +3397,6 @@ namespace libsemigroups {
   //! \exceptions
   //! \no_libsemigroups_except
   [[nodiscard]] std::string to_human_readable_repr(SimsStats const& x);
-
-  // TODO(0): Remove
-  // //! \ingroup congruence_group
-  // //!
-  // //! \brief Return a human readable representation of a SimsSettings object.
-  // //!
-  // //! Return a human readable representation of a SimsSettings object.
-  // //!
-  // //! \param x the SimsSettings object.
-  // //!
-  // //! \exceptions
-  // //! \no_libsemigroups_except
-  // // TODO(1) to tpp
-  // template <typename Subclass>
-  // [[nodiscard]] std::string
-  // target size 0 and  to_human_readable_repr(SimsSettings<Subclass> const& x);
 
   //! \ingroup congruence_group
   //!

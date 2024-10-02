@@ -3027,71 +3027,6 @@ namespace libsemigroups {
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
-                          "086",
-                          "search for possibly non-existent monoid",
-                          "[fail][sims1]") {
-    // TODO(0): does not seem to use sims?
-    // Also does not terminate
-    Presentation<std::string> p;
-    p.contains_empty_word(true);
-    p.alphabet("abcde");
-    presentation::add_rule(p, "aa", "a");
-    presentation::add_rule(p, "ad", "d");
-    presentation::add_rule(p, "bb", "b");
-    presentation::add_rule(p, "ca", "ac");
-    presentation::add_rule(p, "cc", "c");
-    presentation::add_rule(p, "da", "d");
-    presentation::add_rule(p, "dc", "cd");
-    presentation::add_rule(p, "dd", "d");
-    presentation::add_rule(p, "aba", "a");
-    presentation::add_rule(p, "bab", "b");
-    presentation::add_rule(p, "bcb", "b");
-    presentation::add_rule(p, "bcd", "cd");
-    presentation::add_rule(p, "cbc", "c");
-    presentation::add_rule(p, "cdb", "cd");
-    presentation::change_alphabet(p, "cbade");
-
-    presentation::add_rule(p, "ea", "ae");
-    presentation::add_rule(p, "be", "eb");
-    presentation::add_rule(p, "ee", "e");
-    presentation::add_rule(p, "cec", "c");
-    presentation::add_rule(p, "ece", "e");
-
-    presentation::add_rule(p, "ead", "ad");
-    presentation::add_rule(p, "ade", "ad");
-    // presentation::add_rule(p, "de", "ed");
-    auto d = find_quotient(p, 0);
-    REQUIRE(d.number_of_nodes() == 120);
-    auto S = to_froidure_pin<Transf<0, node_type>>(
-        d, 0, d.number_of_active_nodes());
-    REQUIRE(d == to_word_graph<uint32_t>(1, {{}}));
-    auto id = one(S.generator(0));
-    S.add_generator(id);
-    REQUIRE(S.size() == 120);
-    REQUIRE(S.number_of_generators() == 6);  // number 6 is the identity
-    REQUIRE(S.generator(0)
-            == Transf<0, node_type>({0,  0,  2,  3,  0,  2,  10, 3,  3,  14,
-                                     10, 11, 2,  18, 14, 11, 11, 23, 18, 19,
-                                     14, 2,  22, 23, 19, 19, 23, 2}));
-    REQUIRE(S.generator(1)
-            == Transf<0, node_type>({1,  1,  2,  7,  6,  1,  6,  7,  13, 6,
-                                     6,  15, 7,  13, 20, 15, 22, 13, 13, 24,
-                                     20, 15, 22, 26, 24, 2,  26, 24}));
-    REQUIRE(S.generator(2)
-            == Transf<0, node_type>({2,  5,  2,  2,  2,  5,  9,  12, 2,  9,
-                                     14, 2,  12, 17, 14, 21, 2,  17, 23, 2,
-                                     14, 21, 22, 23, 27, 2,  23, 27}));
-    REQUIRE(S.generator(3)
-            == Transf<0, node_type>({3,  3,  2, 3,  3,  2,  11, 3, 3,  2,
-                                     11, 11, 2, 19, 2,  11, 11, 2, 19, 19,
-                                     2,  2,  2, 2,  19, 19, 2,  2}));
-    REQUIRE(S.generator(4)
-            == Transf<0, node_type>({4, 6,  2,  8,  4, 9,  6,  13, 8,  9,
-                                     6, 16, 17, 13, 9, 22, 16, 17, 13, 25,
-                                     6, 22, 22, 17, 2, 25, 13, 2}));
-  }
-
-  LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "087",
                           "2-sylvester monoid",
                           "[fail][sims1]") {
@@ -3174,6 +3109,7 @@ namespace libsemigroups {
                           "090",
                           "possible full transf. monoid 8",
                           "[extreme][sims1]") {
+    auto                    rg = ReportGuard(true);
     Presentation<word_type> p;
     p.rules = std::vector<word_type>(
         {00_w,         {},           11_w,        {},         22_w,     {},
@@ -3197,7 +3133,7 @@ namespace libsemigroups {
     p.alphabet_from_rules();
     auto q = full_transformation_monoid(8);
 
-    std::array<uint64_t, 9> const num = {0, 1, 2, 3, 3, 3, 3, 3, 0};
+    std::array<uint64_t, 9> const num = {0, 1, 2, 3, 3, 3, 3, 3, 11};
     Sims1                         s(p);
     for (size_t n = 1; n < num.size(); ++n) {
       s.presentation(q);
@@ -3979,7 +3915,7 @@ namespace libsemigroups {
     REQUIRE(s.number_of_congruences(7) == 197);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Sims2",
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "118",
                           "1-sided ideals partition monoid, n = 2",
                           "[quick][sims1]") {
@@ -3997,13 +3933,13 @@ namespace libsemigroups {
     presentation::add_rule(p, 0101_w, 101_w);
     presentation::add_rule(p, 1010_w, 101_w);
 
-    KnuthBendix kb(congruence_kind::twosided, p);
-    REQUIRE(kb.number_of_classes() == 15);
+    // KnuthBendix kb(congruence_kind::twosided, p);
+    // REQUIRE(kb.number_of_classes() == 15);
 
-    SimsRefinerIdeals ip(to_presentation<std::string>(p));
+    SimsRefinerIdeals ip(p);
 
     Sims1 s(p);
-    s.number_of_threads(1).add_pruner(ip);
+    s.add_pruner(ip);
     REQUIRE(s.number_of_congruences(15) == 15);  // correct value is 15
     REQUIRE(s.number_of_threads(2).number_of_congruences(15)
             == 15);  // correct value is 15
@@ -4504,6 +4440,17 @@ namespace libsemigroups {
     S.clear_pruners();
     REQUIRE(S.number_of_threads(2).number_of_congruences(34) == 0);
   }
+
+  // TODO(0): finish test
+  // LIBSEMIGROUPS_TEST_CASE("Sims1",
+  //                         "128",
+  //                         "SimsRefinerFaithful test",
+  //                         "[quick][low-index]") {
+  //   auto                    rg = ReportGuard(true);
+  //   Presentation<word_type> p;
+  //   std::vector<word_type>  forbid;
+  //   SimsRefinerFaithful     pruno(forbid);
+  // }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "256",

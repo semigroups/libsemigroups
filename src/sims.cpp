@@ -76,7 +76,7 @@ namespace libsemigroups {
     return *this;
   }
 
-  SimsStats& SimsStats::init_from(SimsStats const& that) {
+  SimsStats& SimsStats::init(SimsStats const& that) {
     count_last         = that.count_last.load();
     count_now          = that.count_now.load();
     max_pending        = that.max_pending.load();
@@ -117,27 +117,8 @@ namespace libsemigroups {
     // access.
     _longs_begin = _presentation.rules.cend();
 
-    // TODO(0) does not seem to be a way of clearing _stats
-    // _stats.init();
+    _stats.init();
 
-    // TODO(0) move to exclude function
-    // auto pruner = [this](auto const& wg) {
-    //   auto      first = _exclude.cbegin();
-    //   auto      last  = _exclude.cend();
-    //   node_type root  = 0;
-    //
-    //   for (auto it = first; it != last; it += 2) {
-    //     auto l = word_graph::follow_path_no_checks(wg, root, *it);
-    //     if (l != UNDEFINED) {
-    //       auto r = word_graph::follow_path_no_checks(wg, root, *(it + 1));
-    //       if (l == r) {
-    //         return false;
-    //       }
-    //     }
-    //   }
-    //   return true;
-    // };
-    // add_pruner(pruner);
     return static_cast<Subclass&>(*this);
   }
 
@@ -168,6 +149,11 @@ namespace libsemigroups {
     if (val == 0) {
       LIBSEMIGROUPS_EXCEPTION(
           "the argument (number of threads) must be non-zero");
+    }
+
+    if ((std::thread::hardware_concurrency() > 0)
+        && (val > std::thread::hardware_concurrency())) {
+      val = std::thread::hardware_concurrency();
     }
     _num_threads = val;
     return static_cast<Subclass&>(*this);
@@ -939,6 +925,8 @@ namespace libsemigroups {
                           that._pending.cend());
     }
 
+    // TODO(0) expand to longer comment about thread sanitizer warnings and how
+    // we can gleefully ignore them
     template <typename Sims1or2>
     bool SimsBase<Sims1or2>::thread_iterator::try_steal(thread_iterator& that) {
       std::lock_guard<std::mutex> lock(iterator_base::_mtx);
@@ -1040,6 +1028,9 @@ namespace libsemigroups {
         _done = true;
         throw;
       }
+      // TODO(2) Implement a ThreadIdGuard so that thread ids are automatically
+      // reset after they exit scope.
+      detail::reset_thread_ids();
     }
 
     ////////////////////////////////////////////////////////////////////////
