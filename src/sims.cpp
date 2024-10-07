@@ -1459,7 +1459,7 @@ namespace libsemigroups {
 
   }  // namespace sims
 
-  [[nodiscard]] std::string to_human_readable_repr(SimsStats const& x) {
+  [[nodiscard]] std::string to_human_readable_repr(SimsStats const&) {
     return fmt::format("<SimsStats object>");
   }
 

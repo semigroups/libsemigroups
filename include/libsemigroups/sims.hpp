@@ -2529,7 +2529,7 @@ namespace libsemigroups {
     cbegin_right_generating_pairs(Presentation<word_type> const& p,
                                   WordGraph<Node> const&         wg) {
       validate_right_congruence(p, wg);
-      return cbegin_right_generating_pairs(p, wg);
+      return cbegin_right_generating_pairs_no_checks(p, wg);
     }
 
     //! \ingroup congruences_group
@@ -3242,7 +3242,7 @@ namespace libsemigroups {
   class SimsRefinerIdeals {
    private:
     using node_type    = uint32_t;
-    using KnuthBendix_ = KnuthBendix<detail::RewriteFromLeft>;
+    using KnuthBendix_ = KnuthBendix<>;
     std::vector<KnuthBendix_> _knuth_bendices;
 
    public:
