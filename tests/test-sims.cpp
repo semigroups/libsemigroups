@@ -190,7 +190,9 @@ namespace libsemigroups {
                   == std::tuple(joiner.is_subrelation(graphs[i], graphs[j]),
                                 graphs[i],
                                 graphs[j]));
-          // FIXME the below doesn't seem to work, but JDM expected it to
+          // TODO(1): FIXME the below doesn't seem to work, but JDM expected it
+          // to.
+          //
           // joiner(tmp, graphs[i], graphs[j]);
           // REQUIRE(meeter.is_subrelation(graphs[j], tmp));
           // REQUIRE(meeter.is_subrelation(graphs[i], tmp));
