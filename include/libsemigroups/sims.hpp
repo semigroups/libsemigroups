@@ -116,7 +116,7 @@ namespace libsemigroups {
    public:
     //! Number of congruences found at time of last report.
     //!
-    //! This member holds the of the number of congruences found by the
+    //! This member holds the number of congruences found by the
     //! Sims1 or Sims2 algorithm at the time of the last call
     //! to \ref stats_check_point.
     //!
@@ -638,7 +638,7 @@ namespace libsemigroups {
     //! Define the length of a "long" rule.
     //!
     //! This function modifies \ref presentation so that the rules whose length
-    //! (sum of the lengths of both sizes) is at least  \p val (if any) occur at
+    //! (sum of the lengths of both sides) is at least  \p val (if any) occur at
     //! the end of `presentation().rules` and so that `cbegin_long_rules` points
     //! at the such rule.
     //!
@@ -681,9 +681,6 @@ namespace libsemigroups {
     //! \param func an rvalue reference to a pruner function.
     //!
     //! \returns A reference to \c this.
-    //!
-    //! \exceptions
-    //! \noexcept
     //!
     //! \sa \ref pruners
     //!
@@ -731,7 +728,7 @@ namespace libsemigroups {
     //! represented by the relations of the presentation returned by
     //! \ref include.
     //!
-    //! \returns A const reference to `Presentation<word_type>`.
+    //! \returns A const reference to `std::vector<word_type>`.
     //!
     //! \exceptions
     //! \noexcept
@@ -848,7 +845,7 @@ namespace libsemigroups {
     //! represented by the relations of the presentation returned by
     //! \ref exclude.
     //!
-    //! \returns A const reference to `Presentation<word_type>`.
+    //! \returns A const reference to `std::vector<word_type>`.
     //!
     //! \exceptions
     //! \noexcept
@@ -919,8 +916,6 @@ namespace libsemigroups {
     //! only taken among those that do not contain the pairs of elements of the
     //! underlying semigroup (defined by the presentation returned by \ref
     //! presentation) represented by the relations returned by `exclude()`.
-    //! \brief Define a set of pairs that should be included in every
-    //! congruence.
     //!
     //! \tparam Container the type of the argument, an container of
     //! word_type objects.
@@ -985,9 +980,7 @@ namespace libsemigroups {
     //!
     //! \note This setting has no effect if \ref number_of_threads is 1.
     //!
-    //! \returns A const reference to
-    //! `std::vector<std::function<bool(word_graph_type const&)>>`, the set of
-    //! all pruners.
+    //! \returns A `size_t`.
     //!
     //! \exceptions
     //! \noexcept
@@ -1611,7 +1604,7 @@ namespace libsemigroups {
     //! the maximum number of classes in a congruence.
     //!
     //! \returns An iterator \c it of type \c iterator pointing to an WordGraph
-    //! with at most \p n nodes.
+    //! with at most \p n or \p n + 1 nodes.
     //!
     //! \throws LibsemigroupsException if \p n is \c 0.
     //! \throws LibsemigroupsException if `presentation()`
@@ -1736,6 +1729,33 @@ namespace libsemigroups {
     template <typename Word>
     explicit Sims2(Presentation<Word> const&& p) : Sims2() {
       presentation(std::move(p));
+    }
+
+    //! \brief Reinitialize an existing Sims2 object.
+    //!
+    //! This function puts an object back into the same state as if it had
+    //! been newly constructed from the presentation \p p.
+    //!
+    //! \tparam Word the type of the words in the presentation \p p .
+    //!
+    //! \param p the presentation.
+    //!
+    //! \returns A reference to \c *this.
+    //!
+    //! \throws LibsemigroupsException if `to_presentation<word_type>(p)` throws
+    //! \throws LibsemigroupsException if `p` is not valid
+    //! \throws LibsemigroupsException if `p` has 0-generators and 0-relations.
+    //!
+    //! \warning This function has no exception guarantee, the object will be
+    //! in the same state as if it was default constructed if an exception is
+    //! thrown.
+    //!
+    //! \sa presentation(Presentation<Word> const&)
+    template <typename Word>
+    Sims2& init(Presentation<Word> const& p) {
+      init();
+      presentation(p);
+      return *this;
     }
 
 #ifdef PARSED_BY_DOXYGEN
@@ -2753,7 +2773,7 @@ namespace libsemigroups {
     //! word graph \p wg on the free monoid.
     //!
     //! \throws LibsemigroupsException if the argument \p wg does not define a
-    //! right congruence on the semigroup or monoid presented by \p p.
+    //! right congruence on the free monoid.
     template <typename Node>
     rx::iterator_range<const_rcgp_iterator>
     right_generating_pairs(WordGraph<Node> const& wg) {
