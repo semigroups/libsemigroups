@@ -161,6 +161,8 @@
           title="const_cgp_iterator" />
         <tab type="user" visible="yes" url="@ref libsemigroups::SimsRefinerIdeals"
           title="SimsRefinerIdeals" />
+        <tab type="user" visible="yes" url="@ref libsemigroups::SimsRefinerFaithful"
+          title="SimsRefinerFaithful" />
       </tab>
       <!-- TODO: Figure out a way to avoid this hack -->
       <tab type="user" visible="yes" url="group__congruences__group.html#func-members"

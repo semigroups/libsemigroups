@@ -442,9 +442,7 @@ namespace libsemigroups {
     //! The settings object contains all the settings that are common to
     //! Sims1, Sims2, RepOrc, and MinimalRepOrc, which are currently:
     //! * \ref presentation
-    //! * \ref long_rules
-    // TODO(1) change above to an actual function that exists, or add such a
-    // function
+    //! * \ref long_rule_length
     //! * \ref number_of_threads
     //!
     //! The return value of this function can be used to
@@ -701,18 +699,7 @@ namespace libsemigroups {
     //!
     //! \exceptions
     //! \no_libsemigroups_except
-    Subclass& clear_pruners() {
-      if (_exclude_pruner_index == UNDEFINED) {
-        _pruners.clear();
-      } else {
-        LIBSEMIGROUPS_ASSERT(_exclude_pruner_index < _pruners.size());
-        _pruners.erase(_pruners.cbegin(),
-                       _pruners.cbegin() + _exclude_pruner_index);
-        _exclude_pruner_index = 0;
-        _pruners.erase(_pruners.cbegin() + 1, _pruners.cend());
-      }
-      return static_cast<Subclass&>(*this);
-    }
+    Subclass& clear_pruners();
 
     //! \brief Get the set of pairs that must be included in every
     //! congruence.
@@ -1026,83 +1013,6 @@ namespace libsemigroups {
   };
 
   ////////////////////////////////////////////////////////////////////////
-  // SimsSettings - impl of template mem fns
-  ////////////////////////////////////////////////////////////////////////
-
-#ifndef PARSED_BY_DOXYGEN
-  template <typename Subclass>
-  template <typename OtherSubclass>
-  SimsSettings<Subclass>&
-  SimsSettings<Subclass>::init(SimsSettings<OtherSubclass> const& that) {
-    _exclude      = that.exclude();
-    _include      = that.include();
-    _presentation = that.presentation();
-
-    _idle_thread_restarts = that.idle_thread_restarts();
-    _longs_begin          = _presentation.rules.cbegin()
-                   + std::distance(that.presentation().rules.cbegin(),
-                                   that.cbegin_long_rules());
-    _num_threads = that.number_of_threads();
-    _stats       = that.stats();
-    _pruners     = that.pruners();
-    return *this;
-  }
-#endif /* PARSED_BY_DOXYGEN */
-
-  template <typename Subclass>
-  template <typename Word>
-  Subclass& SimsSettings<Subclass>::presentation(Presentation<Word> const& p) {
-    if (p.alphabet().empty()) {
-      LIBSEMIGROUPS_EXCEPTION(
-          "the argument (a presentation) must not have 0 generators");
-    }
-    // This normalises the rules in the case they are of the right type but
-    // not normalised
-    Presentation<word_type> p_copy;
-    if constexpr (std::is_same_v<Word, word_type>) {
-      p_copy = p;
-      presentation::normalize_alphabet(p_copy);
-    } else {
-      p_copy = to_presentation<word_type>(p);
-    }
-    try {
-      presentation::validate_rules(
-          p_copy, include().cbegin(), include().cend());
-      presentation::validate_rules(
-          p_copy, exclude().cbegin(), exclude().cend());
-    } catch (LibsemigroupsException const& e) {
-      LIBSEMIGROUPS_EXCEPTION(
-          "the argument (a presentation) is not compatible with include() and "
-          "exclude(), the following exception was thrown:\n{}",
-          e.what());
-    }
-    _presentation = std::move(p_copy);
-    _longs_begin  = _presentation.rules.cend();
-    return static_cast<Subclass&>(*this);
-  }
-
-  template <typename Subclass>
-  template <typename Iterator>
-  Subclass& SimsSettings<Subclass>::include_exclude(
-      Iterator                first,
-      Iterator                last,
-      std::vector<word_type>& include_or_exclude) {
-    if (std::distance(first, last) % 2 != 0) {
-      LIBSEMIGROUPS_EXCEPTION("expected the distance between the 1st and 2nd "
-                              "arguments (iterators) to be even, found {}",
-                              std::distance(first, last));
-    }
-    for (auto it = first; it != last; ++it) {
-      presentation().validate_word(it->cbegin(), it->cend());
-    }
-    include_or_exclude.assign(first, last);
-    return static_cast<Subclass&>(*this);
-  }
-
-  template <typename Subclass>
-  SimsSettings<Subclass>::~SimsSettings() = default;
-
-  ////////////////////////////////////////////////////////////////////////
   // Sims1 - Sims2 - forward decl
   ////////////////////////////////////////////////////////////////////////
 
@@ -1120,8 +1030,7 @@ namespace libsemigroups {
       // We use WordGraph, even though the iterators produced by this class
       // hold FelschGraph's, none of the features of FelschGraph are useful
       // for the output, only for the implementation
-      // TODO(1) use SimsSettings::word_graph_type
-      using word_graph_type = WordGraph<uint32_t>;
+      using word_graph_type = typename SimsSettings<Sims1or2>::word_graph_type;
 
       //! Type for the nodes in the associated WordGraph objects.
       using node_type = typename word_graph_type::node_type;
@@ -1497,7 +1406,14 @@ namespace libsemigroups {
       presentation(p);
       return *this;
     }
-    // TODO(0) init from rvalue reference presentation
+
+    //! \copydoc Sims1::init(Presentation<Word> const&)
+    template <typename Word>
+    Sims1& init(Presentation<Word> const&& p) {
+      init();
+      presentation(std::move(p));
+      return *this;
+    }
 
 #ifdef PARSED_BY_DOXYGEN
     //! \brief Returns the number of one-sided congruences with up to a given
@@ -1758,6 +1674,14 @@ namespace libsemigroups {
       return *this;
     }
 
+    //! \copydoc Sims2::init(Presentation<Word> const&)
+    template <typename Word>
+    Sims2& init(Presentation<Word> const&& p) {
+      init();
+      presentation(std::move(p));
+      return *this;
+    }
+
 #ifdef PARSED_BY_DOXYGEN
     //! \copydoc Sims1::number_of_congruences
     uint64_t number_of_congruences(size_t n);
@@ -1796,10 +1720,6 @@ namespace libsemigroups {
       std::vector<word_type>         _2_sided_words;
 
      protected:
-      // TODO(0) delete after ensuring that compilation with GCC works
-      // using SimsBase::IteratorBase::init;
-      // using SimsBase::IteratorBase::try_pop;
-
       // We could use the copy constructor, but there's no point in copying
       // anything except the FelschGraph and so we only copy that.
       void partial_copy_for_steal_from(iterator_base const& that);
@@ -1819,12 +1739,6 @@ namespace libsemigroups {
       iterator_base& operator=(iterator_base const& that);
       iterator_base& operator=(iterator_base&& that);
       ~iterator_base();
-
-      // TODO(0) delete after ensuring that compilation with GCC works
-      // using SimsBase::IteratorBase::operator==;
-      // using SimsBase::IteratorBase::operator!=;
-      // using SimsBase::IteratorBase::operator*;
-      // using SimsBase::IteratorBase::operator->;
 
       //! No doc
       void swap(iterator_base& that) noexcept;
@@ -2344,21 +2258,7 @@ namespace libsemigroups {
 
       //! No doc
       // prefix
-      // TODO(1) to cpp file
-      const_cgp_iterator const& operator++() {
-        size_type start = _reconstructed_word_graph.definitions().size();
-        const_rcgp_iterator::operator++();
-        if (at_end()) {
-          return *this;
-        }
-        // Copy wasteful
-        auto p = _reconstructed_word_graph.presentation();
-        presentation::add_rule_no_checks(p, (**this).first, (**this).second);
-        _reconstructed_word_graph.presentation(std::move(p));
-
-        std::ignore = _reconstructed_word_graph.process_definitions(start);
-        return *this;
-      }
+      const_cgp_iterator const& operator++();
 
       //! No doc
       // postfix
@@ -2406,23 +2306,7 @@ namespace libsemigroups {
     //! on the semigroup or monoid defined by \p p and `false` otherwise.
     template <typename Node>
     bool is_right_congruence(Presentation<word_type> const& p,
-                             WordGraph<Node> const&         wg) {
-      if (p.alphabet().size() != wg.out_degree()) {
-        return false;
-      }
-      auto const N     = wg.number_of_active_nodes();
-      auto       first = wg.cbegin_nodes();
-      auto       last  = wg.cbegin_nodes() + N;
-
-      if (!word_graph::is_complete(wg, first, last)
-          || !word_graph::is_compatible_no_checks(
-              wg, first, last, p.rules.cbegin(), p.rules.cend())) {
-        return false;
-      }
-      auto norf = word_graph::nodes_reachable_from(wg, 0);
-      return std::all_of(
-          norf.begin(), norf.end(), [&N](auto n) { return n < N; });
-    }
+                             WordGraph<Node> const&         wg);
 
     //! No doc
     template <typename Node>
@@ -2468,19 +2352,7 @@ namespace libsemigroups {
     //! happen.
     template <typename Node>
     bool is_two_sided_congruence_no_checks(Presentation<word_type> const& p,
-                                           WordGraph<Node> const&         wg) {
-      auto const N     = wg.number_of_active_nodes();
-      auto       first = wg.cbegin_nodes();
-      auto       last  = wg.cbegin_nodes() + N;
-
-      for (auto const& rule : right_generating_pairs(p, wg)) {
-        if (!word_graph::is_compatible_no_checks(
-                wg, first, last, rule.first, rule.second)) {
-          return false;
-        }
-      }
-      return true;
-    }
+                                           WordGraph<Node> const&         wg);
 
     //! \ingroup congruences_group
     //!
@@ -2906,48 +2778,7 @@ namespace libsemigroups {
     //! otherwise.
     template <typename Node>
     bool is_maximal_right_congruence(Presentation<word_type> const& p,
-                                     WordGraph<Node> const&         wg) {
-      if (!is_right_congruence(p, wg)) {
-        return false;
-      } else if (wg.number_of_active_nodes() == 1) {
-        // Universal congruence
-        return false;
-      }
-
-      ToddCoxeter tc;
-
-      auto   tree = word_graph::spanning_tree(wg, 0);
-      size_t N    = wg.number_of_active_nodes();
-
-      for (Node x = 0; x < N - 1; ++x) {
-        auto wx = tree.path_to_root(x);
-        std::reverse(wx.begin(), wx.end());
-        for (Node y = x + 1; y < N; ++y) {
-          auto wy = tree.path_to_root(y);
-          std::reverse(wy.begin(), wy.end());
-          auto copy = wg;
-          // TODO(2) avoid the copy here
-          copy.induced_subgraph_no_checks(static_cast<Node>(0),
-                                          wg.number_of_active_nodes());
-          todd_coxeter::add_generating_pair(
-              tc.init(tc.kind(), p, copy), wx, wy);
-          // LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
-          //                     == wg.number_of_active_nodes());
-          // fmt::print("x = {}, y = {}\n", x, y);
-          // fmt::print("wx = {}, wy = {}\n", wx, wy);
-          // std::cout << copy << std::endl;
-          // fmt::print("tc.number_of_classes() == {}\n",
-          // tc.number_of_classes()); fmt::print("copy.number_of_nodes() ==
-          // {}\n", copy.number_of_nodes());
-          LIBSEMIGROUPS_ASSERT(tc.number_of_classes()
-                               < wg.number_of_active_nodes());
-          if (tc.number_of_classes() > 1) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
+                                     WordGraph<Node> const&         wg);
 
     //! \ingroup congruences_group
     //!
@@ -2966,40 +2797,7 @@ namespace libsemigroups {
     //! that every element in the range `[first, last)` is a complete word
     //! graph. If this is not the case, then bad things may happen.
     template <typename Iterator>
-    BMat<> poset(Iterator first, Iterator last) {
-      using WordGraph_ = std::decay_t<decltype(*first)>;
-      std::vector<WordGraph_> graphs(first, last);
-      size_t const            n = graphs.size();
-
-      Joiner hk;
-
-      BMat<> mat1(n, n);
-
-      for (size_t i = 0; i < n; ++i) {
-        for (size_t j = 0; j < n; ++j) {
-          mat1(i, j) = hk.is_subrelation_no_checks(graphs[i], graphs[j]);
-        }
-      }
-
-      auto   mat2 = mat1;
-      auto   mat3 = mat1;
-      BMat<> zero(n, n);
-      auto   acc = zero;
-      while (mat2 != zero) {
-        mat3.product_inplace_no_checks(mat2, mat1);
-        std::swap(mat3, mat2);
-        acc += mat2;
-      }
-
-      for (size_t i = 0; i < n; ++i) {
-        for (size_t j = 0; j < n; ++j) {
-          if (!acc(i, j) && mat1(i, j)) {
-            zero(i, j) = true;
-          }
-        }
-      }
-      return zero;
-    }
+    BMat<> poset(Iterator first, Iterator last);
 
     //! \ingroup congruences_group
     //!
@@ -3008,111 +2806,8 @@ namespace libsemigroups {
     // The following produces a self-contained Dot object which doesn't render
     // very well.
     template <typename Iterator>
-    Dot dot_poset(Iterator first, Iterator last) {
-      auto mat = poset(first, last);
-      auto n   = mat.number_of_rows();
+    Dot dot_poset(Iterator first, Iterator last);
 
-      Dot result;
-
-      result.kind(Dot::Kind::digraph)
-          .add_attr("node [shape=\"box\"]")
-          .add_attr("rankdir=\"BT\"")
-          .add_attr("compound=true");
-      size_t index = 0;
-      for (auto it = first; it != last; ++it) {
-        auto copy = *it;
-        copy.induced_subgraph_no_checks(0, copy.number_of_active_nodes());
-        Dot dot_graph = word_graph::dot(copy);
-        dot_graph.name(std::to_string(index++));
-        result.add_subgraph(std::move(dot_graph));
-      }
-      for (size_t i = 0; i < n; ++i) {
-        for (size_t j = 0; j < n; ++j) {
-          if (mat(i, j)) {
-            result
-                .add_edge(fmt::format("cluster_{}_0", i),
-                          fmt::format("cluster_{}_0", j))
-                .add_attr("minlen", 2.5)
-                .add_attr("ltail", fmt::format("cluster_{}", i))
-                .add_attr("lhead", fmt::format("cluster_{}", j));
-          }
-        }
-      }
-      result.add_attr("splines=line");
-      return result;
-    }
-
-    //! \ingroup congruences_group
-    //!
-    //! Create and save a graphical rendering of the inclusion poset of a
-    //! collection of word graphs.
-    // template <typename Iterator>
-    // void dot_poset(std::string_view work_dir,
-    //                std::string_view fname,
-    //                Iterator         first,
-    //                Iterator         last) {
-    //   int  index = 0;
-    //   auto wdir  = std::filesystem::path(work_dir);
-    //   std::filesystem::create_directories(wdir);
-    //   fmt::print("\nUsing temporary directory {} . . .\n", wdir.c_str());
-
-    //   for (auto it = first; it != last; ++it) {
-    //     auto copy = *it;
-    //     copy.induced_subgraph_no_checks(0, copy.number_of_active_nodes());
-    //     Dot         dot_graph = word_graph::dot(copy);
-    //     std::string name      = std::to_string(index);
-    //     dot_graph.name(name);
-    //     wdir /= fmt::format("{}.gv", index++);
-    //     std::ofstream f(wdir);
-    //     f << dot_graph.to_string();  // TODO should be f << dot_graph;
-    //     wdir.remove_filename();
-    //   }
-
-    //   auto mat = poset(first, last);
-    //   auto n   = mat.number_of_rows();
-
-    //   Dot result;
-
-    //   result.kind(Dot::Kind::digraph)
-    //       .add_attr("node [shape=\"box\"]")
-    //       .add_attr("rankdir=\"BT\"");
-    //   index = 0;
-    //   for (size_t i = 0; i < n; ++i) {
-    //     wdir /= fmt::format("{}.png", index);
-    //     result.add_node(index)
-    //         .add_attr("image", wdir.c_str())
-    //         .add_attr("xlabel", std::to_string(index++))
-    //         .add_attr("label", "__NONE__");
-    //     wdir.remove_filename();
-    //   }
-    //   for (size_t i = 0; i < n; ++i) {
-    //     for (size_t j = 0; j < n; ++j) {
-    //       if (mat(i, j)) {
-    //         result.add_edge(fmt::format("{}", i), fmt::format("{}", j))
-    //             .add_attr("minlen", "2.5");
-    //       }
-    //     }
-    //   }
-    //   {
-    //     std::ofstream f(std::string(fname) + ".gv");
-    //     f << result.to_string();
-    //   }
-    //   int code = 0;
-    //   while (--index >= 0 && code == 0) {
-    //     wdir /= fmt::format("{}", index);
-    //     auto cmd = fmt::format("dot -Tpng {0}.gv > {0}.png", wdir.c_str());
-    //     code     = std::system(cmd.c_str());
-    //     wdir.remove_filename();
-    //   }
-    //   // TODO handle code if not 0
-    //   std::system(fmt::format("dot -Tpng {0}.gv > {0}.png", fname).c_str());
-    // }
-
-    // template <typename Iterator>
-    // void dot_poset(std::string_view fname, Iterator first, Iterator last) {
-    //   auto tmp_dir = std::filesystem::temp_directory_path() /
-    //   "libsemigroups"; dot_poset(tmp_dir.c_str(), fname, first, last);
-    // }
   }  // namespace sims
 
   //! \ingroup congruences_group
@@ -3219,32 +2914,7 @@ namespace libsemigroups {
     //! which will result in a word graph defining a faithful congruence.
     //! Otherwise returns `true`.
     //!
-    // TODO(1) to cpp
-    bool operator()(Sims1::word_graph_type const& wg) {
-      auto first = _forbid.cbegin(), last = _forbid.cend();
-      // TODO(2) use 1 felsch tree per excluded pairs, and use it to check if
-      // paths containing newly added edges, lead to the same place
-      for (auto it = first; it != last; it += 2) {
-        bool this_rule_compatible = true;
-        for (uint32_t n = 0; n < wg.number_of_active_nodes(); ++n) {
-          auto l = word_graph::follow_path_no_checks(wg, n, *it);
-          if (l != UNDEFINED) {
-            auto r = word_graph::follow_path_no_checks(wg, n, *(it + 1));
-            if (r == UNDEFINED || (r != UNDEFINED && l != r)) {
-              this_rule_compatible = false;
-              break;
-            }
-          } else {
-            this_rule_compatible = false;
-            break;
-          }
-        }
-        if (this_rule_compatible) {
-          return false;
-        }
-      }
-      return true;
-    }
+    bool operator()(Sims1::word_graph_type const& wg);
   };
 
   //! \ingroup congruences_group
@@ -3362,48 +3032,7 @@ namespace libsemigroups {
     //! This method assumes that KnuthBendix terminates on the underlying
     //! presentation that was used to construct the SimsRefinerIdeals object. If
     //! this is not the case then th pruner may not terminate on certain inputs.
-    bool operator()(Sims1::word_graph_type const& wg) {
-      // TODO(2) Make knuth bendix thread safe to use here without the bodge
-      using sims::right_generating_pairs_no_checks;
-
-      node_type sink = UNDEFINED;
-
-      LIBSEMIGROUPS_ASSERT(detail::this_threads_id()
-                           < std::thread::hardware_concurrency() + 1);
-      // TODO(1) change this to be const& when we have const_contains for knuth
-      // bendix
-      auto& kb = _knuth_bendices[detail::this_threads_id()];
-      for (auto const& p : right_generating_pairs_no_checks(wg)) {
-        auto const& u = p.first;
-        auto const& v = p.second;
-        // TODO(1) change this to be const_contains for knuth
-        // bendix when we have it
-        if (!kb.contains(u, v)) {
-          auto beta
-              = word_graph::follow_path_no_checks(wg, 0, u.cbegin(), u.cend());
-          if (sink == UNDEFINED) {
-            sink = beta;
-          } else if (sink != beta) {
-            return false;
-          }
-        }
-      }
-      if (sink != UNDEFINED) {
-        for (auto [a, t] : wg.labels_and_targets_no_checks(sink)) {
-          if (t != UNDEFINED && t != sink) {
-            return false;
-          }
-        }
-      } else {
-        auto const N     = wg.number_of_active_nodes();
-        auto       first = wg.cbegin_nodes();
-        auto       last  = wg.cbegin_nodes() + N;
-        if (word_graph::is_complete(wg, first, last)) {
-          return false;
-        }
-      }
-      return true;
-    }
+    bool operator()(Sims1::word_graph_type const& wg);
   };
 
   //! \ingroup congruence_group
@@ -3494,4 +3123,7 @@ namespace libsemigroups {
   to_human_readable_repr(SimsRefinerFaithful const& x);
 
 }  // namespace libsemigroups
+
+#include "sims.tpp"
+
 #endif  // LIBSEMIGROUPS_SIMS_HPP_

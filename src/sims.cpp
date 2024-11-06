@@ -1457,7 +1457,91 @@ namespace libsemigroups {
 
     const_cgp_iterator::~const_cgp_iterator() = default;
 
+    const_cgp_iterator const& const_cgp_iterator::operator++() {
+      size_type start = _reconstructed_word_graph.definitions().size();
+      const_rcgp_iterator::operator++();
+      if (at_end()) {
+        return *this;
+      }
+      // Copy wasteful
+      auto p = _reconstructed_word_graph.presentation();
+      presentation::add_rule_no_checks(p, (**this).first, (**this).second);
+      _reconstructed_word_graph.presentation(std::move(p));
+
+      std::ignore = _reconstructed_word_graph.process_definitions(start);
+      return *this;
+    }
+
   }  // namespace sims
+
+  bool SimsRefinerFaithful::operator()(Sims1::word_graph_type const& wg) {
+    auto first = _forbid.cbegin(), last = _forbid.cend();
+    // TODO(2) use 1 felsch tree per excluded pairs, and use it to check if
+    // paths containing newly added edges, lead to the same place
+    for (auto it = first; it != last; it += 2) {
+      bool this_rule_compatible = true;
+      for (uint32_t n = 0; n < wg.number_of_active_nodes(); ++n) {
+        auto l = word_graph::follow_path_no_checks(wg, n, *it);
+        if (l != UNDEFINED) {
+          auto r = word_graph::follow_path_no_checks(wg, n, *(it + 1));
+          if (r == UNDEFINED || (r != UNDEFINED && l != r)) {
+            this_rule_compatible = false;
+            break;
+          }
+        } else {
+          this_rule_compatible = false;
+          break;
+        }
+      }
+      if (this_rule_compatible) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool SimsRefinerIdeals::operator()(Sims1::word_graph_type const& wg) {
+    // TODO(2) Make knuth bendix thread safe to use here without the bodge
+    using sims::right_generating_pairs_no_checks;
+
+    node_type sink = UNDEFINED;
+
+    LIBSEMIGROUPS_ASSERT(detail::this_threads_id()
+                         < std::thread::hardware_concurrency() + 1);
+    // TODO(1) change this to be const& when we have const_contains for knuth
+    // bendix
+    auto& kb = _knuth_bendices[detail::this_threads_id()];
+    for (auto const& p : right_generating_pairs_no_checks(wg)) {
+      auto const& u = p.first;
+      auto const& v = p.second;
+      // TODO(1) change this to be const_contains for knuth
+      // bendix when we have it
+      if (!kb.contains(u, v)) {
+        auto beta
+            = word_graph::follow_path_no_checks(wg, 0, u.cbegin(), u.cend());
+        if (sink == UNDEFINED) {
+          sink = beta;
+        } else if (sink != beta) {
+          return false;
+        }
+      }
+    }
+    if (sink != UNDEFINED) {
+      for (auto [a, t] : wg.labels_and_targets_no_checks(sink)) {
+        if (t != UNDEFINED && t != sink) {
+          return false;
+        }
+      }
+    } else {
+      auto const N     = wg.number_of_active_nodes();
+      auto       first = wg.cbegin_nodes();
+      auto       last  = wg.cbegin_nodes() + N;
+      if (word_graph::is_complete(wg, first, last)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   [[nodiscard]] std::string to_human_readable_repr(SimsStats const&) {
     return fmt::format("<SimsStats object>");
