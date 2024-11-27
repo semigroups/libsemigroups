@@ -863,12 +863,23 @@ namespace libsemigroups {
     REQUIRE_THROWS_AS(ro.number_of_threads(0), LibsemigroupsException);
     MinimalRepOrc mro;
     REQUIRE_THROWS_AS(mro.number_of_threads(0), LibsemigroupsException);
+    REQUIRE_NOTHROW(S.presentation(p));
+    REQUIRE_THROWS_AS(S.cbegin_long_rules(S.presentation().rules.cend() + 1),
+                      LibsemigroupsException);
+    REQUIRE_THROWS_AS(S.cbegin_long_rules(S.presentation().rules.cbegin() - 1),
+                      LibsemigroupsException);
+    REQUIRE_THROWS_AS(S.cbegin_long_rules(S.presentation().rules.cbegin() + 1),
+                      LibsemigroupsException);
+    REQUIRE_THROWS_AS(S.idle_thread_restarts(0), LibsemigroupsException);
+    std::vector<word_type> excluded = {{0, 1, 0}, {0, 0}, {1, 1}};
+    REQUIRE_THROWS_AS(S.include(excluded.cbegin(), excluded.cend()),
+                      LibsemigroupsException);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "022",
                           "singular_brauer_monoid(4) (Maltcev-Mazorchuk)",
-                          "[standard][sims1]") {
+                          "[standard][sims1][no-coverage]") {
     auto                     rg = ReportGuard(true);
     FroidurePin<Bipartition> S;
     S.add_generator(Bipartition({{1, 2}, {3, -1}, {4, -2}, {-3, -4}}));
@@ -1343,7 +1354,7 @@ namespace libsemigroups {
 
   LIBSEMIGROUPS_TEST_CASE("Sims1", "033", "constructors", "[quick][sims1]") {
     auto                    rg = ReportGuard(false);
-    Presentation<word_type> p;
+    Presentation<word_type> p, pp;
     p.contains_empty_word(true);
 
     //         aAbBcC
@@ -1372,6 +1383,41 @@ namespace libsemigroups {
     Sims1 C;
     REQUIRE_THROWS_AS(C.presentation(p).include(0127_w, 0_w),
                       LibsemigroupsException);
+
+    Sims1 SP(p);
+    REQUIRE(SP.number_of_congruences(3) == 14);
+
+    pp = p;
+    Sims1 SPP(std::move(pp));
+    REQUIRE(SPP.number_of_congruences(3) == 14);
+
+    Sims2 S2;
+    S2.presentation(p);
+
+    Sims2 T2(S2);
+    REQUIRE(S2.number_of_congruences(3) == 14);
+    REQUIRE(T2.number_of_congruences(3) == 14);
+
+    Sims2 U2(std::move(S2));
+    REQUIRE(U2.number_of_congruences(3) == 14);
+    REQUIRE(T2.number_of_congruences(3) == 14);
+
+    S2 = U2;
+    REQUIRE(S2.number_of_congruences(3) == 14);
+
+    S2 = std::move(U2);
+    REQUIRE(S2.number_of_congruences(3) == 14);
+
+    Sims2 C2;
+    REQUIRE_THROWS_AS(C2.presentation(p).include(0127_w, 0_w),
+                      LibsemigroupsException);
+
+    Sims2 SP2(p);
+    REQUIRE(SP2.number_of_congruences(3) == 14);
+
+    pp = p;
+    Sims2 SPP2(std::move(pp));
+    REQUIRE(SPP2.number_of_congruences(3) == 14);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -1502,12 +1548,22 @@ namespace libsemigroups {
     Sims1 S;
     S.presentation(p);
 
-    std::stringbuf buff;
-    std::ostream   os(&buff);
-    static_cast<void>(S.number_of_congruences(2));
+    REQUIRE(S.number_of_congruences(2) == 1);
     REQUIRE(S.stats().max_pending != 0);
-    // Withdrawn in v3
-    // os << S.cbegin(3).stats();  // Also does not do anything visible
+
+    auto it = S.cbegin(2);
+    ++it;
+    REQUIRE(it.stats().max_pending != 0);
+
+    Sims2 S2;
+    S2.presentation(p);
+
+    REQUIRE(S2.number_of_congruences(2) == 1);
+    REQUIRE(S2.stats().max_pending != 0);
+
+    auto it2 = S2.cbegin(2);
+    ++it2;
+    REQUIRE(it2.stats().max_pending != 0);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -1526,12 +1582,32 @@ namespace libsemigroups {
     verify_forward_iterator_requirements(S.cbegin(10));
     auto it = S.cbegin(10);
     REQUIRE(it->number_of_nodes() == 10);
+    REQUIRE(&it.sims() == &S);
+    REQUIRE(it.maximum_number_of_classes() == 10);
 
     presentation::reverse(p);
     S.init(p);
     verify_forward_iterator_requirements(S.cbegin(10));
     it = S.cbegin(10);
     REQUIRE(it->number_of_nodes() == 10);
+    REQUIRE(&it.sims() == &S);
+    REQUIRE(it.maximum_number_of_classes() == 10);
+
+    Sims2 S2;
+    S2.presentation(p);
+    verify_forward_iterator_requirements(S2.cbegin(10));
+    auto it2 = S2.cbegin(10);
+    REQUIRE(it2->number_of_nodes() == 10);
+    REQUIRE(&it2.sims() == &S2);
+    REQUIRE(it2.maximum_number_of_classes() == 10);
+
+    presentation::reverse(p);
+    S2.init(p);
+    verify_forward_iterator_requirements(S2.cbegin(10));
+    it2 = S2.cbegin(10);
+    REQUIRE(it2->number_of_nodes() == 10);
+    REQUIRE(&it2.sims() == &S2);
+    REQUIRE(it2.maximum_number_of_classes() == 10);
   }
 
   // Takes about 4s
@@ -1995,9 +2071,10 @@ namespace libsemigroups {
                           "048",
                           "stellar_monoid(n) n = 3",
                           "[quick][sims1][babbage]") {
-    size_t n = 3;
-    auto   p = zero_rook_monoid(n);
-    auto   q = stellar_monoid(n);
+    auto   rg = ReportGuard(true);
+    size_t n  = 3;
+    auto   p  = zero_rook_monoid(n);
+    auto   q  = stellar_monoid(n);
     p.rules.insert(p.rules.end(), q.rules.cbegin(), q.rules.cend());
     p.validate();
     REQUIRE(p.alphabet().size() == n);
@@ -2426,12 +2503,9 @@ namespace libsemigroups {
                           "068",
                           "RepOrc",
                           "[quick][low-index][no-valgrind]") {
-    auto rg = ReportGuard(false);
+    auto rg = ReportGuard(true);
 
-    auto p = temperley_lieb_monoid(9);
-    // There are no relations containing the empty word so we just manually
-    // add it. FIXME there should be!
-    p.contains_empty_word(true);
+    auto   p = temperley_lieb_monoid(9);
     RepOrc orc;
     // Check bad input
     auto d = orc.presentation(p)
@@ -2462,7 +2536,7 @@ namespace libsemigroups {
                           "069",
                           "fp example 1 (settings)",
                           "[quick][low-index]") {
-    auto rg = ReportGuard(false);
+    auto rg = ReportGuard(true);
 
     Presentation<word_type> p;
     p.contains_empty_word(true);
@@ -2483,13 +2557,142 @@ namespace libsemigroups {
     S.long_rule_length(4);
     REQUIRE(S.number_of_long_rules() == 2);
     REQUIRE(S.presentation().rules.size() == 6);
+    REQUIRE(S.settings().number_of_long_rules() == 2);
+    REQUIRE(S.settings().presentation().rules.size() == 6);
 
     presentation::reverse(p);
     REQUIRE(S.presentation(p)
                 .cbegin_long_rules(4)
-                .number_of_threads(2)
+                .number_of_threads(4)
                 .number_of_congruences(5)
             == 9);
+    S.clear_long_rules();
+    REQUIRE(S.presentation(p)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .number_of_congruences(5)
+            == 9);
+
+    Sims2 S2;
+    REQUIRE(S2.presentation(p)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .number_of_congruences(5)
+            == 6);
+    S2.long_rule_length(5);
+    REQUIRE(S2.number_of_long_rules() == 1);
+    REQUIRE(S2.presentation().rules.size() == 6);
+    S2.long_rule_length(4);
+    REQUIRE(S2.number_of_long_rules() == 2);
+    REQUIRE(S2.presentation().rules.size() == 6);
+    REQUIRE(S2.settings().number_of_long_rules() == 2);
+    REQUIRE(S2.settings().presentation().rules.size() == 6);
+
+    presentation::reverse(p);
+    REQUIRE(S2.presentation(p)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .number_of_congruences(5)
+            == 6);
+    S2.clear_long_rules();
+    REQUIRE(S2.presentation(p)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .number_of_congruences(5)
+            == 6);
+
+    Presentation<word_type> q;
+
+    q.alphabet({0, 1});
+    q.contains_empty_word(true);
+    presentation::add_rule(q, 000_w, 0_w);
+    presentation::add_rule(q, 111_w, ""_w);
+    presentation::add_rule(q, 011_w, 10_w);
+
+    std::vector<word_type> forbid = {0_w, 01_w, 00_w, ""_w};
+    SimsRefinerFaithful    pruno(forbid);
+
+    RepOrc Ro;
+    REQUIRE(Ro.presentation(q)
+                .target_size(9)
+                .min_nodes(2)
+                .max_nodes(6)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .add_pruner(pruno)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    Ro.long_rule_length(5);
+    REQUIRE(Ro.number_of_long_rules() == 1);
+    REQUIRE(Ro.presentation().rules.size() == 6);
+    Ro.long_rule_length(4);
+    REQUIRE(Ro.number_of_long_rules() == 2);
+    REQUIRE(Ro.presentation().rules.size() == 6);
+    REQUIRE(Ro.settings().number_of_long_rules() == 2);
+    REQUIRE(Ro.settings().presentation().rules.size() == 6);
+    Ro.clear_long_rules();
+    Ro.clear_pruners();
+    REQUIRE(Ro.presentation(q)
+                .target_size(9)
+                .min_nodes(2)
+                .max_nodes(6)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    Ro.init();
+    REQUIRE(Ro.presentation(q)
+                .target_size(9)
+                .min_nodes(2)
+                .max_nodes(6)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .add_pruner(pruno)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    RepOrc Ro2(Ro);
+    REQUIRE(Ro2.word_graph().number_of_active_nodes() == 6);
+
+    MinimalRepOrc Mro;
+    REQUIRE(Mro.presentation(q)
+                .target_size(9)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .add_pruner(pruno)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    Mro.long_rule_length(5);
+    REQUIRE(Mro.number_of_long_rules() == 1);
+    REQUIRE(Mro.presentation().rules.size() == 6);
+    Mro.long_rule_length(4);
+    REQUIRE(Mro.number_of_long_rules() == 2);
+    REQUIRE(Mro.presentation().rules.size() == 6);
+    REQUIRE(Mro.settings().number_of_long_rules() == 2);
+    REQUIRE(Mro.settings().presentation().rules.size() == 6);
+    Mro.clear_long_rules();
+    Mro.clear_pruners();
+    REQUIRE(Mro.presentation(q)
+                .target_size(9)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    Mro.init();
+    REQUIRE(Mro.presentation(q)
+                .target_size(9)
+                .cbegin_long_rules(4)
+                .number_of_threads(4)
+                .add_pruner(pruno)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    MinimalRepOrc Mro2(Mro);
+    REQUIRE(Mro2.word_graph().number_of_active_nodes() == 6);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -3210,7 +3413,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "093",
                           "2-sided T_4",
-                          "[quick][sims2][no-valgrind][no-coverage]") {
+                          "[standard][sims2][no-valgrind][no-coverage]") {
     auto  rg = ReportGuard(false);
     Sims2 S(fpsemigroup::full_transformation_monoid(4, author::Iwahori));
 
@@ -3221,7 +3424,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "094",
                           "2-sided T_4 Iwahori presentation",
-                          "[quick][sims2][low-index][no-valgrind]") {
+                          "[standard][sims2][low-index][no-valgrind]") {
     auto  rg = ReportGuard(false);
     Sims2 S(fpsemigroup::full_transformation_monoid(
         4, fpsemigroup::author::Iwahori));
@@ -3408,7 +3611,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "104",
                           "2-sided one-relation baaabaaa=aba",
-                          "[standard][sims2][low-index]") {
+                          "[standard][sims2][low-index][no-coverage]") {
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("ab");
@@ -3684,7 +3887,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "109",
                           "2-sided 2-generated free monoid",
-                          "[standard][sims2]") {
+                          "[standard][sims2][no-coverage]") {
     auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("ab");
@@ -3709,7 +3912,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "110",
                           "symmetric inverse monoid (Gay)",
-                          "[quick][sims2]") {
+                          "[standard][sims2]") {
     auto rg = ReportGuard(true);
     auto p  = symmetric_inverse_monoid(5, fpsemigroup::author::Gay);
     presentation::remove_duplicate_rules(p);
@@ -3756,7 +3959,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "112",
                           "2-sided congruence-free monoid n=8",
-                          "[quick][sims2][no-valgrind]") {
+                          "[standard][sims2][no-valgrind]") {
     auto rg = ReportGuard(false);
     // Presentation taken from
     // Al-Kharousi, F., Cain, A.J., Maltcev, V. et al.
@@ -3810,7 +4013,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "114",
                           "2-sided 2-generated free commutative monoid",
-                          "[quick][sims2][no-valgrind]") {
+                          "[standard][sims2][no-valgrind]") {
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("ab");
@@ -3841,7 +4044,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "115",
                           "free semilattice n = 8",
-                          "[standard][sims1]") {
+                          "[standard][sims1][no-coverage]") {
     auto rg = ReportGuard(true);
     // https://oeis.org/A102894
     constexpr std::array<size_t, 6> results = {0, 1, 4, 45, 2'271, 1'373'701};
@@ -3999,7 +4202,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "120",
                           "order_preserving_monoid(5)",
-                          "[standard][sims1]") {
+                          "[standard][sims1][no-coverage]") {
     auto rg = ReportGuard(false);
     auto p  = fpsemigroup::order_preserving_monoid(5);
     REQUIRE(p.contains_empty_word());
@@ -4059,7 +4262,8 @@ namespace libsemigroups {
                           "121",
                           "order_preserving_monoid(6)",
                           "[fail][sims1]") {
-    auto p = fpsemigroup::order_preserving_monoid(6);
+    auto rg = ReportGuard(false);
+    auto p  = fpsemigroup::order_preserving_monoid(6);
     presentation::sort_each_rule(p);
     presentation::sort_rules(p);
     presentation::remove_duplicate_rules(p);
@@ -4085,40 +4289,36 @@ namespace libsemigroups {
                           "122",
                           "partition_monoid(2)",
                           "[quick][sims1]") {
-    // Presentation<word_type> p;
-    // p.contains_empty_word(true);
+    Presentation<word_type> p;
+    p.contains_empty_word(true);
 
-    // p.alphabet(123_w);
-    // presentation::add_rule(p, 11_w, ""_w);
-    // presentation::add_rule(p, 13_w, 3_w);
-    // presentation::add_rule(p, 22_w, 2_w);
-    // presentation::add_rule(p, 31_w, 3_w);
-    // presentation::add_rule(p, 33_w, 3_w);
-    // presentation::add_rule(p, 232_w, 2_w);
-    // presentation::add_rule(p, 323_w, 3_w);
-    // presentation::add_rule(p, 1212_w, 212_w);
-    // presentation::add_rule(p, 2121_w, 212_w);
-    // presentation::sort_each_rule(p);
-    // presentation::sort_rules(p);
-    // presentation::remove_duplicate_rules(p);
-    // presentation::reduce_complements(p);
-    // presentation::remove_trivial_rules(p);
+    p.alphabet(123_w);
+    presentation::add_rule(p, 11_w, ""_w);
+    presentation::add_rule(p, 13_w, 3_w);
+    presentation::add_rule(p, 22_w, 2_w);
+    presentation::add_rule(p, 31_w, 3_w);
+    presentation::add_rule(p, 33_w, 3_w);
+    presentation::add_rule(p, 232_w, 2_w);
+    presentation::add_rule(p, 323_w, 3_w);
+    presentation::add_rule(p, 1212_w, 212_w);
+    presentation::add_rule(p, 2121_w, 212_w);
+    presentation::sort_each_rule(p);
+    presentation::sort_rules(p);
+    presentation::remove_duplicate_rules(p);
+    presentation::reduce_complements(p);
+    presentation::remove_trivial_rules(p);
 
-    // auto rg = ReportGuard(false);
-    // auto p  = partition_monoid(3, author::Machine);
-    // p.contains_empty_word(true);
-
-    // Sims1                s(p);
-    // auto                 pp     = s.presentation();
-    // std::atomic_uint64_t result = 0;
-    // s.for_each(11, [&result, &pp](auto const& wg) {
-    //   if (sims::is_maximal_right_congruence(pp, wg)) {
-    //     fmt::print("Index {}\n", wg.number_of_active_nodes());
-    //     result++;
-    //   }
-    // });
-    // REQUIRE(result == 6);
-    // REQUIRE(s.number_of_congruences(15) == 0);
+    Sims1                s(p);
+    auto                 pp     = s.presentation();
+    std::atomic_uint64_t result = 0;
+    s.for_each(11, [&result, &pp](auto const& wg) {
+      if (sims::is_maximal_right_congruence(pp, wg)) {
+        fmt::print("Index {}\n", wg.number_of_active_nodes());
+        result++;
+      }
+    });
+    REQUIRE(result == 6);
+    REQUIRE(s.number_of_congruences(15) == 105);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -4128,6 +4328,7 @@ namespace libsemigroups {
     // TODO(0) change category back to quick, these fail
     // currently because of changes to the api in
     // ToddCoxeter
+    auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("ab");
     p.contains_empty_word(false);
@@ -4443,16 +4644,105 @@ namespace libsemigroups {
     REQUIRE(S.number_of_threads(2).number_of_congruences(34) == 0);
   }
 
-  // TODO(0): finish test
-  // LIBSEMIGROUPS_TEST_CASE("Sims1",
-  //                         "128",
-  //                         "SimsRefinerFaithful test",
-  //                         "[quick][low-index]") {
-  //   auto                    rg = ReportGuard(true);
-  //   Presentation<word_type> p;
-  //   std::vector<word_type>  forbid;
-  //   SimsRefinerFaithful     pruno(forbid);
-  // }
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "128",
+                          "SimsRefinerFaithful test",
+                          "[quick][low-index]") {
+    auto                    rg = ReportGuard(true);
+    Presentation<word_type> p;
+
+    p.alphabet({0, 1});
+    p.contains_empty_word(true);
+    presentation::add_rule(p, 000_w, 0_w);
+    presentation::add_rule(p, 111_w, ""_w);
+    presentation::add_rule(p, 011_w, 10_w);
+
+    std::vector<word_type> forbid = {0_w, 01_w, 00_w, ""_w};
+    SimsRefinerFaithful    pruno(forbid);
+
+    Sims1 S;
+    S.presentation(p);
+    S.add_pruner(pruno);
+    REQUIRE(S.number_of_threads(2).number_of_congruences(9)
+            == 4);  // Verified with GAP
+
+    auto it = S.cbegin(9);
+    REQUIRE(*(it++)
+            == to_word_graph<node_type>(
+                9, {{1, 2}, {1, 3}, {4, 5}, {4, 4}, {3, 1}, {3, 0}}));
+    REQUIRE(*(it++)
+            == to_word_graph<node_type>(
+                9, {{1, 2}, {3, 3}, {4, 5}, {1, 4}, {4, 1}, {3, 0}}));
+    REQUIRE(*(it++)
+            == to_word_graph<node_type>(
+                9, {{1, 2}, {3, 4}, {3, 5}, {1, 1}, {4, 3}, {4, 0}}));
+    REQUIRE(*(it++)
+            == to_word_graph<node_type>(9,
+                                        {{1, 2},
+                                         {3, 4},
+                                         {5, 6},
+                                         {1, 7},
+                                         {8, 5},
+                                         {7, 1},
+                                         {4, 0},
+                                         {5, 8},
+                                         {4, 3}}));
+    REQUIRE(*(it++) == WordGraph<node_type>(0, 2));
+    REQUIRE(*(it++) == WordGraph<node_type>(0, 2));
+    REQUIRE(*(it++) == WordGraph<node_type>(0, 2));
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "129",
+                          "Threading tests",
+                          "[quick][low-index]") {
+    auto                    rg = ReportGuard(true);
+    Presentation<word_type> p;
+    Sims1                   S;
+
+    p.alphabet({0, 1, 2});
+    p.contains_empty_word(true);
+    S.presentation(p);
+
+    S.number_of_threads(std::thread::hardware_concurrency() + 1);
+    REQUIRE(S.number_of_threads() == std::thread::hardware_concurrency());
+    S.idle_thread_restarts(1000);
+
+    auto wg = S.number_of_threads(1).find_if(
+        4, [](auto const& wg) { return wg.number_of_active_nodes() == 2; });
+    REQUIRE(wg.number_of_active_nodes() == 2);
+    wg = S.number_of_threads(1).find_if(3,
+                                        [](auto const& wg) { return false; });
+    REQUIRE(wg.number_of_active_nodes() == 0);
+    std::vector<word_type> excluded = {{0, 0}, {0, 1}};
+    std::vector<word_type> included = {{0, 0}, {0, 1}};
+    REQUIRE(S.exclude(excluded.cbegin(), excluded.cend())
+                .include(included.cbegin(), included.cend())
+                .number_of_congruences(3)
+            == 0);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "130",
+                          "MinimalRepOrc test",
+                          "[quick][low-index]") {
+    auto                    rg = ReportGuard(true);
+    Presentation<word_type> p;
+
+    p.alphabet({0, 1});
+    p.contains_empty_word(true);
+    presentation::add_rule(p, 000_w, 0_w);
+    presentation::add_rule(p, 111_w, ""_w);
+    presentation::add_rule(p, 011_w, 10_w);
+
+    MinimalRepOrc orc;
+    auto          d = orc.presentation(p)
+                 .target_size(9)
+                 .number_of_threads(std::thread::hardware_concurrency())
+                 .word_graph();
+
+    REQUIRE(d.number_of_nodes() == 6);
+  }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "256",
