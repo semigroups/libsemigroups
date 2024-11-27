@@ -97,9 +97,9 @@ fi
 
 bold "Running lcov and genhtml . . .";
 printf "\033[2m";
-lcov  --directory . --capture --output-file "coverage.info.tmp" --test-name "libsemigroups_1_0_0" --no-checksum --no-external --compat-libtool --gcov-tool "gcov" --ignore-errors empty  --ignore-errors inconsistent --ignore-errors gcov| grep -v "ignoring data for external file"
-lcov  --directory . --remove "coverage.info.tmp" --output-file "coverage.info" --ignore-errors empty --ignore-errors inconsistent --ignore-errors gcov
-LANG=C genhtml  --ignore-errors inconsistent --ignore-errors unmapped --prefix . --output-directory "coverage" --title "libsemigroups Code Coverage" --legend --show-details "coverage.info.tmp" 
+lcov  --directory . --capture --output-file "coverage.info.tmp" --test-name "libsemigroups_1_0_0" --no-checksum --no-external --compat-libtool --gcov-tool "gcov" --ignore-errors negative --ignore-errors empty  --ignore-errors inconsistent --ignore-errors gcov| grep -v "ignoring data for external file"
+lcov  --directory . --remove "coverage.info.tmp" --output-file "coverage.info" --ignore-errors negative --ignore-errors empty --ignore-errors inconsistent --ignore-errors gcov
+LANG=C genhtml --ignore-errors negative --ignore-errors inconsistent --ignore-errors unmapped --prefix . --output-directory "coverage" --title "libsemigroups Code Coverage" --legend --show-details "coverage.info.tmp"
 rm -f coverage.info.tmp
 printf "\033[0m";
 delete_gcda_files
