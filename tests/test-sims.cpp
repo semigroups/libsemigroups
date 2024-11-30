@@ -1418,6 +1418,51 @@ namespace libsemigroups {
     pp = p;
     Sims2 SPP2(std::move(pp));
     REQUIRE(SPP2.number_of_congruences(3) == 14);
+
+    Presentation<word_type> q;
+    q.alphabet({0, 1});
+    q.contains_empty_word(true);
+    presentation::add_rule(q, 000_w, 0_w);
+    presentation::add_rule(q, 111_w, ""_w);
+    presentation::add_rule(q, 011_w, 10_w);
+
+    RepOrc Ro;
+    REQUIRE(Ro.presentation(q)
+                .target_size(9)
+                .min_nodes(2)
+                .max_nodes(6)
+                .number_of_threads(4)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    RepOrc Ro2(Ro);
+    REQUIRE(Ro2.word_graph().number_of_active_nodes() == 6);
+    RepOrc Ro3;
+    Ro3 = Ro2;
+    REQUIRE(Ro3.word_graph().number_of_active_nodes() == 6);
+    RepOrc Ro4(std::move(Ro3));
+    REQUIRE(Ro4.word_graph().number_of_active_nodes() == 6);
+    RepOrc Ro5;
+    Ro5 = std::move(Ro4);
+    REQUIRE(Ro5.word_graph().number_of_active_nodes() == 6);
+
+    MinimalRepOrc Mro;
+    REQUIRE(Mro.presentation(q)
+                .target_size(9)
+                .number_of_threads(4)
+                .word_graph()
+                .number_of_active_nodes()
+            == 6);
+    MinimalRepOrc Mro2(Mro);
+    REQUIRE(Mro2.word_graph().number_of_active_nodes() == 6);
+    MinimalRepOrc Mro3;
+    Mro3 = Mro2;
+    REQUIRE(Mro3.word_graph().number_of_active_nodes() == 6);
+    MinimalRepOrc Mro4(std::move(Mro3));
+    REQUIRE(Mro4.word_graph().number_of_active_nodes() == 6);
+    MinimalRepOrc Mro5;
+    Mro5 = std::move(Mro4);
+    REQUIRE(Mro5.word_graph().number_of_active_nodes() == 6);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -1592,6 +1637,15 @@ namespace libsemigroups {
     REQUIRE(it->number_of_nodes() == 10);
     REQUIRE(&it.sims() == &S);
     REQUIRE(it.maximum_number_of_classes() == 10);
+    auto itc(std::move(it));
+    REQUIRE(itc->number_of_nodes() == 10);
+    REQUIRE(&itc.sims() == &S);
+    REQUIRE(itc.maximum_number_of_classes() == 10);
+    Sims1::iterator itcc;
+    itcc = itc;
+    REQUIRE(itcc->number_of_nodes() == 10);
+    REQUIRE(&itcc.sims() == &S);
+    REQUIRE(itcc.maximum_number_of_classes() == 10);
 
     Sims2 S2;
     S2.presentation(p);
@@ -1608,6 +1662,15 @@ namespace libsemigroups {
     REQUIRE(it2->number_of_nodes() == 10);
     REQUIRE(&it2.sims() == &S2);
     REQUIRE(it2.maximum_number_of_classes() == 10);
+    auto itc2(std::move(it2));
+    REQUIRE(itc2->number_of_nodes() == 10);
+    REQUIRE(&itc2.sims() == &S2);
+    REQUIRE(itc2.maximum_number_of_classes() == 10);
+    Sims2::iterator itcc2;
+    itcc2 = itc2;
+    REQUIRE(itcc2->number_of_nodes() == 10);
+    REQUIRE(&itcc2.sims() == &S2);
+    REQUIRE(itcc2.maximum_number_of_classes() == 10);
   }
 
   // Takes about 4s
@@ -2653,8 +2716,6 @@ namespace libsemigroups {
                 .word_graph()
                 .number_of_active_nodes()
             == 6);
-    RepOrc Ro2(Ro);
-    REQUIRE(Ro2.word_graph().number_of_active_nodes() == 6);
 
     MinimalRepOrc Mro;
     REQUIRE(Mro.presentation(q)
@@ -2691,8 +2752,6 @@ namespace libsemigroups {
                 .word_graph()
                 .number_of_active_nodes()
             == 6);
-    MinimalRepOrc Mro2(Mro);
-    REQUIRE(Mro2.word_graph().number_of_active_nodes() == 6);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -4603,6 +4662,106 @@ namespace libsemigroups {
                 "<MinimalRepOrc object over {} with 2 include and 1 exclude "
                 "pairs, target size 0 and 4 threads>",
                 to_human_readable_repr(p)));
+
+    std::vector<word_type> forbid = {0_w, 01_w, 00_w, ""_w};
+    SimsRefinerFaithful    pruno(forbid);
+    sims1.add_pruner(pruno);
+    sims2.add_pruner(pruno);
+    rep_orc.add_pruner(pruno);
+    minimal_rep_orc.add_pruner(pruno);
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 include and 1 exclude "
+                           "pairs, 1 pruner and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 include and 1 exclude "
+                           "pairs, 1 pruner and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(rep_orc)
+            == fmt::format("<RepOrc object over {} with 2 include and 1 "
+                           "exclude pairs, node bounds [0, 0), "
+                           "target size 0, 1 pruner and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(minimal_rep_orc)
+            == fmt::format(
+                "<MinimalRepOrc object over {} with 2 include and 1 exclude "
+                "pairs, target size 0, 1 pruner and 4 threads>",
+                to_human_readable_repr(p)));
+    SimsRefinerIdeals ideal_pruner(p);
+    sims1.add_pruner(ideal_pruner);
+    sims2.add_pruner(ideal_pruner);
+    rep_orc.add_pruner(ideal_pruner);
+    minimal_rep_orc.add_pruner(ideal_pruner);
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 include and 1 exclude "
+                           "pairs, 2 pruners and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 include and 1 exclude "
+                           "pairs, 2 pruners and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(rep_orc)
+            == fmt::format("<RepOrc object over {} with 2 include and 1 "
+                           "exclude pairs, node bounds [0, 0), "
+                           "target size 0, 2 pruners and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(minimal_rep_orc)
+            == fmt::format(
+                "<MinimalRepOrc object over {} with 2 include and 1 exclude "
+                "pairs, target size 0, 2 pruners and 4 threads>",
+                to_human_readable_repr(p)));
+    sims1.clear_exclude();
+    sims2.clear_exclude();
+    rep_orc.clear_exclude();
+    minimal_rep_orc.clear_exclude();
+    sims1.clear_pruners();
+    sims2.clear_pruners();
+    rep_orc.clear_pruners();
+    minimal_rep_orc.clear_pruners();
+    sims1.add_pruner(pruno);
+    sims2.add_pruner(pruno);
+    rep_orc.add_pruner(pruno);
+    minimal_rep_orc.add_pruner(pruno);
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 include pairs, 1 "
+                           "pruner and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 include pairs, 1 "
+                           "pruner and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(
+        to_human_readable_repr(rep_orc)
+        == fmt::format(
+            "<RepOrc object over {} with 2 include pairs, node bounds [0, 0), "
+            "target size 0, 1 pruner and 4 threads>",
+            to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(minimal_rep_orc)
+            == fmt::format("<MinimalRepOrc object over {} with 2 include "
+                           "pairs, target size 0, 1 pruner and 4 threads>",
+                           to_human_readable_repr(p)));
+    sims1.add_pruner(ideal_pruner);
+    sims2.add_pruner(ideal_pruner);
+    rep_orc.add_pruner(ideal_pruner);
+    minimal_rep_orc.add_pruner(ideal_pruner);
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 include pairs, 2 "
+                           "pruners and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 include pairs, 2 "
+                           "pruners and 4 threads>",
+                           to_human_readable_repr(p)));
+    REQUIRE(
+        to_human_readable_repr(rep_orc)
+        == fmt::format(
+            "<RepOrc object over {} with 2 include pairs, node bounds [0, 0), "
+            "target size 0, 2 pruners and 4 threads>",
+            to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(minimal_rep_orc)
+            == fmt::format("<MinimalRepOrc object over {} with 2 include "
+                           "pairs, target size 0, 2 pruners and 4 threads>",
+                           to_human_readable_repr(p)));
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -4711,8 +4870,7 @@ namespace libsemigroups {
     auto wg = S.number_of_threads(1).find_if(
         4, [](auto const& wg) { return wg.number_of_active_nodes() == 2; });
     REQUIRE(wg.number_of_active_nodes() == 2);
-    wg = S.number_of_threads(1).find_if(3,
-                                        [](auto const& wg) { return false; });
+    wg = S.number_of_threads(1).find_if(3, [](auto const&) { return false; });
     REQUIRE(wg.number_of_active_nodes() == 0);
     std::vector<word_type> excluded = {{0, 0}, {0, 1}};
     std::vector<word_type> included = {{0, 0}, {0, 1}};

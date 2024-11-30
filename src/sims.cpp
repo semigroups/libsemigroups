@@ -913,10 +913,10 @@ namespace libsemigroups {
       // into [begin, begin + size / 2) and [begin + size / 2, end)
       size_t i = 0;
       for (; i < n - 2; i += 2) {
-        iterator_base::_pending.push_back(std::move(that._pending[i]));
+        push(std::move(that._pending[i]));
         that._pending[i / 2] = std::move(that._pending[i + 1]);
       }
-      iterator_base::_pending.push_back(std::move(that._pending[i]));
+      push(std::move(that._pending[i]));
       if (i == n - 2) {
         that._pending[i / 2] = std::move(that._pending[i + 1]);
       }
@@ -1060,7 +1060,8 @@ namespace libsemigroups {
     ~RuleContainer() = default;
 
     void resize(size_t m) {
-      // TODO(0) should we use resize?
+      // TODO(2) should we use resize?
+      // I.e. is it ok to overwrite values as we go along instead at start.
       _used_slots.assign(m, UNDEFINED);
       if (m > 0) {
         _used_slots[0] = 0;
@@ -1116,8 +1117,8 @@ namespace libsemigroups {
   void Sims2::iterator_base::partial_copy_for_steal_from(
       Sims2::iterator_base const& that) {
     SimsBase::IteratorBase::partial_copy_for_steal_from(that);
-    *_2_sided_include = *that._2_sided_include;
-    _2_sided_words    = that._2_sided_words;
+    _2_sided_include = std::make_unique<RuleContainer>(*that._2_sided_include);
+    _2_sided_words   = that._2_sided_words;
   }
 
   Sims2::iterator_base::iterator_base(Sims2 const* s, size_type n)
@@ -1135,29 +1136,31 @@ namespace libsemigroups {
     // here (i.e. the number of nodes in the resulting graphs is n + 1.
   }
 
+  Sims2::iterator_base::iterator_base()
+      : SimsBase::IteratorBase(), _2_sided_include(nullptr), _2_sided_words() {}
+
   Sims2::iterator_base::iterator_base(Sims2::iterator_base const& that)
       : SimsBase::IteratorBase(that),
         _2_sided_include(new RuleContainer(*that._2_sided_include)),
         _2_sided_words(that._2_sided_words) {}
 
   Sims2::iterator_base::iterator_base(Sims2::iterator_base&& that)
-      : SimsBase::IteratorBase(std::move(that)),  // TODO(0) std::move correct?
+      : SimsBase::IteratorBase(std::move(that)),
         _2_sided_include(std::move(that._2_sided_include)),
         _2_sided_words(std::move(that._2_sided_words)) {}
 
   typename Sims2::iterator_base&
   Sims2::iterator_base::operator=(Sims2::iterator_base const& that) {
     SimsBase::IteratorBase::operator=(that);
-    *_2_sided_include = *that._2_sided_include;
-    _2_sided_words    = that._2_sided_words;
+    _2_sided_include = std::make_unique<RuleContainer>(*that._2_sided_include);
+    _2_sided_words   = that._2_sided_words;
 
     return *this;
   }
 
   typename Sims2::iterator_base&
   Sims2::iterator_base::operator=(Sims2::iterator_base&& that) {
-    SimsBase::IteratorBase::operator=(
-        std::move(that));  // TODO(0) std::move ok?
+    SimsBase::IteratorBase::operator=(std::move(that));
     _2_sided_include = std::move(that._2_sided_include);
     _2_sided_words   = std::move(that._2_sided_words);
     return *this;
@@ -1593,7 +1596,11 @@ namespace libsemigroups {
         result += fmt::format(" {} pruner{}",
                               x.exclude().size() == 0 ? x.pruners().size()
                                                       : x.pruners().size() - 1,
-                              x.pruners().size() == 1 ? "" : "s");
+                              (x.exclude().size() == 0 ? x.pruners().size()
+                                                       : x.pruners().size() - 1)
+                                      == 1
+                                  ? ""
+                                  : "s");
         needs_and = true;
       }
       result += needs_and ? " and" : "";
@@ -1623,19 +1630,31 @@ namespace libsemigroups {
   }
 
   [[nodiscard]] std::string to_human_readable_repr(RepOrc const& x) {
-    return fmt::format("<RepOrc {}>",
-                       helper::sims_to_human_readable_repr_helper(
-                           x,
-                           fmt::format(" node bounds [{}, {}), target size {}",
-                                       x.min_nodes(),
-                                       x.max_nodes(),
-                                       x.target_size())));
+    return fmt::format(
+        "<RepOrc {}>",
+        helper::sims_to_human_readable_repr_helper(
+            x,
+            fmt::format(" node bounds [{}, {}), target size {}{}",
+                        x.min_nodes(),
+                        x.max_nodes(),
+                        x.target_size(),
+                        (x.pruners().size() > 1
+                         || (x.exclude().empty() && !x.pruners().empty()))
+                            ? ","
+                            : "")));
   }
 
   [[nodiscard]] std::string to_human_readable_repr(MinimalRepOrc const& x) {
-    return fmt::format("<MinimalRepOrc {}>",
-                       helper::sims_to_human_readable_repr_helper(
-                           x, fmt::format(" target size {}", x.target_size())));
+    return fmt::format(
+        "<MinimalRepOrc {}>",
+        helper::sims_to_human_readable_repr_helper(
+            x,
+            fmt::format(" target size {}{}",
+                        x.target_size(),
+                        (x.pruners().size() > 1
+                         || (x.exclude().empty() && !x.pruners().empty()))
+                            ? ","
+                            : "")));
   }
 
   [[nodiscard]] std::string to_human_readable_repr(SimsRefinerIdeals const& x) {

@@ -1189,6 +1189,18 @@ namespace libsemigroups {
        public:
         ~iterator();
 
+        iterator() : iterator_base() {}
+        iterator(iterator const& that) : iterator_base(that) {}
+        iterator(iterator&& that) : iterator_base(std::move(that)) {}
+        iterator& operator=(iterator const& that) {
+          iterator_base::operator=(that);
+          return *this;
+        }
+        iterator& operator=(iterator&& that) {
+          iterator_base::operator=(std::move(that));
+          return *this;
+        }
+
         //! No doc
         // prefix
         iterator const& operator++();
@@ -1732,8 +1744,7 @@ namespace libsemigroups {
       iterator_base(Sims2 const* s, size_type n);
 
      public:
-      iterator_base() = default;
-
+      iterator_base();
       iterator_base(iterator_base const& that);
       iterator_base(iterator_base&& that);
       iterator_base& operator=(iterator_base const& that);
