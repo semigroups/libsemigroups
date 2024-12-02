@@ -156,7 +156,7 @@ namespace libsemigroups {
         return false;
       }
 
-      ToddCoxeter tc(congruence_kind::right);
+      ToddCoxeter tc;
 
       auto   tree = word_graph::spanning_tree(wg, 0);
       size_t N    = wg.number_of_active_nodes();
@@ -171,7 +171,9 @@ namespace libsemigroups {
           // TODO(2) avoid the copy here
           copy.induced_subgraph_no_checks(static_cast<Node>(0),
                                           wg.number_of_active_nodes());
-          tc.init(tc.kind(), p, copy).add_pair(wx, wy);
+          tc.init(congruence_kind::onesided, copy)
+              .add_generating_pair_no_checks(
+                  wx.cbegin(), wx.cend(), wy.cbegin(), wy.cend());
           LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
                                == wg.number_of_active_nodes());
           // fmt::print("x = {}, y = {}\n", x, y);

@@ -2951,7 +2951,7 @@ namespace libsemigroups {
     //! Default constructor.
     explicit SimsRefinerIdeals()
         : _knuth_bendices(std::thread::hardware_concurrency() + 1,
-                          KnuthBendix_(congruence_kind::twosided)) {
+                          KnuthBendix_()) {
       init();
     }
 
@@ -2962,7 +2962,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c *this.
     SimsRefinerIdeals& init() {
-      _knuth_bendices[0].init(congruence_kind::twosided).run();
+      _knuth_bendices[0].init();
       std::fill(_knuth_bendices.begin() + 1,
                 _knuth_bendices.end(),
                 _knuth_bendices[0]);
@@ -2981,7 +2981,7 @@ namespace libsemigroups {
     template <typename Word>
     explicit SimsRefinerIdeals(Presentation<Word> const& p)
         : _knuth_bendices(std::thread::hardware_concurrency() + 1,
-                          KnuthBendix_(congruence_kind::twosided)) {
+                          KnuthBendix_(congruence_kind::twosided, p)) {
       init(p);
     }
 

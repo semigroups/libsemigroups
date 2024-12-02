@@ -4933,7 +4933,6 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    ToddCoxeter             tc(congruence_kind::twosided);
     // plusses indicate that the result was reached but could not be verified.
     std::vector<size_t>  results = {1, 2, 7, 22, +84, +364, +1734, +8943};
     WordGraph<node_type> wg;
@@ -4983,7 +4982,6 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    ToddCoxeter             tc(congruence_kind::twosided);
     // plusses indicate that the result was reached but could not be verified.
     std::vector<size_t>    results = {1,
                                       1,
@@ -5050,7 +5048,6 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    ToddCoxeter             tc(congruence_kind::twosided);
     // plusses indicate that the result was reached but could not be verified.
     std::vector<size_t>  results = {1, 2, 6, 14, +39, +117, +383, +1311, +7080};
     WordGraph<node_type> wg;
@@ -5097,7 +5094,6 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    ToddCoxeter             tc(congruence_kind::twosided);
     // plusses indicate that the result was reached but could not be verified.
     std::vector<size_t> results
         = {1, 2, 6, 13, +31, +77, +197, +513, +1354, +3611, +9714};
@@ -5147,7 +5143,6 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    ToddCoxeter             tc(congruence_kind::twosided);
     // plusses indicate that the result was reached but could not be verified.
     std::vector<size_t>    results = {1, 1, 3, 7, 22, 46, +196, +523};
     WordGraph<node_type>   wg;
