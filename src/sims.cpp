@@ -28,25 +28,30 @@
 
 #include "libsemigroups/sims.hpp"
 
-#include <algorithm>   // for max, find_if, fill
-#include <chrono>      // for duration, durat...
-#include <functional>  // for ref
-#include <memory>      // for unique_ptr, mak...
-#include <string>      // for operator+, basi...
-#include <thread>      // for thread, yield
-#include <utility>     // for swap
+#include <algorithm>      // for fill, reverse
+#include <functional>     // for function, ref
+#include <memory>         // for unique_ptr, make_unique, swap
+#include <string>         // for basic_string, string, operator+
+#include <thread>         // for thread, yield
+#include <tuple>          // for _Swallow_assign, ignore
+#include <unordered_map>  // for operator==, operator!=
+#include <utility>        // for move, swap, pair
 
 #include "libsemigroups/constants.hpp"        // for operator!=, ope...
 #include "libsemigroups/debug.hpp"            // for LIBSEMIGROUPS_A...
 #include "libsemigroups/exception.hpp"        // for LIBSEMIGROUPS_E...
+#include "libsemigroups/forest.hpp"           // for Forest
 #include "libsemigroups/froidure-pin.hpp"     // for FroidurePin
+#include "libsemigroups/knuth-bendix.hpp"     // for KnuthBendix, to_present...
 #include "libsemigroups/presentation.hpp"     // for Presentation
+#include "libsemigroups/runner.hpp"           // for delta, Reporter
 #include "libsemigroups/to-froidure-pin.hpp"  // for to_word_graph
-#include "libsemigroups/transf.hpp"           // for Transf, validate
+#include "libsemigroups/transf.hpp"           // for Transf, one
 #include "libsemigroups/types.hpp"            // for congruence_kind
 #include "libsemigroups/word-graph.hpp"       // for follow_path_no_...
 
 #include "libsemigroups/detail/felsch-graph.hpp"  // for FelschGraph
+#include "libsemigroups/detail/iterator.hpp"      // for operator+
 #include "libsemigroups/detail/report.hpp"        // for report_default
 #include "libsemigroups/detail/stl.hpp"           // for JoinThreads
 #include "libsemigroups/detail/string.hpp"        // for group_digits

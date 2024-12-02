@@ -56,41 +56,41 @@
 #ifndef LIBSEMIGROUPS_SIMS_HPP_
 #define LIBSEMIGROUPS_SIMS_HPP_
 
-#include <atomic>
-#include <iostream>
+#include <algorithm>      // for max, fill, count, for_each
+#include <atomic>         // for atomic_uint64_t, __atomic_base
+#include <bits/chrono.h>  // for operator-
+#include <cstddef>        // for size_t
+#include <cstdint>        // for uint64_t, uint32_t
+#include <functional>     // for function
+#include <iterator>       // for distance, forward_iterator_tag, pair
+#include <list>           // for operator!=
+#include <memory>         // for unique_ptr
+#include <mutex>          // for mutex
+#include <string>         // for operator+, basic_string, string, to_string
+#include <thread>         // for thread
+#include <type_traits>    // for decay_t
+#include <utility>        // for move, pair, swap
+#include <vector>         // for vector
 
-#include <algorithm>  // for max
-#include <cstddef>    // for size_t
-#include <cstdint>    // for uint64_t, uint32_t
-// #include <filesystem>  // for path, create_directories, temp_directory_path
-#include <functional>  // for function
-#include <iterator>    // for forward_iterator_tag
-#include <libsemigroups/detail/report.hpp>
-#include <libsemigroups/knuth-bendix.hpp>
-#include <mutex>   // for mutex
-#include <string>  // for operator+, basic_string
-#include <thread>
-#include <utility>  // for move
-#include <vector>   // for vector
-
-#include <fstream>
-
-#include "debug.hpp"            // for LIBSEMIGROUPS_ASSERT
-#include "exception.hpp"        // for LIBSEMIGROUPS_EXCEPTION
-#include "knuth-bendix.hpp"     // for KnuthBendix
-#include "presentation.hpp"     // for Presentation, Presentati...
-#include "to-presentation.hpp"  // for to_presentation
-#include "todd-coxeter.hpp"     // for ToddCoxeter
-#include "types.hpp"            // for word_type,
-#include "word-graph.hpp"       // for WordGraph
-
-#include "matrix.hpp"
+#include "constants.hpp"  // for operator!=, operator==, Max, UNDEFINED
+#include "debug.hpp"      // for LIBSEMIGROUPS_ASSERT
+#include "dot.hpp"        // for Dot
+#include "exception.hpp"  // for LIBSEMIGROUPS_EXCEPTION, LibsemigroupsExcep...
+#include "forest.hpp"     // for Forest
+#include "knuth-bendix.hpp"  // for KnuthBendix, to_presentation
+#include "matrix.hpp"        // for DynamicMatrix, MatrixCommon, BMat
+#include "presentation.hpp"  // for Presentation, longest_rule_length, short...
+#include "runner.hpp"        // for delta, Reporter
+#include "todd-coxeter.hpp"  // for ToddCoxeter
+#include "types.hpp"         // for word_type, relation_type, congruence_kind
+#include "word-graph.hpp"    // for Joiner, WordGraph
 
 #include "detail/felsch-graph.hpp"  // for FelschGraph
+#include "detail/fmt.hpp"           // for format, print
 #include "detail/iterator.hpp"      // for detail/default_postfix_increment
-#include "detail/rewriters.hpp"
+#include "detail/rewriters.hpp"     // for RewriteTrie
 
-#include "rx/ranges.hpp"
+#include "rx/ranges.hpp"  // for operator|, iterator_range
 
 //! \defgroup congruences_group Congruences
 //!
