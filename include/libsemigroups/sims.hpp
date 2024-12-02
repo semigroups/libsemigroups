@@ -23,7 +23,6 @@
 // TODO(0):
 // * review the function aliases, and remove them if they are unnecessary
 // * doc
-// * iwyu
 // * const
 // * noexcept
 // * nodiscard
@@ -72,11 +71,11 @@
 #include <utility>        // for move, pair, swap
 #include <vector>         // for vector
 
-#include "constants.hpp"  // for operator!=, operator==, Max, UNDEFINED
-#include "debug.hpp"      // for LIBSEMIGROUPS_ASSERT
-#include "dot.hpp"        // for Dot
-#include "exception.hpp"  // for LIBSEMIGROUPS_EXCEPTION, LibsemigroupsExcep...
-#include "forest.hpp"     // for Forest
+#include "constants.hpp"     // for operator!=, operator==, Max, UNDEFINED
+#include "debug.hpp"         // for LIBSEMIGROUPS_ASSERT
+#include "dot.hpp"           // for Dot
+#include "exception.hpp"     // for LIBSEMIGROUPS_EXCEPTION
+#include "forest.hpp"        // for Forest
 #include "knuth-bendix.hpp"  // for KnuthBendix, to_presentation
 #include "matrix.hpp"        // for DynamicMatrix, MatrixCommon, BMat
 #include "presentation.hpp"  // for Presentation, longest_rule_length, short...
@@ -85,10 +84,13 @@
 #include "types.hpp"         // for word_type, relation_type, congruence_kind
 #include "word-graph.hpp"    // for Joiner, WordGraph
 
-#include "detail/felsch-graph.hpp"  // for FelschGraph
-#include "detail/fmt.hpp"           // for format, print
-#include "detail/iterator.hpp"      // for detail/default_postfix_increment
-#include "detail/rewriters.hpp"     // for RewriteTrie
+#include "detail/felsch-graph.hpp"    // for FelschGraph
+#include "detail/fmt.hpp"             // for format, print
+#include "detail/iterator.hpp"        // for detail/default_postfix_increment
+#include "detail/path-iterators.hpp"  // for const_pstilo_iterator
+#include "detail/report.hpp"          // for ReportCell
+#include "detail/rewriters.hpp"       // for RewriteTrie
+#include "detail/word-graph-with-sources.hpp"  // for WordGraphWithSources
 
 #include "rx/ranges.hpp"  // for operator|, iterator_range
 
@@ -365,7 +367,6 @@ namespace libsemigroups {
     //!
     //! \exception
     //! \no_libsemigroups_except
-    // TODO(0) (tests)
     Subclass& init();
 
     //! Copy constructor.

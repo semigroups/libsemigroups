@@ -51,8 +51,10 @@
 #include "libsemigroups/matrix.hpp"           // for DynamicMatrix, BMat
 #include "libsemigroups/order.hpp"            // for shortlex_compare, Order
 #include "libsemigroups/presentation.hpp"     // for Presentation
+#include "libsemigroups/ranges.hpp"           // for shortlex_compare
 #include "libsemigroups/sims.hpp"             // for Sims1
 #include "libsemigroups/to-froidure-pin.hpp"  // for make
+#include "libsemigroups/to-presentation.hpp"  // for to_presentation
 #include "libsemigroups/transf.hpp"           // for Transf
 #include "libsemigroups/types.hpp"            // for word_type
 #include "libsemigroups/word-graph.hpp"       // for WordGraph
@@ -60,10 +62,13 @@
 #include <libsemigroups/constants.hpp>        // for UNDEFINED
 #include <libsemigroups/todd-coxeter.hpp>     // for ToddCoxeter
 
-#include "libsemigroups/detail/eigen.hpp"     // for DenseBase::row
-#include "libsemigroups/detail/fmt.hpp"       // for format, print
-#include "libsemigroups/detail/iterator.hpp"  // for operator+
-#include "libsemigroups/detail/report.hpp"  // for ReportGuard, SuppressReportFor
+#include "libsemigroups/detail/eigen.hpp"           // for DenseBase::row
+#include "libsemigroups/detail/felsch-graph.hpp"    // for FelschGraph
+#include "libsemigroups/detail/fmt.hpp"             // for format, print
+#include "libsemigroups/detail/iterator.hpp"        // for operator+
+#include "libsemigroups/detail/path-iterators.hpp"  // for const_pstilo_iterator
+#include "libsemigroups/detail/report.hpp"          // for ReportGuard
+#include "libsemigroups/detail/word-graph-with-sources.hpp"  // for WordGra...
 
 #include "rx/ranges.hpp"  // for operator|, iterator_range
 
@@ -90,7 +95,7 @@ namespace libsemigroups {
   using fpsemigroup::zero_rook_monoid;
 
   namespace {
-    // TODO check_exclude
+    // TODO(2) check_exclude
     template <typename P>
     void check_include(P const& p, std::vector<word_type> const& e, size_t n) {
       auto foo = [&e](auto const& wg) {
@@ -1195,7 +1200,7 @@ namespace libsemigroups {
         {{4, 8}, {4, 5, 7}, {4, 7}, {5, 4, 7}};
     Sims1 sims;
     sims.presentation(p);
-    // TODO use SimsRefinerFaithful instead
+    // TODO(2) use SimsRefinerFaithful instead
     for (auto it = forbid.cbegin(); it != forbid.cend(); it += 2) {
       sims.exclude(*it, *(it + 1));
     }

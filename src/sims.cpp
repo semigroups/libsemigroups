@@ -44,6 +44,7 @@
 #include "libsemigroups/froidure-pin.hpp"     // for FroidurePin
 #include "libsemigroups/knuth-bendix.hpp"     // for KnuthBendix, to_present...
 #include "libsemigroups/presentation.hpp"     // for Presentation
+#include "libsemigroups/ranges.hpp"           // for shortlex_compare
 #include "libsemigroups/runner.hpp"           // for delta, Reporter
 #include "libsemigroups/to-froidure-pin.hpp"  // for to_word_graph
 #include "libsemigroups/transf.hpp"           // for Transf, one
