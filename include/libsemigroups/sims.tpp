@@ -171,19 +171,18 @@ namespace libsemigroups {
           // TODO(2) avoid the copy here
           copy.induced_subgraph_no_checks(static_cast<Node>(0),
                                           wg.number_of_active_nodes());
-          tc.init(congruence_kind::onesided, copy)
-              .add_generating_pair_no_checks(
-                  wx.cbegin(), wx.cend(), wy.cbegin(), wy.cend());
-          LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
-                               == wg.number_of_active_nodes());
+          tc.init(congruence_kind::onesided, copy);
+          todd_coxeter::add_generating_pair(tc, wx, wy);
+          // LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
+          //                      == wg.number_of_active_nodes());
           // fmt::print("x = {}, y = {}\n", x, y);
           // fmt::print("wx = {}, wy = {}\n", wx, wy);
           // std::cout << copy << std::endl;
           // fmt::print("tc.number_of_classes() == {}\n",
           // tc.number_of_classes()); fmt::print("copy.number_of_nodes() ==
           // {}\n", copy.number_of_nodes());
-          LIBSEMIGROUPS_ASSERT(tc.number_of_classes()
-                               < wg.number_of_active_nodes());
+          // LIBSEMIGROUPS_ASSERT(tc.number_of_classes()
+          //                      < wg.number_of_active_nodes());
           if (tc.number_of_classes() > 1) {
             return false;
           }

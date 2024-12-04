@@ -2946,12 +2946,14 @@ namespace libsemigroups {
     using node_type    = uint32_t;
     using KnuthBendix_ = KnuthBendix<>;
     std::vector<KnuthBendix_> _knuth_bendices;
+    Presentation<word_type>   _presentation;
 
    public:
     //! Default constructor.
     explicit SimsRefinerIdeals()
         : _knuth_bendices(std::thread::hardware_concurrency() + 1,
-                          KnuthBendix_()) {
+                          KnuthBendix_()),
+          _presentation() {
       init();
     }
 
@@ -2962,6 +2964,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c *this.
     SimsRefinerIdeals& init() {
+      _presentation.init();
       _knuth_bendices[0].init();
       std::fill(_knuth_bendices.begin() + 1,
                 _knuth_bendices.end(),
@@ -2981,7 +2984,8 @@ namespace libsemigroups {
     template <typename Word>
     explicit SimsRefinerIdeals(Presentation<Word> const& p)
         : _knuth_bendices(std::thread::hardware_concurrency() + 1,
-                          KnuthBendix_(congruence_kind::twosided, p)) {
+                          KnuthBendix_()),
+          _presentation() {
       init(p);
     }
 
@@ -3006,9 +3010,18 @@ namespace libsemigroups {
     //! terminate on certain inputs.
     //!
     //! \sa presentation(Presentation<std::string> const&)
-    template <typename Word>
-    SimsRefinerIdeals& init(Presentation<Word> const& p) {
-      _knuth_bendices[0].init(congruence_kind::twosided, p).run();
+    SimsRefinerIdeals& init(Presentation<word_type> const& p) {
+      _presentation = p;
+      _knuth_bendices[0].init(congruence_kind::twosided, _presentation).run();
+      std::fill(_knuth_bendices.begin() + 1,
+                _knuth_bendices.end(),
+                _knuth_bendices[0]);
+      return *this;
+    }
+
+    SimsRefinerIdeals& init(Presentation<std::string> const& p) {
+      _presentation = to_presentation<word_type>(p);
+      _knuth_bendices[0].init(congruence_kind::twosided, _presentation).run();
       std::fill(_knuth_bendices.begin() + 1,
                 _knuth_bendices.end(),
                 _knuth_bendices[0]);
@@ -3024,13 +3037,12 @@ namespace libsemigroups {
     //! This function returns the defining presentation of a SimsRefinerIdeals
     //! instance.
     //!
-    //! \returns A const reference to `Presentation<std::string>`.
+    //! \returns A const reference to `Presentation<word_type>`.
     //!
     //! \exceptions
     //! \noexcept
-    [[nodiscard]] Presentation<std::string> const&
-    presentation() const noexcept {
-      return _knuth_bendices[0].presentation();
+    [[nodiscard]] Presentation<word_type> const& presentation() const noexcept {
+      return _presentation;
     }
 
     //! \brief Check if a word graph can be extended to one defining a Rees

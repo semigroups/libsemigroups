@@ -1525,7 +1525,7 @@ namespace libsemigroups {
       auto const& v = p.second;
       // TODO(1) change this to be const_contains for knuth
       // bendix when we have it
-      if (!kb.contains(u.cbegin(), u.cend(), v.cbegin(), v.cend())) {
+      if (!knuth_bendix::contains(kb, u, v)) {
         auto beta
             = word_graph::follow_path_no_checks(wg, 0, u.cbegin(), u.cend());
         if (sink == UNDEFINED) {

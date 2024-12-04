@@ -4242,7 +4242,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "119",
                           "2-sided ideals Jura's example",
-                          "[fail][sims1][no-valgrind]") {
+                          "[quick][sims1][no-valgrind]") {
     // TODO(0) change category back to quick, these fail
     // currently because of changes to the api in
     // ToddCoxeter
@@ -4404,7 +4404,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "123",
                           "Adding and removing pruners",
-                          "[fail][low-index]") {
+                          "[quick][low-index]") {
     // TODO(0) change category back to quick, these fail
     // currently because of changes to the api in
     // ToddCoxeter
