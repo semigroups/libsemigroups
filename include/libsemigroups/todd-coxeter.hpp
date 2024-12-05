@@ -758,6 +758,19 @@ namespace libsemigroups {
     //! \no_libsemigroups_except
     // TODO(1) a to_todd_coxeter variant that throws if wg is not valid
     // see below
+    // TODO(1) Document the requirement that the word graph has every node
+    // reachable from 0 if knd == congruence_kind::onesided. Otherwise can't
+    // really perform one-sided ToddCoxeter since we can't know how the
+    // generators map onto nodes of the word graph. If we assume the underlying
+    // presentation and word graph correspond to a monoid then this can be done
+    // if we also assume by convention that the 0 node of the word graph
+    // corresponds to the identity. According to JDM this is what is done and so
+    // it should be reflected in the documentation.
+    // TODO(2) Fix issue where contains_empty_word is false when initializing
+    // from a monoid word graph. Note that we do not want to add an extra
+    // identity node in this case as that's the wrong behaviour. Instead we
+    // would like to somehow link the 0 vertex to the identity of the
+    // presentation.
     template <typename Node>
     ToddCoxeter(congruence_kind knd, WordGraph<Node> const& wg)
         : ToddCoxeter() {
@@ -887,6 +900,9 @@ namespace libsemigroups {
     // Used in Sims
     // TODO(0) could this and the next function be removed, and replaced with
     // something else?
+    // NOTE (reiniscirpons): It potentially could, but before doing so, some
+    // issues with initializing congruence_kind::onesided ToddCoxeter from a
+    // word graph should be fixed otherwise this will cause issues in Sims
     template <typename Node>
     ToddCoxeter(congruence_kind                knd,
                 Presentation<word_type> const& p,
