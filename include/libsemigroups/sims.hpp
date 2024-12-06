@@ -22,7 +22,6 @@
 
 // TODO(0):
 // * review the function aliases, and remove them if they are unnecessary
-// * doc
 // * const
 // * noexcept
 // * nodiscard
@@ -514,8 +513,7 @@ namespace libsemigroups {
     //! \throws LibsemigroupsException if `p` is not valid.
     //!
     //! \throws LibsemigroupsException if the alphabet of `p` is non-empty and
-    //! not equal to that of \ref long_rules or \ref presentation.
-    // TODO(1) review the previous exception
+    //! not compatible with \ref include or \ref exclude.
     //!
     //! \throws LibsemigroupsException if `p` has 0-generators and 0-relations.
     template <typename Word>
@@ -870,8 +868,6 @@ namespace libsemigroups {
     //! \warning
     //! This function replaces all previously set `exclude` pairs with
     //! those found in `[first, last)`.
-    // TODO(1) maybe should add instead of replacing similar to exclude of r
-    // pair? Replaces current exclude with [first, last)
     template <typename Iterator>
     Subclass& exclude(Iterator first, Iterator last) {
       add_exclude_pruner();
@@ -1065,10 +1061,10 @@ namespace libsemigroups {
 
        protected:
         using PendingDef = typename Sims1or2::PendingDef;
-        // TODO(1) (Sims1) ensure that _felsch_graph's settings are
-        // properly initialised
         using Definition = std::pair<node_type, label_type>;
 
+        // TODO(1) (Sims1) ensure that _felsch_graph's settings are
+        // properly initialised
         FelschGraph<word_type, node_type, std::vector<Definition>>
             _felsch_graph;
 
@@ -2177,9 +2173,6 @@ namespace libsemigroups {
                                                 WordGraph<Node> const&);
 
      public:
-      // TODO(0) add noexcept?
-      // NOTE(RC): Not sure if noexcept, initializing the _tree field of type
-      // Forest allocates memory
       //! Default constructor
       const_rcgp_iterator() = default;
       //! Default copy constructor.
@@ -2893,7 +2886,6 @@ namespace libsemigroups {
     //! \warning
     //! This method does not verify if \p forbid contains trivial pairs or not.
     // TODO(2): Construct from std::vector<std::string>
-    // TODO(2): Template constructor on typename Word
     explicit SimsRefinerFaithful(std::vector<word_type> const& forbid)
         : _forbid(forbid) {}
 

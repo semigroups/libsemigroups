@@ -931,8 +931,13 @@ namespace libsemigroups {
                           that._pending.cend());
     }
 
-    // TODO(0) expand to longer comment about thread sanitizer warnings and how
-    // we can gleefully ignore them
+    // NOTE: (reiniscirpons)
+    // When running the thread sanitizer we get the error
+    // ThreadSanitizer: lock-order-inversion (potential deadlock)
+    // This can be ignored here, despite the lock order inversion, since we only
+    // every try to steal when we are empty from a non-empty thread, it cannot
+    // be the case that two threads try to steal from each other simultaneously.
+    // In other words the thread sanitizer is overly cautious here.
     template <typename Sims1or2>
     bool SimsBase<Sims1or2>::thread_iterator::try_steal(thread_iterator& that) {
       std::lock_guard<std::mutex> lock(iterator_base::_mtx);

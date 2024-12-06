@@ -2348,7 +2348,7 @@ namespace libsemigroups {
                           "[extreme][low-index][plactic]") {
     std::array<uint64_t, 8> const num
         = {0, 1, 67, 2'794, 106'264, 4'795'980, 278'253'841, 20'855'970'290};
-    // Last value too 1h34m to compute so is not included.
+    // Last value took 1h34m to compute so is not included.
     auto rg = ReportGuard(true);
     auto p  = plactic_monoid(4);
     p.contains_empty_word(false);
@@ -4243,9 +4243,6 @@ namespace libsemigroups {
                           "119",
                           "2-sided ideals Jura's example",
                           "[quick][sims1][no-valgrind]") {
-    // TODO(0) change category back to quick, these fail
-    // currently because of changes to the api in
-    // ToddCoxeter
     Presentation<std::string> p;
     p.alphabet("ab");
     p.contains_empty_word(false);
@@ -4405,9 +4402,6 @@ namespace libsemigroups {
                           "123",
                           "Adding and removing pruners",
                           "[quick][low-index]") {
-    // TODO(0) change category back to quick, these fail
-    // currently because of changes to the api in
-    // ToddCoxeter
     auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("ab");
@@ -5185,22 +5179,3 @@ namespace libsemigroups {
   }
 
 }  // namespace libsemigroups
-
-// [[[0, 0, 0]],            #1#
-// [[0, 0, 1], [1, 0, 1]],  #2#
-// [[0, 1, 0], [1, 1, 0]],
-// [[0, 1, 1], [1, 1, 1]]]  #3#
-
-// [[[0, 0, 0]],                        #1#
-//   [[1, 0, 1], [1, 1, 1]],
-//   [[1, 0, 2], [1, 1, 1], [1, 2, 1]],
-//   [[1, 1, 1], [1, 1, 1]],            #2#
-//   [[1, 1, 2], [1, 1, 1], [1, 1, 1]], #4#
-//   [[1, 0, 1], [2, 1, 2], [2, 2, 2]],
-//   [[1, 0, 2], [2, 1, 2], [2, 2, 2]],
-//   [[1, 1, 2], [2, 1, 2], [2, 2, 2]], #3#
-//   [[1, 2, 2], [2, 1, 2], [2, 2, 2]],
-//   [[1, 0, 2], [2, 2, 2], [2, 2, 2]],
-//   [[1, 2, 1], [2, 2, 2], [2, 2, 2]],
-//   [[1, 2, 2], [2, 2, 2], [2, 2, 2]],
-//   [[1, 2, 1], [1, 1, 1], [1, 2, 1]]]
