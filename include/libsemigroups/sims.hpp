@@ -1259,7 +1259,7 @@ namespace libsemigroups {
 
       uint64_t number_of_congruences(size_type n) const;
     };  // SimsBase
-  }  // namespace detail
+  }     // namespace detail
 
   namespace sims {
     class const_cgp_iterator;
@@ -1763,7 +1763,7 @@ namespace libsemigroups {
 
       using SimsBase::IteratorBase::stats;
     };  // class iterator_base
-  };  // Sims2
+  };    // Sims2
 
   //! \ingroup congruences_group
   //!
