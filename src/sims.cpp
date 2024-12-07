@@ -1348,7 +1348,7 @@ namespace libsemigroups {
   // doesn't construct a FroidurePin object for these). So, it seems to be
   // best to just search through the digraphs with [1, 57) nodes once.
   //
-  // TODO(2)(later) perhaps find minimal 2-sided congruences first (or try to)
+  // TODO(2) perhaps find minimal 2-sided congruences first (or try to)
   // and then run MinimalRepOrc for right congruences excluding all the
   // generating pairs from the minimal 2-sided congruences. Also with this
   // approach FroidurePin wouldn't be required in RepOrc. This might not work,
