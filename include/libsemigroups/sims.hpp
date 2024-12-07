@@ -54,21 +54,21 @@
 #ifndef LIBSEMIGROUPS_SIMS_HPP_
 #define LIBSEMIGROUPS_SIMS_HPP_
 
-#include <algorithm>      // for max, fill, count, for_each
-#include <atomic>         // for atomic_uint64_t, __atomic_base
-#include <bits/chrono.h>  // for operator-
-#include <cstddef>        // for size_t
-#include <cstdint>        // for uint64_t, uint32_t
-#include <functional>     // for function
-#include <iterator>       // for distance, forward_iterator_tag, pair
-#include <list>           // for operator!=
-#include <memory>         // for unique_ptr
-#include <mutex>          // for mutex
-#include <string>         // for operator+, basic_string, string, to_string
-#include <thread>         // for thread
-#include <type_traits>    // for decay_t
-#include <utility>        // for move, pair, swap
-#include <vector>         // for vector
+#include <algorithm>    // for max, fill, count, for_each
+#include <atomic>       // for atomic_uint64_t, __atomic_base
+#include <chrono>       // for operator-
+#include <cstddef>      // for size_t
+#include <cstdint>      // for uint64_t, uint32_t
+#include <functional>   // for function
+#include <iterator>     // for distance, forward_iterator_tag, pair
+#include <list>         // for operator!=
+#include <memory>       // for unique_ptr
+#include <mutex>        // for mutex
+#include <string>       // for operator+, basic_string, string, to_string
+#include <thread>       // for thread
+#include <type_traits>  // for decay_t
+#include <utility>      // for move, pair, swap
+#include <vector>       // for vector
 
 #include "constants.hpp"     // for operator!=, operator==, Max, UNDEFINED
 #include "debug.hpp"         // for LIBSEMIGROUPS_ASSERT
@@ -78,6 +78,7 @@
 #include "knuth-bendix.hpp"  // for KnuthBendix, to_presentation
 #include "matrix.hpp"        // for DynamicMatrix, MatrixCommon, BMat
 #include "presentation.hpp"  // for Presentation, longest_rule_length, short...
+#include "ranges.hpp"        // for operator|, iterator_range
 #include "runner.hpp"        // for delta, Reporter
 #include "todd-coxeter.hpp"  // for ToddCoxeter
 #include "types.hpp"         // for word_type, relation_type, congruence_kind
@@ -90,8 +91,6 @@
 #include "detail/report.hpp"          // for ReportCell
 #include "detail/rewriters.hpp"       // for RewriteTrie
 #include "detail/word-graph-with-sources.hpp"  // for WordGraphWithSources
-
-#include "rx/ranges.hpp"  // for operator|, iterator_range
 
 //! \defgroup congruences_group Congruences
 //!

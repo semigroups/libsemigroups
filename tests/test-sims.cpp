@@ -19,30 +19,28 @@
 #define CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER
 #define CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER
 
-#include <algorithm>         // for fill, transform, equal, sort, for_each
-#include <array>             // for array
-#include <atomic>            // for atomic, atomic_uint64_t, __atomic_b...
-#include <bits/chrono.h>     // for milliseconds
-#include <cmath>             // for pow
-#include <cstddef>           // for size_t
-#include <cstdint>           // for uint64_t, uint32_t, uint8_t
-#include <ctype.h>           // for isprint
-#include <functional>        // for function
-#include <initializer_list>  // for initializer_list
-#include <iostream>          // for cout
-#include <iterator>          // for distance
-#include <string>            // for basic_string, operator==, string
-#include <thread>            // for thread
-#include <tuple>             // for tuple, operator==
-#include <type_traits>       // for decay_t
-#include <unordered_map>     // for operator!=, operator==
-#include <utility>           // for pair, move, swap
-#include <vector>            // for vector
+#include <algorithm>    // for fill, transform, equal, sort, for_each
+#include <array>        // for array
+#include <atomic>       // for atomic, atomic_uint64_t, __atomic_b...
+#include <cctype>       // for isprint
+#include <chrono>       // for milliseconds
+#include <cmath>        // for pow
+#include <cstddef>      // for size_t
+#include <cstdint>      // for uint64_t, uint32_t, uint8_t
+#include <iostream>     // for cout
+#include <iterator>     // for distance
+#include <string>       // for basic_string, operator==, string
+#include <thread>       // for thread
+#include <tuple>        // for tuple, operator==
+#include <type_traits>  // for decay_t
+#include <utility>      // for pair, move, swap
+#include <vector>       // for vector
 
 #include "catch_amalgamated.hpp"  // for REQUIRE, REQUIRE_THROWS_AS, REQUI...
 #include "test-main.hpp"          // for LIBSEMIGROUPS_TEST_CASE
 
 #include "libsemigroups/bipart.hpp"           // for Bipartition
+#include "libsemigroups/constants.hpp"        // for UNDEFINED
 #include "libsemigroups/exception.hpp"        // for LibsemigroupsException
 #include "libsemigroups/fpsemi-examples.hpp"  // for brauer_monoid etc
 #include "libsemigroups/froidure-pin.hpp"     // for FroidurePin
@@ -55,12 +53,11 @@
 #include "libsemigroups/sims.hpp"             // for Sims1
 #include "libsemigroups/to-froidure-pin.hpp"  // for make
 #include "libsemigroups/to-presentation.hpp"  // for to_presentation
+#include "libsemigroups/todd-coxeter.hpp"     // for ToddCoxeter
 #include "libsemigroups/transf.hpp"           // for Transf
 #include "libsemigroups/types.hpp"            // for word_type
 #include "libsemigroups/word-graph.hpp"       // for WordGraph
 #include "libsemigroups/words.hpp"            // for operator""_w, operator+
-#include <libsemigroups/constants.hpp>        // for UNDEFINED
-#include <libsemigroups/todd-coxeter.hpp>     // for ToddCoxeter
 
 #include "libsemigroups/detail/eigen.hpp"           // for DenseBase::row
 #include "libsemigroups/detail/felsch-graph.hpp"    // for FelschGraph
