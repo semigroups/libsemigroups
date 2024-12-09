@@ -4578,25 +4578,29 @@ namespace libsemigroups {
         == fmt::format(
             "<MinimalRepOrc object over {} with target size 0 and 1 thread>",
             to_human_readable_repr(p)));
-    sims1.number_of_threads(4);
-    sims2.number_of_threads(4);
-    rep_orc.number_of_threads(4);
-    minimal_rep_orc.number_of_threads(4);
+    sims1.number_of_threads(std::thread::hardware_concurrency());
+    sims2.number_of_threads(std::thread::hardware_concurrency());
+    rep_orc.number_of_threads(std::thread::hardware_concurrency());
+    minimal_rep_orc.number_of_threads(std::thread::hardware_concurrency());
     REQUIRE(to_human_readable_repr(sims1)
-            == fmt::format("<Sims1 object over {} with 4 threads>",
-                           to_human_readable_repr(p)));
+            == fmt::format("<Sims1 object over {} with {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
-            == fmt::format("<Sims2 object over {} with 4 threads>",
-                           to_human_readable_repr(p)));
+            == fmt::format("<Sims2 object over {} with {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
             == fmt::format("<RepOrc object over {} with node bounds [0, 0), "
-                           "target size 0 and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(
         to_human_readable_repr(minimal_rep_orc)
         == fmt::format(
-            "<MinimalRepOrc object over {} with target size 0 and 4 threads>",
-            to_human_readable_repr(p)));
+            "<MinimalRepOrc object over {} with target size 0 and {} threads>",
+            to_human_readable_repr(p),
+            std::thread::hardware_concurrency()));
     sims1.include(01_w, 10_w);
     sims1.include(010_w, 101_w);
     sims2.include(01_w, 10_w);
@@ -4607,21 +4611,25 @@ namespace libsemigroups {
     minimal_rep_orc.include(010_w, 101_w);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format(
-                "<Sims1 object over {} with 2 include pairs and 4 threads>",
-                to_human_readable_repr(p)));
+                "<Sims1 object over {} with 2 include pairs and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format(
-                "<Sims2 object over {} with 2 include pairs and 4 threads>",
-                to_human_readable_repr(p)));
+                "<Sims2 object over {} with 2 include pairs and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
             == fmt::format("<RepOrc object over {} with 2 include pairs, "
                            "node bounds [0, 0), "
-                           "target size 0 and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format("<MinimalRepOrc object over {} with 2 include "
-                           "pairs, target size 0 and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     sims1.clear_include();
     sims2.clear_include();
     rep_orc.clear_include();
@@ -4632,22 +4640,26 @@ namespace libsemigroups {
     minimal_rep_orc.exclude(11_w, 10_w);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format(
-                "<Sims1 object over {} with 1 exclude pair and 4 threads>",
-                to_human_readable_repr(p)));
+                "<Sims1 object over {} with 1 exclude pair and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format(
-                "<Sims2 object over {} with 1 exclude pair and 4 threads>",
-                to_human_readable_repr(p)));
+                "<Sims2 object over {} with 1 exclude pair and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
     REQUIRE(
         to_human_readable_repr(rep_orc)
         == fmt::format(
             "<RepOrc object over {} with 1 exclude pair, node bounds [0, 0), "
-            "target size 0 and 4 threads>",
-            to_human_readable_repr(p)));
+            "target size 0 and {} threads>",
+            to_human_readable_repr(p),
+            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format("<MinimalRepOrc object over {} with 1 exclude "
-                           "pair, target size 0 and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pair, target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     sims1.include(01_w, 10_w);
     sims1.include(010_w, 101_w);
     sims2.include(01_w, 10_w);
@@ -4658,22 +4670,26 @@ namespace libsemigroups {
     minimal_rep_orc.include(010_w, 101_w);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format("<Sims1 object over {} with 2 include and 1 exclude "
-                           "pairs and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format("<Sims2 object over {} with 2 include and 1 exclude "
-                           "pairs and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
             == fmt::format("<RepOrc object over {} with 2 include and 1 "
                            "exclude pairs, node bounds [0, 0), "
-                           "target size 0 and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format(
                 "<MinimalRepOrc object over {} with 2 include and 1 exclude "
-                "pairs, target size 0 and 4 threads>",
-                to_human_readable_repr(p)));
+                "pairs, target size 0 and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
 
     std::vector<word_type> forbid = {0_w, 01_w, 00_w, ""_w};
     SimsRefinerFaithful    pruno(forbid);
@@ -4683,22 +4699,26 @@ namespace libsemigroups {
     minimal_rep_orc.add_pruner(pruno);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format("<Sims1 object over {} with 2 include and 1 exclude "
-                           "pairs, 1 pruner and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, 1 pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format("<Sims2 object over {} with 2 include and 1 exclude "
-                           "pairs, 1 pruner and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, 1 pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
             == fmt::format("<RepOrc object over {} with 2 include and 1 "
                            "exclude pairs, node bounds [0, 0), "
-                           "target size 0, 1 pruner and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "target size 0, 1 pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format(
                 "<MinimalRepOrc object over {} with 2 include and 1 exclude "
-                "pairs, target size 0, 1 pruner and 4 threads>",
-                to_human_readable_repr(p)));
+                "pairs, target size 0, 1 pruner and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
     SimsRefinerIdeals ideal_pruner(p);
     sims1.add_pruner(ideal_pruner);
     sims2.add_pruner(ideal_pruner);
@@ -4706,22 +4726,26 @@ namespace libsemigroups {
     minimal_rep_orc.add_pruner(ideal_pruner);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format("<Sims1 object over {} with 2 include and 1 exclude "
-                           "pairs, 2 pruners and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, 2 pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format("<Sims2 object over {} with 2 include and 1 exclude "
-                           "pairs, 2 pruners and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, 2 pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
             == fmt::format("<RepOrc object over {} with 2 include and 1 "
                            "exclude pairs, node bounds [0, 0), "
-                           "target size 0, 2 pruners and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "target size 0, 2 pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format(
                 "<MinimalRepOrc object over {} with 2 include and 1 exclude "
-                "pairs, target size 0, 2 pruners and 4 threads>",
-                to_human_readable_repr(p)));
+                "pairs, target size 0, 2 pruners and {} threads>",
+                to_human_readable_repr(p),
+                std::thread::hardware_concurrency()));
     sims1.clear_exclude();
     sims2.clear_exclude();
     rep_orc.clear_exclude();
@@ -4736,44 +4760,52 @@ namespace libsemigroups {
     minimal_rep_orc.add_pruner(pruno);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format("<Sims1 object over {} with 2 include pairs, 1 "
-                           "pruner and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format("<Sims2 object over {} with 2 include pairs, 1 "
-                           "pruner and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(
         to_human_readable_repr(rep_orc)
         == fmt::format(
             "<RepOrc object over {} with 2 include pairs, node bounds [0, 0), "
-            "target size 0, 1 pruner and 4 threads>",
-            to_human_readable_repr(p)));
+            "target size 0, 1 pruner and {} threads>",
+            to_human_readable_repr(p),
+            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format("<MinimalRepOrc object over {} with 2 include "
-                           "pairs, target size 0, 1 pruner and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, target size 0, 1 pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     sims1.add_pruner(ideal_pruner);
     sims2.add_pruner(ideal_pruner);
     rep_orc.add_pruner(ideal_pruner);
     minimal_rep_orc.add_pruner(ideal_pruner);
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format("<Sims1 object over {} with 2 include pairs, 2 "
-                           "pruners and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
             == fmt::format("<Sims2 object over {} with 2 include pairs, 2 "
-                           "pruners and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(
         to_human_readable_repr(rep_orc)
         == fmt::format(
             "<RepOrc object over {} with 2 include pairs, node bounds [0, 0), "
-            "target size 0, 2 pruners and 4 threads>",
-            to_human_readable_repr(p)));
+            "target size 0, 2 pruners and {} threads>",
+            to_human_readable_repr(p),
+            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
             == fmt::format("<MinimalRepOrc object over {} with 2 include "
-                           "pairs, target size 0, 2 pruners and 4 threads>",
-                           to_human_readable_repr(p)));
+                           "pairs, target size 0, 2 pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
