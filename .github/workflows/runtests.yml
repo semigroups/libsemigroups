@@ -264,7 +264,7 @@ jobs:
            run:  ./test_all "[quick]"
    sanitisers:
       timeout-minutes: 60
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       env:
         CXX: "ccache clang++"
       strategy:
