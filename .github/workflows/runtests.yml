@@ -264,12 +264,12 @@ jobs:
            run:  ./test_all "[quick]"
    sanitisers:
       timeout-minutes: 60
-      runs-on: ubuntu-24.04
+      runs-on: ubuntu-latest
       env:
-        CXX: "ccache clang++"
+        CXX: "ccache clang++-18"
       strategy:
         matrix:
-          type: ["thread", "address", "undefined behaviour"]
+          type: ["Thread", "Address", "UndefinedBehaviour"]
           include:
             - type: "Thread"
               cxx_flags: "-fdiagnostics-color -fsanitize=thread -fPIE -pie -fno-omit-frame-pointer -g -O2"
@@ -287,6 +287,8 @@ jobs:
            with:
              update_packager_index: false
              install_ccache: true
+         - name: "Install dependencies . . ."
+           run: wget -qO- https://apt.llvm.org/llvm.sh | bash -s -- 18
          - name: "Configure . . ."
            run: |
                 mkdir -p m4 && ./autogen.sh
@@ -294,7 +296,7 @@ jobs:
          - name: "Build libsemigroups . . ."
            run: make -j4
          - name: "Build test_all . . ."
-           run: make test_all -j4 
+           run: make test_all -j4
          - name: "Run tests with {{ matrix.type }}Sanitizer . . ."
            run: ./test_all "[quick][standard]"
    valgrind:
