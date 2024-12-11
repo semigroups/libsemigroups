@@ -288,7 +288,10 @@ jobs:
              update_packager_index: false
              install_ccache: true
          - name: "Install dependencies . . ."
-           run: sudo wget -qO- https://apt.llvm.org/llvm.sh | bash -s -- 18
+           run: |
+                sudo wget -q https://apt.llvm.org/llvm.sh
+                sudo chmod u+x llvm.sh
+                sudo ./llvm.sh 18
          - name: "Configure . . ."
            run: |
                 mkdir -p m4 && ./autogen.sh
