@@ -271,9 +271,15 @@ jobs:
         matrix:
           type: ["thread", "address", "undefined behaviour"]
           include:
-            - type: "thread"
+            - type: "Thread"
               cxx_flags: "-fdiagnostics-color -fsanitize=thread -fPIE -pie -fno-omit-frame-pointer -g -O2"
               ld_flags: "-fsanitize=thread"
+            - type: "Address"
+              cxx_flags: ""
+              ld_flags: ""
+            - type: "UndefinedBehavior"
+              cxx_flags: ""
+              ld_flags: ""
       steps:
          - uses: actions/checkout@v3
          - name: "Setup ccache . . ."
@@ -289,7 +295,7 @@ jobs:
            run: make -j4
          - name: "Build test_all . . ."
            run: make test_all -j4 
-         - name: "Run tests with {{ matrix.type }} . . ."
+         - name: "Run tests with {{ matrix.type }}Sanitizer . . ."
            run: ./test_all "[quick][standard]"
    valgrind:
       timeout-minutes: 60
