@@ -277,7 +277,7 @@ jobs:
             - type: "Address"
               cxx_flags: ""
               ld_flags: ""
-            - type: "UndefinedBehavior"
+            - type: "UndefinedBehaviour"
               cxx_flags: ""
               ld_flags: ""
       steps:
@@ -288,7 +288,7 @@ jobs:
              update_packager_index: false
              install_ccache: true
          - name: "Install dependencies . . ."
-           run: wget -qO- https://apt.llvm.org/llvm.sh | bash -s -- 18
+           run: sudo wget -qO- https://apt.llvm.org/llvm.sh | bash -s -- 18
          - name: "Configure . . ."
            run: |
                 mkdir -p m4 && ./autogen.sh
