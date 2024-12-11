@@ -262,6 +262,35 @@ jobs:
            run: make test_all -j4
          - name: "Run the quick tests . . ."
            run:  ./test_all "[quick]"
+   sanitisers:
+      timeout-minutes: 60
+      runs-on: ubuntu-latest
+      env:
+        CXX: "ccache clang++"
+      strategy:
+        matrix:
+          type: ["thread", "address", "undefined behaviour"]
+          include:
+            - type: "thread"
+              cxx_flags: "-fdiagnostics-color -fsanitize=thread -fPIE -pie -fno-omit-frame-pointer -g -O2"
+              ld_flags: "-fsanitize=thread"
+      steps:
+         - uses: actions/checkout@v3
+         - name: "Setup ccache . . ."
+           uses: Chocobo1/setup-ccache-action@v1
+           with:
+             update_packager_index: false
+             install_ccache: true
+         - name: "Configure . . ."
+           run: |
+                mkdir -p m4 && ./autogen.sh
+                ./configure CXX="$CXX" CXXFLAGS="{{ matrix.cxx_flags }}" LDFLAGS="{{ matrix.ld_flags }}"
+         - name: "Build libsemigroups . . ."
+           run: make -j4
+         - name: "Build test_all . . ."
+           run: make test_all -j4 
+         - name: "Run tests with {{ matrix.type }} . . ."
+           run: ./test_all "[quick][standard]"
    valgrind:
       timeout-minutes: 60
       runs-on: ubuntu-latest
