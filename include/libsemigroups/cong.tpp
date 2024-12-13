@@ -40,16 +40,16 @@ namespace libsemigroups {
     // in parallel
     add_runner(std::make_shared<ToddCoxeter>(to_todd_coxeter(knd, S, wg)));
 
-    auto tc = to_todd_coxeter(knd, S, wg);
-    tc.strategy(ToddCoxeter::options::strategy::felsch);
+    // auto tc = to_todd_coxeter(knd, S, wg);
+    // tc.strategy(ToddCoxeter::options::strategy::felsch);
+    // add_runner(std::make_shared<ToddCoxeter>(std::move(tc)));
+
+    auto tc = ToddCoxeter(knd, to_presentation<word_type>(S));
     add_runner(std::make_shared<ToddCoxeter>(std::move(tc)));
 
-    tc = ToddCoxeter(knd, to_presentation<word_type>(S));
-    add_runner(std::make_shared<ToddCoxeter>(std::move(tc)));
-
-    tc = ToddCoxeter(knd, to_presentation<word_type>(S));
-    tc.strategy(ToddCoxeter::options::strategy::felsch);
-    add_runner(std::make_shared<ToddCoxeter>(std::move(tc)));
+    // tc = ToddCoxeter(knd, to_presentation<word_type>(S));
+    // tc.strategy(ToddCoxeter::options::strategy::felsch);
+    // add_runner(std::make_shared<ToddCoxeter>(std::move(tc)));
 
     return *this;
   }
