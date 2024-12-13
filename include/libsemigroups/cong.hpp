@@ -40,6 +40,9 @@ namespace libsemigroups {
 
   //! \ingroup cong_all_classes_group
   //!
+  //! \brief Class for running Kambites, KnuthBendix, and \ref
+  //! todd_coxeter_class_group "ToddCoxeter" in parallel.
+  //!
   //! Defined in ``cong.hpp``.
   //!
   //! On this page we describe the functionality relating to the class
@@ -49,26 +52,25 @@ namespace libsemigroups {
   //! in parallel. This class is provided for convenience, at present it is not
   //! very customisable, and lacks some of the fine grained control offered by
   //! the classes implementing individual algorithms, such as Kambites,
-  //! KnuthBendix, and ToddCoxeter.
+  //! KnuthBendix, and \ref todd_coxeter_class_group "ToddCoxeter".
   //!
   //! \sa congruence_kind and tril.
   //!
   //! \par Example
   //! \code
-  //! FpSemigroup S;
-  //! S.set_alphabet(3);
-  //! S.set_identity(0);
-  //! S.add_rule({1, 2}, {0});
-  //! S.is_obviously_infinite();  // false
-  //!
-  //! Congruence cong(twosided, S);
-  //! cong.add_generating_pair({1, 1, 1}, {0});
+  //! Presentation<word_type> p;
+  //! p.alphabet(3)
+  //! presentation::add_rule(p, {1, 2}, {0});
+  //! Congruence cong(congruence_kind::twosided, p);
+  //! is_obviously_infinite(cong);  // false
+  //! congruence::add_generating_pair(cong, {1, 1, 1}, {0});
   //! cong.number_of_classes(); // 3
   //! \endcode
   // TODO(0):
   // * impl presentation mem fn
   class Congruence : public CongruenceInterface {
     enum class RunnerKind : size_t { TC = 0, KB = 1, K = 2 };
+
     /////////////////////////////////////////////////////////////////////////
     // Congruence - data - private
     /////////////////////////////////////////////////////////////////////////
@@ -82,48 +84,33 @@ namespace libsemigroups {
     // Congruence - constructors - public
     //////////////////////////////////////////////////////////////////////////
 
-    // TODO doc
+    //! \brief Default constructor.
+    //!
+    //! This function default constructs an uninitialised Congruence instance.
     Congruence()
         : CongruenceInterface(), _race(), _runners_initted(), _runner_kinds() {
       init();
     }
 
-    // TODO doc
+    //! \brief Re-initialize a Congruence instance.
+    //!
+    //! This function puts a Congruence instance back into the state that it
+    //! would have been in if it had just been newly default constructed.
+    //!
+    //! \returns A reference to `*this`.
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
     Congruence& init();
-
-    //! Construct from kind (left/right/2-sided) and options.
-    //!
-    //! Constructs an empty instance of an interface to a congruence of type
-    //! specified by the argument.
-    //!
-    //! \param type the type of the congruence.
-    //! \param opt  optionally specify algorithms to be used (defaults to
-    //! options::runners::standard).
-    //!
-    //! \complexity
-    //! Constant.
-    //!
-    //! \sa set_number_of_generators and add_generating_pair.
-    // TODO remove
-    explicit Congruence(congruence_kind type) : CongruenceInterface() {
-      init(type);
-    }
-
-    // TODO doc
-    // TODO remove
-    Congruence& init(congruence_kind type) {
-      CongruenceInterface::init(type);
-      return init();
-    }
 
     //! Construct from kind (left/right/2-sided) and FroidurePin.
     //!
     //! Constructs a Congruence over the FroidurePin instance \p S
-    //! representing a left/right/2-sided congruence according to \p type.
+    //! representing a left/right/2-sided congruence according to \p knd.
     //!
     //! \tparam T a class derived from FroidurePinBase.
     //!
-    //! \param type whether the congruence is left, right, or 2-sided
+    //! \param knd whether the congruence is left, right, or 2-sided
     //! \param S  a const reference to the semigroup over which the congruence
     //! is defined.
     //!
@@ -138,17 +125,17 @@ namespace libsemigroups {
     // template <typename T>
     // TODO(0) should be a helper
     template <typename Node>
-    Congruence(congruence_kind        type,
+    Congruence(congruence_kind        knd,
                FroidurePinBase&       S,
                WordGraph<Node> const& wg)
         : Congruence() {
-      init(type, S, wg);
+      init(knd, S, wg);
     }
 
     // TODO doc
     // TODO(0) helper
     template <typename Node>
-    Congruence& init(congruence_kind        type,
+    Congruence& init(congruence_kind        knd,
                      FroidurePinBase&       S,
                      WordGraph<Node> const& wg) {
       if (S.is_finite() != tril::FALSE) {
@@ -157,12 +144,12 @@ namespace libsemigroups {
         LIBSEMIGROUPS_EXCEPTION(
             "the 2nd argument does not represent a finite semigroup!");
       }
-      init(type);
+      CongruenceInterface::init(knd);
 
       // TODO(later) if necessary make a runner that tries to S.run(), then get
       // the Cayley graph and use that in the ToddCoxeter, at present that'll
       // happen here in the constructor
-      auto tc = std::make_shared<ToddCoxeter>(to_todd_coxeter(type, S, wg));
+      auto tc = std::make_shared<ToddCoxeter>(to_todd_coxeter(knd, S, wg));
       add_runner(tc);
       // TODO add felsch TC also
       return *this;
@@ -171,9 +158,9 @@ namespace libsemigroups {
     //! Construct from kind (left/right/2-sided) and Presentation.
     //!
     //! Constructs a Congruence over the Presentation instance \p p
-    //! representing a left/right/2-sided congruence according to \p type.
+    //! representing a left/right/2-sided congruence according to \p knd.
     //!
-    //! \param type whether the congruence is left, right, or 2-sided
+    //! \param knd whether the congruence is left, right, or 2-sided
     //! \param p  a const reference to the presentation.
     //!
     //! \exceptions
@@ -182,28 +169,27 @@ namespace libsemigroups {
     //! \complexity
     //! Constant.
     // No rvalue ref version because we anyway must copy p multiple times
-    Congruence(congruence_kind type, Presentation<word_type> const& p)
+    Congruence(congruence_kind knd, Presentation<word_type> const& p)
         : Congruence() {
-      init(type, p);
+      init(knd, p);
     }
 
     // TODO doc
     // No rvalue ref version because we anyway must copy p multiple times
-    Congruence& init(congruence_kind type, Presentation<word_type> const& p);
+    Congruence& init(congruence_kind knd, Presentation<word_type> const& p);
 
     // TODO doc
     // No rvalue ref version because we are not able to use p directly anyway
     template <typename Word>
-    Congruence(congruence_kind type, Presentation<Word> const& p)
-        : Congruence(type, to_presentation<word_type>(p, [](auto const& x) {
+    Congruence(congruence_kind knd, Presentation<Word> const& p)
+        : Congruence(knd, to_presentation<word_type>(p, [](auto const& x) {
                        return x;
                      })) {}
 
     //! TODO(doc)
     template <typename Word>
-    Congruence& init(congruence_kind type, Presentation<Word> const& p) {
-      init(type,
-           to_presentation<word_type>(p, [](auto const& x) { return x; }));
+    Congruence& init(congruence_kind knd, Presentation<Word> const& p) {
+      init(knd, to_presentation<word_type>(p, [](auto const& x) { return x; }));
       return *this;
     }
 
