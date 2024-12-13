@@ -180,8 +180,6 @@ namespace libsemigroups {
     //!
     //! Constructs a SimsStats object with all statistics set to zero.
     //!
-    //! \parameters (None)
-    //!
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats();
@@ -190,8 +188,6 @@ namespace libsemigroups {
     //!
     //! This function puts a SimsStats object back into the same state as if
     //! it had been newly default constructed.
-    //!
-    //! \parameters (None)
     //!
     //! \returns A reference to \c this.
     //!
@@ -265,8 +261,6 @@ namespace libsemigroups {
     //!
     //! Set all statistics to zero.
     //!
-    //! \parameters (None)
-    //!
     //! \exceptions
     //! \no_libsemigroups_except
     SimsStats& stats_zero();
@@ -276,8 +270,6 @@ namespace libsemigroups {
     //! Overwrites the values of \ref count_last and \ref total_pending_last
     //! with \ref count_now and \ref total_pending_now respectively. Triggers an
     //! atomic load on \ref count_now and \ref total_pending_now.
-    //!
-    //! \parameters (None)
     //!
     //! \exceptions
     //! \no_libsemigroups_except
@@ -348,8 +340,6 @@ namespace libsemigroups {
     //! * \ref long_rule_length to set the length of long rules;
     //! * \ref idle_thread_restarts to set the number of idle thread restarts.
     //!
-    //! \parameters (None)
-    //!
     //! \exceptions
     //! \no_libsemigroups_except
     SimsSettings();
@@ -358,8 +348,6 @@ namespace libsemigroups {
     //!
     //! This function puts a SimsSettings object back into the same state as if
     //! it had been newly default constructed.
-    //!
-    //! \parameters (None)
     //!
     //! \returns A reference to \c this.
     //!
@@ -1259,7 +1247,7 @@ namespace libsemigroups {
 
       uint64_t number_of_congruences(size_type n) const;
     };  // SimsBase
-  }     // namespace detail
+  }  // namespace detail
 
   namespace sims {
     class const_cgp_iterator;
@@ -1428,8 +1416,6 @@ namespace libsemigroups {
     //! This function puts a Sims1 object back into the same state as if
     //! it had been newly default constructed.
     //!
-    //! \parameters (None)
-    //!
     //! \returns A reference to \c this.
     //!
     //! \exception
@@ -1470,8 +1456,6 @@ namespace libsemigroups {
     //!
     //!  \param n the maximum number of congruence classes.
     //!  \param pred the predicate applied to every congruence found.
-    //!
-    //!  \returns (None)
     //!
     //!  \throws LibsemigroupsException if \p n is \c 0.
     //!  \throws LibsemigroupsException if `presentation()` has 0-generators and
@@ -1694,8 +1678,6 @@ namespace libsemigroups {
     //! This function puts a Sims2 object back into the same state as if
     //! it had been newly default constructed.
     //!
-    //! \parameters (None)
-    //!
     //! \returns A reference to \c this.
     //!
     //! \exception
@@ -1763,7 +1745,7 @@ namespace libsemigroups {
 
       using SimsBase::IteratorBase::stats;
     };  // class iterator_base
-  };    // Sims2
+  };  // Sims2
 
   //! \ingroup congruences_group
   //!
@@ -1800,8 +1782,6 @@ namespace libsemigroups {
     //!
     //! This function puts a RepOrc object back into the same state as if
     //! it had been newly default constructed.
-    //!
-    //! \parameters (None)
     //!
     //! \returns A reference to \c this.
     //!
@@ -1958,8 +1938,6 @@ namespace libsemigroups {
     //! \c 1, then the value returned by this function is non-deterministic, and
     //! may vary even for the same parameters.
     //!
-    //! \param (None) this function has no parameters.
-    //!
     //! \returns A value of type `WordGraph`.
     //!
     //! \exceptions \no_libsemigroups_except
@@ -1998,8 +1976,6 @@ namespace libsemigroups {
     //!
     //! This function puts a MinimalRepOrc object back into the same state as if
     //! it had been newly default constructed.
-    //!
-    //! \parameters (None)
     //!
     //! \returns A reference to \c this.
     //!
@@ -2070,9 +2046,6 @@ namespace libsemigroups {
     //! \warning If the return value of \ref number_of_threads is greater
     //! than \c 1, then the value returned by this function is
     //! non-deterministic, and may vary even for the same parameters.
-    //!
-    //! \param
-    //! (None) this function has no parameters.
     //!
     //! \returns A value of type `WordGraph<uint32_t>`.
     //!
