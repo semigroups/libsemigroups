@@ -1037,6 +1037,7 @@ namespace libsemigroups {
     ////////////////////////////////////////////////////////////////////////
 
    private:
+    // TODO(0) out of line
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,

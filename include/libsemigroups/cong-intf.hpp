@@ -233,7 +233,8 @@ namespace libsemigroups {
     // CongruenceInterface - contains
     ////////////////////////////////////////////////////////////////////////
 
-    template <typename Iterator1,
+    template <typename Subclass,
+              typename Iterator1,
               typename Iterator2,
               typename Iterator3,
               typename Iterator4>
@@ -241,12 +242,14 @@ namespace libsemigroups {
                                           Iterator2 last1,
                                           Iterator3 first2,
                                           Iterator4 last2) const {
-      throw_if_letter_out_of_bounds(first1, last1);
-      throw_if_letter_out_of_bounds(first2, last2);
-      return currently_contains_no_checks(first1, last1, first2, last2);
+      throw_if_letter_out_of_bounds<Subclass>(first1, last1);
+      throw_if_letter_out_of_bounds<Subclass>(first2, last2);
+      return static_cast<Subclass const&>(*this).currently_contains_no_checks(
+          first1, last1, first2, last2);
     }
 
-    template <typename Iterator1,
+    template <typename Subclass,
+              typename Iterator1,
               typename Iterator2,
               typename Iterator3,
               typename Iterator4>
@@ -254,9 +257,10 @@ namespace libsemigroups {
                                 Iterator2 last1,
                                 Iterator3 first2,
                                 Iterator4 last2) {
-      throw_if_letter_out_of_bounds(first1, last1);
-      throw_if_letter_out_of_bounds(first2, last2);
-      return contains_no_checks(first1, last1, first2, last2);
+      throw_if_letter_out_of_bounds<Subclass>(first1, last1);
+      throw_if_letter_out_of_bounds<Subclass>(first2, last2);
+      return static_cast<Subclass&>(*this).contains_no_checks(
+          first1, last1, first2, last2);
     }
 
    private:

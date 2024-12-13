@@ -259,6 +259,8 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 525);
   }
 
+  // TODO(0) this test case runs the race twice for some reason I
+  // don't understand
   LIBSEMIGROUPS_TEST_CASE("Congruence",
                           "011",
                           "congruence on full PBR monoid on 2 points",
@@ -286,6 +288,7 @@ namespace libsemigroups {
         cong, {8, 7, 5, 8, 9, 8}, {6, 3, 8, 6, 1, 2, 4});
 
     REQUIRE(cong.number_of_classes() == 19'009);
+    // TODO(0) uncomment
     // REQUIRE(cong.number_of_non_trivial_classes() == 577);
     // REQUIRE(cong.cend_ntc() - cong.cbegin_ntc() == 577);
 
