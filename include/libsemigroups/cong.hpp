@@ -25,34 +25,34 @@
 #include <cstddef>  // for size_t
 #include <memory>   // for shared_ptr
 
-#include "cong-intf.hpp"
-#include "exception.hpp"     // for LIBSEMIGROUPS_EXCEPTION
-#include "kambites.hpp"      // for Kambites
-#include "knuth-bendix.hpp"  // for KnuthBendix
-#include "runner.hpp"        // for Runner
-#include "to-todd-coxeter.hpp"
-#include "todd-coxeter.hpp"  // for ToddCoxeter
-#include "types.hpp"         // for word_type
+#include "cong-intf.hpp"        // for CongruenceInterface
+#include "exception.hpp"        // for LIBSEMIGROUPS_EXCEPTION
+#include "kambites.hpp"         // for Kambites
+#include "knuth-bendix.hpp"     // for KnuthBendix
+#include "to-todd-coxeter.hpp"  // for to_todd_coxeter
+#include "todd-coxeter.hpp"     // for ToddCoxeter
+#include "types.hpp"            // for word_type
 
 #include "detail/race.hpp"  // for Race
 
 namespace libsemigroups {
   class FroidurePinBase;  // Forward declaration, constructor parameters
 
-  // The purpose of this class in v3 is just to deliver the winner, then that
-  // object is used to answer whatever questions.
-
+  //! \ingroup cong_all_classes_group
+  //!
   //! Defined in ``cong.hpp``.
   //!
-  //! On this page we describe the functionality relating to the Congruence
-  //! class. This class can be used for computing a congruence over a semigroup
-  //! by running every applicable algorithm from ``libsemigroups`` (and some
-  //! variants of the same algorithm) in parallel. This class is provided for
-  //! convenience, at present it is not very customisable, and lacks some of
-  //! the fine grained control offered by the classes implementing individual
-  //! algorithms, such as ToddCoxeter and KnuthBendix.
+  //! On this page we describe the functionality relating to the class
+  //! Congruence in ``libsemigroups``. This class can be used for computing a
+  //! congruence over a semigroup or monoid by running every applicable
+  //! algorithm from ``libsemigroups`` (and some variants of the same algorithm)
+  //! in parallel. This class is provided for convenience, at present it is not
+  //! very customisable, and lacks some of the fine grained control offered by
+  //! the classes implementing individual algorithms, such as Kambites,
+  //! KnuthBendix, and ToddCoxeter.
   //!
   //! \sa congruence_kind and tril.
+  //!
   //! \par Example
   //! \code
   //! FpSemigroup S;
@@ -514,6 +514,8 @@ namespace libsemigroups {
     }
   };
 
+  // There's no doc for anything in this section it's covered by the congruence
+  // interface helpers.
   namespace congruence {
 
     ////////////////////////////////////////////////////////////////////////
