@@ -19,7 +19,7 @@
 #define CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS
 
 #include "catch_amalgamated.hpp"  // for TEST_CASE
-#include "test-main.hpp"          // for LIBSEMIGROUPS_TEST_CASE
+#include "test-main.hpp"          // for LIBSEMIGROUPS_TEST_CASE_V3
 
 #include "libsemigroups/bmat-fastest.hpp"     // for BMatFastest
 #include "libsemigroups/bmat8.hpp"            // for BMat8
@@ -70,10 +70,10 @@ namespace libsemigroups {
   using fpsemigroup::stellar_monoid;
   using fpsemigroup::zero_rook_monoid;
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "000",
-                          "left congruence from presentation",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "000",
+                             "left congruence from presentation",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(2);
@@ -97,10 +97,10 @@ namespace libsemigroups {
     }
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "001",
-                          "2-sided congruence from presentation",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "001",
+                             "2-sided congruence from presentation",
+                             "[quick][cong]") {
     auto rg = ReportGuard(false);
 
     Presentation<word_type> p;
@@ -122,10 +122,10 @@ namespace libsemigroups {
     REQUIRE(!congruence::contains(cong, 1_w, 000_w));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "007",
-                          "2-sided congruence from presentation",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "007",
+                             "2-sided congruence from presentation",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(3);
@@ -147,10 +147,10 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 2);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "008",
-                          "2-sided congruence from presentation",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "008",
+                             "2-sided congruence from presentation",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(3);
@@ -178,10 +178,10 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 2);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "009",
-                          "infinite 2-sided congruence from presentation",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "009",
+                             "infinite 2-sided congruence from presentation",
+                             "[quick][cong]") {
     auto rg = ReportGuard(false);
 
     Presentation<word_type> p;
@@ -209,7 +209,6 @@ namespace libsemigroups {
     REQUIRE(congruence::contains(cong, 1_w, 11_w));
     REQUIRE(congruence::contains(cong, 101_w, 10_w));
 
-    // TODO remove explicit use of KnuthBendix here?
     REQUIRE(cong.has<KnuthBendix<>>());
 
     KnuthBendix<> kb(twosided, p);
@@ -227,10 +226,10 @@ namespace libsemigroups {
                 {{{1}, {0, 1}, {1, 1}, {0, 1, 1}, {0}}}));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "010",
-                          "2-sided congruence on finite semigroup",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "010",
+                             "2-sided congruence on finite semigroup",
+                             "[quick][cong][no-valgrind]") {
     auto rg      = ReportGuard(false);
     using Transf = LeastTransf<8>;
     auto S       = to_froidure_pin({Transf({7, 3, 5, 3, 4, 2, 7, 7}),
@@ -262,12 +261,13 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 525);
   }
 
-  // TODO(0) this test case runs the race twice for some reason I
-  // don't understand
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "011",
-                          "congruence on full PBR monoid on 2 points",
-                          "[extreme][cong]") {
+  // TODO(1) this does not seem to be functioning all that well, one of the
+  // threads blocks the others from stopping, extending the time
+  // taken for this to run.
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "011",
+                             "congruence on full PBR monoid on 2 points",
+                             "[extreme][cong]") {
     auto rg = ReportGuard(true);
     auto S  = to_froidure_pin({PBR({{2}, {3}, {0}, {1}}),
                                PBR({{}, {2}, {1}, {0, 3}}),
@@ -291,25 +291,25 @@ namespace libsemigroups {
         cong, {8, 7, 5, 8, 9, 8}, {6, 3, 8, 6, 1, 2, 4});
 
     REQUIRE(cong.number_of_classes() == 19'009);
-    // TODO(0) uncomment
-    // REQUIRE(cong.number_of_non_trivial_classes() == 577);
-    // REQUIRE(cong.cend_ntc() - cong.cbegin_ntc() == 577);
+    auto ntc
+        = congruence::non_trivial_classes(cong, froidure_pin::normal_forms(S));
+    REQUIRE(ntc.size() == 577);
 
-    // std::vector<size_t> v(577, 0);
-    // std::transform(cong.cbegin_ntc(),
-    //                cong.cend_ntc(),
-    //                v.begin(),
-    //                std::mem_fn(&std::vector<word_type>::size));
-    // REQUIRE(std::count(v.cbegin(), v.cend(), 4) == 384);
-    // REQUIRE(std::count(v.cbegin(), v.cend(), 16) == 176);
-    // REQUIRE(std::count(v.cbegin(), v.cend(), 96) == 16);
-    // REQUIRE(std::count(v.cbegin(), v.cend(), 41216) == 1);
+    std::vector<size_t> v(577, 0);
+    std::transform(ntc.cbegin(),
+                   ntc.cend(),
+                   v.begin(),
+                   std::mem_fn(&std::vector<word_type>::size));
+    REQUIRE(std::count(v.cbegin(), v.cend(), 4) == 384);
+    REQUIRE(std::count(v.cbegin(), v.cend(), 16) == 176);
+    REQUIRE(std::count(v.cbegin(), v.cend(), 96) == 16);
+    REQUIRE(std::count(v.cbegin(), v.cend(), 41216) == 1);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "012",
-                          "2-sided congruence on finite semigroup",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "012",
+                             "2-sided congruence on finite semigroup",
+                             "[quick][cong][no-valgrind]") {
     auto rg = ReportGuard(false);
 
     auto S
@@ -331,10 +331,10 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 32);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "013",
-                          "trivial 2-sided congruence on bicyclic monoid",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "013",
+                             "trivial 2-sided congruence on bicyclic monoid",
+                             "[quick][cong][no-valgrind]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.contains_empty_word(true);
@@ -348,10 +348,11 @@ namespace libsemigroups {
     REQUIRE(congruence::contains(cong, 10_w, 011001_w));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "014",
-                          "non-trivial 2-sided congruence on bicyclic monoid",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3(
+      "Congruence",
+      "014",
+      "non-trivial 2-sided congruence on bicyclic monoid",
+      "[quick][cong]") {
     auto rg = ReportGuard(false);
 
     Presentation<word_type> p;
@@ -377,10 +378,10 @@ namespace libsemigroups {
     }
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "015",
-                          "2-sided congruence on free abelian monoid",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "015",
+                             "2-sided congruence on free abelian monoid",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(3);
@@ -394,10 +395,10 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 15);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "016",
-                          "example where TC works but KB doesn't",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "016",
+                             "example where TC works but KB doesn't",
+                             "[quick][cong]") {
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("abBe");
@@ -414,10 +415,10 @@ namespace libsemigroups {
     REQUIRE(!to_froidure_pin(cong)->contains_one());
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "017",
-                          "2-sided congruence on finite semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "017",
+                             "2-sided congruence on finite semigroup",
+                             "[quick][cong]") {
     auto rg      = ReportGuard(false);
     using Transf = LeastTransf<5>;
     auto S
@@ -442,10 +443,10 @@ namespace libsemigroups {
     REQUIRE(congruence::contains(cong, u, v));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "018",
-                          "infinite fp semigroup from GAP library",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "018",
+                             "infinite fp semigroup from GAP library",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(3);
@@ -481,7 +482,7 @@ namespace libsemigroups {
             == std::vector<std::string>({{1}, {0, 1}, {1, 1}, {0, 1, 1}, {0}}));
   }
 
-  LIBSEMIGROUPS_TEST_CASE(
+  LIBSEMIGROUPS_TEST_CASE_V3(
       "Congruence",
       "019",
       "2-sided cong. from presentation with infinite classes ",
@@ -507,10 +508,10 @@ namespace libsemigroups {
     REQUIRE(congruence::contains(cong, y, y));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "020",
-                          "trivial cong. on an fp semigroup",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "020",
+                             "trivial cong. on an fp semigroup",
+                             "[quick][cong][no-valgrind]") {
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("ab");
@@ -534,10 +535,10 @@ namespace libsemigroups {
                       LibsemigroupsException);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "021",
-                          "duplicate generators",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "021",
+                             "duplicate generators",
+                             "[quick][cong]") {
     auto rg      = ReportGuard(false);
     using Transf = LeastTransf<8>;
     auto       S = to_froidure_pin({Transf({7, 3, 5, 3, 4, 2, 7, 7}),
@@ -548,10 +549,10 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == S.size());
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "022",
-                          "non-trivial classes",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "022",
+                             "non-trivial classes",
+                             "[quick][cong]") {
     auto rg = ReportGuard(false);
 
     Presentation<word_type> p;
@@ -592,10 +593,10 @@ namespace libsemigroups {
     }
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "023",
-                          "onesided congruence on finite semigroup",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "023",
+                             "onesided congruence on finite semigroup",
+                             "[quick][cong][no-valgrind]") {
     auto rg      = ReportGuard(false);
     using Transf = LeastTransf<8>;
     auto S       = to_froidure_pin({Transf({0, 1, 2, 3, 4, 5, 6, 7}),
@@ -634,10 +635,10 @@ namespace libsemigroups {
     REQUIRE(cong.number_of_classes() == 1);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "024",
-                          "redundant generating pairs",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "024",
+                             "redundant generating pairs",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(1);
@@ -647,10 +648,10 @@ namespace libsemigroups {
     REQUIRE(congruence::contains(cong, 00_w, 00_w));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "025",
-                          "2-sided cong. on free semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "025",
+                             "2-sided cong. on free semigroup",
+                             "[quick][cong]") {
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("a");
@@ -660,10 +661,10 @@ namespace libsemigroups {
     REQUIRE(!congruence::contains(cong, "aa", "a"));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "026",
-                          "is_obviously_(in)finite",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "026",
+                             "is_obviously_(in)finite",
+                             "[quick][cong]") {
     auto rg = ReportGuard(false);
     {
       Presentation<word_type> p;
@@ -760,10 +761,10 @@ namespace libsemigroups {
     }
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "028",
-                          "2-sided congruences of BMat8 semigroup",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "028",
+                             "2-sided congruences of BMat8 semigroup",
+                             "[quick][cong][no-valgrind]") {
 #ifdef LIBSEMIGROUPS_HPCOMBI_ENABLED
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -826,10 +827,10 @@ namespace libsemigroups {
 #endif
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "029",
-                          "left congruence on finite semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "029",
+                             "left congruence on finite semigroup",
+                             "[quick][cong]") {
     auto                  rg = ReportGuard(false);
     FroidurePin<Transf<>> S;
     S.add_generator(Transf<>({1, 3, 4, 2, 3}));
@@ -859,10 +860,10 @@ namespace libsemigroups {
     REQUIRE(!congruence::contains(cong, 00010001_w, 1001_w));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "030",
-                          "onesided congruence on finite semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "030",
+                             "onesided congruence on finite semigroup",
+                             "[quick][cong]") {
     auto                  rg = ReportGuard(false);
     FroidurePin<Transf<>> S;
     S.add_generator(Transf<>({1, 3, 4, 2, 3}));
@@ -888,10 +889,10 @@ namespace libsemigroups {
     REQUIRE(!congruence::contains(cong, 10001000_w, 1001_w));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "031",
-                          "onesided congruence on finite semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "031",
+                             "onesided congruence on finite semigroup",
+                             "[quick][cong]") {
     auto                  rg = ReportGuard(false);
     FroidurePin<Transf<>> S;
     S.add_generator(Transf<>({1, 3, 4, 2, 3}));
@@ -922,7 +923,7 @@ namespace libsemigroups {
     REQUIRE(!congruence::contains(cong, w3, w5));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence", "032", "contains", "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence", "032", "contains", "[quick][cong]") {
     using namespace std::string_literals;
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
@@ -961,10 +962,10 @@ namespace libsemigroups {
     REQUIRE(congruence::contains(cong, "ba", "abab"));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "033",
-                          "stellar_monoid S2",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "033",
+                             "stellar_monoid S2",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p  = zero_rook_monoid(2);
     presentation::change_alphabet(p, 10_w);
@@ -990,10 +991,10 @@ namespace libsemigroups {
     REQUIRE(ntc[0] == std::vector<word_type>({010_w, 10_w, 101_w}));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "034",
-                          "stellar_monoid S3",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "034",
+                             "stellar_monoid S3",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p  = zero_rook_monoid(3);
 
@@ -1035,10 +1036,10 @@ namespace libsemigroups {
                               {02_w, 020_w, 202_w}}));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "035",
-                          "stellar_monoid S4",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "035",
+                             "stellar_monoid S4",
+                             "[quick][cong][no-valgrind]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p  = zero_rook_monoid(4);
 
@@ -1068,10 +1069,10 @@ namespace libsemigroups {
             == 209);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "036",
-                          "stellar_monoid S5",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "036",
+                             "stellar_monoid S5",
+                             "[quick][cong][no-valgrind]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p  = zero_rook_monoid(5);
 
@@ -1102,10 +1103,10 @@ namespace libsemigroups {
             == tc.number_of_classes());
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "037",
-                          "stellar_monoid S6",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "037",
+                             "stellar_monoid S6",
+                             "[quick][cong][no-valgrind]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p  = zero_rook_monoid(6);
 
@@ -1132,10 +1133,10 @@ namespace libsemigroups {
             == tc.number_of_classes());
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "038",
-                          "stellar_monoid S7",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "038",
+                             "stellar_monoid S7",
+                             "[quick][cong][no-valgrind]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p  = zero_rook_monoid(7);
 
@@ -1162,10 +1163,10 @@ namespace libsemigroups {
             == tc.number_of_classes());
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "039",
-                          "left cong. on an f.p. semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "039",
+                             "left cong. on an f.p. semigroup",
+                             "[quick][cong]") {
     auto rg = ReportGuard(false);
 
     Presentation<std::string> p;
@@ -1191,10 +1192,10 @@ namespace libsemigroups {
     REQUIRE(cong1.number_of_classes() == cong2.number_of_classes());
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "040",
-                          "2-sided cong. on infinite f.p. semigroup",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "040",
+                             "2-sided cong. on infinite f.p. semigroup",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(3);
@@ -1210,10 +1211,10 @@ namespace libsemigroups {
     REQUIRE(!congruence::contains(cong, 1_w, 2222222222_w));
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "042",
-                          "const_contains",
-                          "[quick][cong][no-valgrind]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "042",
+                             "const_contains",
+                             "[quick][cong][no-valgrind]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(2);
@@ -1236,7 +1237,10 @@ namespace libsemigroups {
     }
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence", "043", "no winner", "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "043",
+                             "no winner",
+                             "[quick][cong]") {
     auto                    rg = ReportGuard(false);
     Presentation<word_type> p;
     p.alphabet(2);
@@ -1263,10 +1267,10 @@ namespace libsemigroups {
     }
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Congruence",
-                          "044",
-                          "congruence over smalloverlap",
-                          "[quick][cong]") {
+  LIBSEMIGROUPS_TEST_CASE_V3("Congruence",
+                             "044",
+                             "congruence over smalloverlap",
+                             "[quick][cong]") {
     auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("abcdefg");
