@@ -224,4 +224,10 @@ namespace libsemigroups {
       LIBSEMIGROUPS_EXCEPTION("Cannot compute the non-trivial classes!");
     }
   }  // namespace congruence
+
+  std::string to_human_readable_repr(Congruence const& c) {
+    return fmt::format("<Congruence over {} with {} runners>",
+                       to_human_readable_repr(c.presentation()),
+                       c.number_of_runners());
+  }
 }  // namespace libsemigroups

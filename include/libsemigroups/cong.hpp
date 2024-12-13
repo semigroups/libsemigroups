@@ -636,6 +636,24 @@ namespace libsemigroups {
     non_trivial_classes(Congruence& cong, Presentation<std::string> const& p);
 
   }  // namespace congruence
+
+  //! \ingroup cong_all_group
+  //!
+  //! \brief Return a human readable representation of a \ref
+  //! Congruence object.
+  //!
+  //! Defined in ``cong.hpp``.
+  //!
+  //! This function returns a human readable representation of a
+  //! \ref Congruence object.
+  //!
+  //! \param c the \ref Congruence object.
+  //!
+  //! \returns A std::string containing the representation.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  std::string to_human_readable_repr(Congruence const& c);
 }  // namespace libsemigroups
 
 #include "cong.tpp"
