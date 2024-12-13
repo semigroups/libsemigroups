@@ -150,7 +150,8 @@ namespace libsemigroups {
     //! This function returns the generating pairs of the congruence
     //! represented by any derived class of a CongruenceInterface. This is
     //! always a std::vector of \ref word_type, regardless of the
-    //! \ref native_presentation_type of the derived class.
+    //! type of the presentation used by the implementation in the derived
+    //! class.
     //!
     //! \returns
     //! A const reference to the generating pairs.
@@ -277,8 +278,8 @@ namespace libsemigroups {
     //! This page contains documentation for helper functions for the classes
     //! Congruence, Kambites, KnuthBendix, and \ref todd_coxeter_class_group
     //! "ToddCoxeter". The functions documented on this page belong to all of
-    //! the namespaces \ref cong_intf_helpers_group "congruence_interface", \ref
-    //! congruence, \ref kambites, \ref knuth_bendix, and \ref
+    //! the namespaces \ref cong_intf_helpers_group "congruence_interface",
+    //! ``congruence``, \ref kambites, \ref knuth_bendix, and \ref
     //! todd_coxeter_helpers_group "todd_coxeter".
 
     ////////////////////////////////////////////////////////////////////////

@@ -146,7 +146,7 @@ namespace libsemigroups {
     // No rvalue ref version because we anyway must copy p multiple times
     Congruence& init(congruence_kind knd, Presentation<word_type> const& p);
 
-    //! \copydoc Congruence(congruence_kind, Presentation<word_type>&)
+    //! \copydoc Congruence(congruence_kind, Presentation<word_type> const&)
     // No rvalue ref version because we are not able to use p directly anyway
     template <typename Word>
     Congruence(congruence_kind knd, Presentation<Word> const& p)
@@ -154,7 +154,7 @@ namespace libsemigroups {
                        return x;
                      })) {}
 
-    //! \copydoc init(congruence_kind, Presentation<word_type>&)
+    //! \copydoc init(congruence_kind, Presentation<word_type> const&)
     // No rvalue ref version because we are not able to use p directly anyway
     template <typename Word>
     Congruence& init(congruence_kind knd, Presentation<Word> const& p) {
@@ -291,6 +291,22 @@ namespace libsemigroups {
     using CongruenceInterface::currently_contains;
 
    public:
+    //! \brief Check containment of a pair of words via iterators.
+    //!
+    //! This function checks whether or not the words represented by the ranges
+    //! \p first1 to \p last1 and \p first2 to \p last2 are already known to be
+    //! contained in the congruence represented by a \ref Congruence instance.
+    //! This function performs no enumeration, so it is possible for the words
+    //! to be contained in the congruence, but that this is not currently known.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns
+    //! * tril::TRUE if the words are known to belong to the congruence;
+    //! * tril::FALSE if the words are known to not belong to the congruence;
+    //! * tril::unknown otherwise.
+    //!
+    //! \cong_intf_throws_if_letters_out_of_bounds
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -302,6 +318,22 @@ namespace libsemigroups {
       return currently_contains<Congruence>(first1, last1, first2, last2);
     }
 
+    //! \brief Check containment of a pair of words via iterators.
+    //!
+    //! This function checks whether or not the words represented by the ranges
+    //! \p first1 to \p last1 and \p first2 to \p last2 are contained in the
+    //! congruence represented by a \ref todd_coxeter_class_group "ToddCoxeter"
+    //! instance. This function triggers a full enumeration, which may never
+    //! terminate.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns Whether or not the pair belongs to the congruence.
+    //!
+    //! \warning Determining the number of classes is undecidable in general,
+    //! and this may never terminate.
+    //!
+    //! \cong_intf_warn_assume_letters_in_bounds
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -354,6 +386,9 @@ namespace libsemigroups {
     //! * tril::unknown otherwise.
     //!
     //! \cong_intf_throws_if_letters_out_of_bounds
+    //!
+    //! \warning Determining the number of classes is undecidable in general,
+    //! and this may never terminate.
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
