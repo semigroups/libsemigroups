@@ -50,6 +50,7 @@ namespace libsemigroups {
   Congruence& Congruence::init(congruence_kind                type,
                                Presentation<word_type> const& p) {
     CongruenceInterface::init(type);
+    init();
     _race.max_threads(POSITIVE_INFINITY);
     if (type == congruence_kind::twosided) {
       add_runner(std::make_shared<Kambites<word_type>>(type, p));
