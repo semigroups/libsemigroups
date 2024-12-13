@@ -55,6 +55,7 @@ pkginclude_HEADERS += include/libsemigroups/bmat8.hpp
 pkginclude_HEADERS += include/libsemigroups/config.hpp
 pkginclude_HEADERS += include/libsemigroups/cong-intf.hpp
 pkginclude_HEADERS += include/libsemigroups/cong.hpp
+pkginclude_HEADERS += include/libsemigroups/cong.tpp
 pkginclude_HEADERS += include/libsemigroups/constants.hpp
 pkginclude_HEADERS += include/libsemigroups/cutting.hpp
 pkginclude_HEADERS += include/libsemigroups/debug.hpp
