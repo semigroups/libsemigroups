@@ -28,14 +28,13 @@
 
 #include "libsemigroups/sims.hpp"
 
-#include <algorithm>      // for fill, reverse
-#include <functional>     // for function, ref
-#include <memory>         // for unique_ptr, make_unique, swap
-#include <string>         // for basic_string, string, operator+
-#include <thread>         // for thread, yield
-#include <tuple>          // for _Swallow_assign, ignore
-#include <unordered_map>  // for operator==, operator!=
-#include <utility>        // for move, swap, pair
+#include <algorithm>   // for fill, reverse
+#include <functional>  // for function, ref
+#include <memory>      // for unique_ptr, make_unique, swap
+#include <string>      // for basic_string, string, operator+
+#include <thread>      // for thread, yield
+#include <tuple>       // for _Swallow_assign, ignore
+#include <utility>     // for move, swap, pair
 
 #include "libsemigroups/constants.hpp"        // for operator!=, ope...
 #include "libsemigroups/debug.hpp"            // for LIBSEMIGROUPS_A...
@@ -44,7 +43,6 @@
 #include "libsemigroups/froidure-pin.hpp"     // for FroidurePin
 #include "libsemigroups/knuth-bendix.hpp"     // for KnuthBendix, to_present...
 #include "libsemigroups/presentation.hpp"     // for Presentation
-#include "libsemigroups/ranges.hpp"           // for shortlex_compare
 #include "libsemigroups/runner.hpp"           // for delta, Reporter
 #include "libsemigroups/to-froidure-pin.hpp"  // for to_word_graph
 #include "libsemigroups/transf.hpp"           // for Transf, one
@@ -52,7 +50,6 @@
 #include "libsemigroups/word-graph.hpp"       // for follow_path_no_...
 
 #include "libsemigroups/detail/felsch-graph.hpp"  // for FelschGraph
-#include "libsemigroups/detail/iterator.hpp"      // for operator+
 #include "libsemigroups/detail/report.hpp"        // for report_default
 #include "libsemigroups/detail/stl.hpp"           // for JoinThreads
 #include "libsemigroups/detail/string.hpp"        // for group_digits
@@ -1522,13 +1519,13 @@ namespace libsemigroups {
 
     LIBSEMIGROUPS_ASSERT(detail::this_threads_id()
                          < std::thread::hardware_concurrency() + 1);
-    // TODO(1) change this to be const& when we have const_contains for knuth
+    // TODO(0) change this to be const& when we have const_contains for knuth
     // bendix
     auto& kb = _knuth_bendices[detail::this_threads_id()];
     for (auto const& p : right_generating_pairs_no_checks(wg)) {
       auto const& u = p.first;
       auto const& v = p.second;
-      // TODO(1) change this to be const_contains for knuth
+      // TODO(0) change this to be const_contains for knuth
       // bendix when we have it
       if (!knuth_bendix::contains(kb, u, v)) {
         auto beta
@@ -1622,13 +1619,6 @@ namespace libsemigroups {
     }
 
   }  // namespace helper
-
-  // template <typename Subclass>
-  // [[nodiscard]] std::string
-  // to_human_readable_repr(SimsSettings<Subclass> const& x) {
-  //   return fmt::format("<SimsSettings {}>",
-  //                      helper::sims_to_human_readable_repr_helper(x, ""));
-  // }
 
   [[nodiscard]] std::string to_human_readable_repr(Sims1 const& x) {
     return fmt::format("<Sims1 {}>",

@@ -36,6 +36,7 @@ namespace libsemigroups {
     return static_cast<Subclass&>(*this);
   }
 
+// TODO(0) is this ifndef required here?
 #ifndef PARSED_BY_DOXYGEN
   template <typename Subclass>
   template <typename OtherSubclass>
@@ -54,7 +55,7 @@ namespace libsemigroups {
     _pruners     = that.pruners();
     return *this;
   }
-#endif /* PARSED_BY_DOXYGEN */
+#endif  // PARSED_BY_DOXYGEN
 
   template <typename Subclass>
   template <typename Word>
@@ -173,14 +174,9 @@ namespace libsemigroups {
                                           wg.number_of_active_nodes());
           tc.init(congruence_kind::onesided, p, copy);
           todd_coxeter::add_generating_pair(tc, wx, wy);
-          // LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
+          // TODO(1) uncomment these assertions when ToddCoxeter initialization
+          // is fixed LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
           //                      == wg.number_of_active_nodes());
-          // fmt::print("x = {}, y = {}\n", x, y);
-          // fmt::print("wx = {}, wy = {}\n", wx, wy);
-          // std::cout << copy << std::endl;
-          // fmt::print("tc.number_of_classes() == {}\n",
-          // tc.number_of_classes()); fmt::print("copy.number_of_nodes() ==
-          // {}\n", copy.number_of_nodes());
           // LIBSEMIGROUPS_ASSERT(tc.number_of_classes()
           //                      < wg.number_of_active_nodes());
           if (tc.number_of_classes() > 1) {

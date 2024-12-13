@@ -432,9 +432,8 @@ namespace libsemigroups {
     //! * \ref long_rule_length
     //! * \ref number_of_threads
     //!
-    //! The return value of this function can be used to
-    //! initialise another Sims1, Sims2, RepOrc, or
-    //! MinimalRepOrc with these settings.
+    //! The return value of this function can be used to initialise another
+    //! Sims1, Sims2, RepOrc, or MinimalRepOrc with these settings.
     //!
     //! \returns A const reference to SimsSettings.
     //!
@@ -524,13 +523,13 @@ namespace libsemigroups {
     //! \noexcept
     //!
     //! \warning
-    //! The value returned by this
-    //! function is not guaranteed be the same as the presentation that was used
-    //! to construct the object! A Sims1 or Sims2 object requires the generators
-    //! of the defining presentation \f$\mathcal{P}\f$ to be \f$\{0, \ldots, n -
-    //! 1\}\f$ where \f$n\f$ is the size of the alphabet of \f$\mathcal{P}\f$.
-    //! Every occurrence of every generator \c a in the presentation \c p used
-    //! to construct a Sims1 or Sims2 instance is replaced by `p.index(a)`.
+    //! The value returned by this function is not guaranteed be the same as
+    //! the presentation that was used to construct the object! A Sims1 or Sims2
+    //! object requires the generators of the defining presentation
+    //! \f$\mathcal{P}\f$ to be \f$\{0, \ldots, n - 1\}\f$ where \f$n\f$ is the
+    //! size of the alphabet of \f$\mathcal{P}\f$. Every occurrence of every
+    //! generator \c a in the presentation \c p used to construct a Sims1 or
+    //! Sims2 instance is replaced by `p.index(a)`.
     [[nodiscard]] Presentation<word_type> const& presentation() const noexcept {
       return _presentation;
     }
@@ -602,7 +601,7 @@ namespace libsemigroups {
       return _longs_begin;
     }
 
-    //! Clear the set of long rules.
+    //! \brief Clear the set of long rules.
     //!
     //! \returns A reference to \c this.
     //!
@@ -660,7 +659,7 @@ namespace libsemigroups {
       return _pruners;
     }
 
-    //! Add a pruner to the search tree.
+    //! \brief Add a pruner to the search tree.
     //!
     //! \param func an rvalue reference to a pruner function.
     //!
@@ -679,7 +678,7 @@ namespace libsemigroups {
       return static_cast<Subclass&>(*this);
     }
 
-    //! Clear the set of pruners.
+    //! \brief Clear the set of pruners.
     //!
     //! \returns A reference to \c this.
     //!
@@ -755,6 +754,7 @@ namespace libsemigroups {
     //! `validate_word(rhs)` throws.
     //!
     //! \sa \ref include
+    // TODO(0) to helper
     Subclass& include(word_type const& lhs, word_type const& rhs) {
       return include_exclude(lhs, rhs, _include);
     }
@@ -786,14 +786,14 @@ namespace libsemigroups {
     //! \warning
     //! This function replaces all previously set `include` pairs with
     //! those found in \p c.
-    // TODO(1) move to helper namespace
+    // TODO(0) move to helper namespace
     template <typename Container>
     Subclass& include(Container const& c) {
       include(std::begin(c), std::end(c));
       return static_cast<Subclass&>(*this);
     }
 
-    //! Clear the set of included words.
+    //! \brief Clear the set of included words.
     //!
     //! \returns A reference to \c this.
     //!
@@ -872,6 +872,7 @@ namespace libsemigroups {
     //! `validate_word(rhs)` throws.
     //!
     //! \sa \ref exclude
+    // TODO(0) to helper
     Subclass& exclude(word_type const& lhs, word_type const& rhs) {
       add_exclude_pruner();
       return include_exclude(lhs, rhs, _exclude);
@@ -904,19 +905,20 @@ namespace libsemigroups {
     //! \warning
     //! This function replaces all previously set `exclude` pairs with
     //! those found in \p c.
-    // TODO(1) move to helper namespace
+    // TODO(0) move to helper namespace
     template <typename Container>
     Subclass& exclude(Container const& c) {
       exclude(std::begin(c), std::end(c));
       return static_cast<Subclass&>(*this);
     }
 
-    //! Clear the set of excluded words.
+    //! \brief Clear the set of excluded words.
     //!
     //! \returns A reference to \c this.
     //!
     //! \exceptions
     //! \no_libsemigroups_except
+    // TODO(0) to tpp file
     Subclass& clear_exclude() {
       if (_exclude_pruner_index != UNDEFINED) {
         _exclude.clear();
@@ -925,8 +927,6 @@ namespace libsemigroups {
       }
       return static_cast<Subclass&>(*this);
     }
-
-    // TODO(2) (later) ranges version of include/exclude?
 
     //! \brief Get the current stats object.
     //!
@@ -989,6 +989,7 @@ namespace libsemigroups {
                               Iterator                last,
                               std::vector<word_type>& include_or_exclude);
 
+    // TODO(0) remove
     Subclass& include_exclude(word_type const&        lhs,
                               word_type const&        rhs,
                               std::vector<word_type>& include_or_exclude);
@@ -2296,6 +2297,8 @@ namespace libsemigroups {
                              WordGraph<Node> const&         wg);
 
     //! No doc
+    // TODO(0) out of line
+    // TODO(0) rename throw_if
     template <typename Node>
     void validate_right_congruence(Presentation<word_type> const& p,
                                    WordGraph<Node> const&         wg) {
@@ -2349,6 +2352,7 @@ namespace libsemigroups {
     //! Returns `true` if the word graph \p wg defines a two-sided
     //! congruence on the semigroup or monoid defined by \p p and `false`
     //! otherwise.
+    // TODO(0) out of line
     template <typename Node>
     bool is_two_sided_congruence(Presentation<word_type> const& p,
                                  WordGraph<Node> const&         wg) {
@@ -2359,6 +2363,7 @@ namespace libsemigroups {
     }
 
     //! No doc
+    // TODO(0) out of line
     template <typename Node>
     void validate_two_sided_congruence(Presentation<word_type> const& p,
                                        WordGraph<Node> const&         wg) {
@@ -2467,6 +2472,7 @@ namespace libsemigroups {
       return cbegin_two_sided_generating_pairs_no_checks(p, wg);
     }
 
+    // TODO(0) many of the functions in below are missing a \returns item
     //! \ingroup congruences_group
     //!
     //! \brief Get an iterator pointing to one after the last right congruence
@@ -2633,6 +2639,7 @@ namespace libsemigroups {
     //!
     //! \throws LibsemigroupsException if the argument \p wg does not define a
     //! right congruence on the free monoid.
+    // TODO(0) out of line
     template <typename Node>
     rx::iterator_range<const_rcgp_iterator>
     right_generating_pairs(WordGraph<Node> const& wg) {
@@ -2858,6 +2865,8 @@ namespace libsemigroups {
     //! \warning
     //! This method does not verify if \p forbid contains trivial pairs or not.
     // TODO(2): Construct from std::vector<std::string>
+    // TODO(0) construct from iterators, and move word_type version of to helper
+    // namespace
     explicit SimsRefinerFaithful(std::vector<word_type> const& forbid)
         : _forbid(forbid) {}
 
@@ -2871,6 +2880,8 @@ namespace libsemigroups {
     //!
     //! \warning
     //! This method does not verify if \p forbid contains trivial pairs or not.
+    // TODO(0) construct from iterators, and move word_type version of to helper
+    // namespace
     SimsRefinerFaithful& init(std::vector<word_type> const& forbid) {
       _forbid.clear();
       _forbid = forbid;
@@ -3014,6 +3025,7 @@ namespace libsemigroups {
     //! terminate on certain inputs.
     //!
     //! \sa presentation(Presentation<std::string> const&)
+    // TODO(0) to tpp
     SimsRefinerIdeals& init(Presentation<std::string> const& p) {
       _presentation = to_presentation<word_type>(p);
       _knuth_bendices[0].init(congruence_kind::twosided, _presentation).run();
