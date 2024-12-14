@@ -277,7 +277,7 @@ jobs:
             - type: "Address"
               cxx_flags: "-fsanitize=address"
             - type: "UndefinedBehaviour"
-              cxx_flags: "-fsanitize=undefined"
+              cxx_flags: "-fsanitize=undefined -fno-sanitize-recover"
       steps:
          - uses: actions/checkout@v3
          - name: "Setup ccache . . ."
