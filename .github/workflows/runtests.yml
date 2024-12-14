@@ -267,19 +267,17 @@ jobs:
       runs-on: ubuntu-latest
       env:
         CXX: "ccache clang++"
+        CXXFLAGS: "-fdiagnostics-color -fno-omit-frame-pointer -g -O2"
       strategy:
         matrix:
           type: ["Thread", "Address", "UndefinedBehaviour"]
           include:
             - type: "Thread"
-              cxx_flags: "-fdiagnostics-color -fsanitize=thread -fPIE -pie -fno-omit-frame-pointer -g -O2"
-              ld_flags: "-fsanitize=thread"
-            # - type: "Address"
-            #   cxx_flags: ""
-            #   ld_flags: ""
-            # - type: "UndefinedBehaviour"
-            #   cxx_flags: ""
-            #   ld_flags: ""
+              cxx_flags: "-fsanitize=thread"
+            - type: "Address"
+              cxx_flags: "-fsanitize=address"
+            - type: "UndefinedBehaviour"
+              cxx_flags: "-fsanitize=undefined"
       steps:
          - uses: actions/checkout@v3
          - name: "Setup ccache . . ."
@@ -292,13 +290,13 @@ jobs:
          - name: "Configure . . ."
            run: |
                 mkdir -p m4 && ./autogen.sh
-                ./configure CXX="$CXX" CXXFLAGS="${{ matrix.cxx_flags }}" LDFLAGS="${{ matrix.ld_flags }}"
+                ./configure CXX="$CXX" CXXFLAGS="${{ matrix.cxx_flags }} $CXXFLAGS"
          - name: "Build libsemigroups . . ."
            run: make -j4
          - name: "Build test_all . . ."
            run: make test_all -j4
-         - name: "Run tests with {{ matrix.type }}Sanitizer . . ."
-           run: ./test_all "[quick][standard]"
+         - name: "Run tests with ${{ matrix.type }}Sanitizer . . ."
+           run: ./test_all "[quick],[standard]"
    valgrind:
       timeout-minutes: 60
       runs-on: ubuntu-latest
