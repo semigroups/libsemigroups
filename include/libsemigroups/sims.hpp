@@ -191,7 +191,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c this.
     //!
-    //! \exception
+    //! \exceptions
     //! \no_libsemigroups_except
     SimsStats& init() {
       stats_zero();
@@ -351,7 +351,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c this.
     //!
-    //! \exception
+    //! \exceptions
     //! \no_libsemigroups_except
     Subclass& init();
 
@@ -1248,7 +1248,7 @@ namespace libsemigroups {
 
       uint64_t number_of_congruences(size_type n) const;
     };  // SimsBase
-  }     // namespace detail
+  }  // namespace detail
 
   namespace sims {
     class const_cgp_iterator;
@@ -1419,7 +1419,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c this.
     //!
-    //! \exception
+    //! \exceptions
     //! \no_libsemigroups_except
     Sims1& init();
 
@@ -1681,7 +1681,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c this.
     //!
-    //! \exception
+    //! \exceptions
     //! \no_libsemigroups_except
     Sims2& init();
 
@@ -1746,7 +1746,7 @@ namespace libsemigroups {
 
       using SimsBase::IteratorBase::stats;
     };  // class iterator_base
-  };    // Sims2
+  };  // Sims2
 
   //! \ingroup congruences_group
   //!
@@ -1786,7 +1786,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c this.
     //!
-    //! \exception
+    //! \exceptions
     //! \no_libsemigroups_except
     RepOrc& init();
 
@@ -1941,7 +1941,8 @@ namespace libsemigroups {
     //!
     //! \returns A value of type `WordGraph`.
     //!
-    //! \exceptions \no_libsemigroups_except
+    //! \exceptions
+    //! \no_libsemigroups_except
     [[nodiscard]] Sims1::word_graph_type word_graph() const;
   };
 
@@ -1980,7 +1981,7 @@ namespace libsemigroups {
     //!
     //! \returns A reference to \c this.
     //!
-    //! \exception
+    //! \exceptions
     //! \no_libsemigroups_except
     MinimalRepOrc& init() {
       _size = 0;
@@ -2050,7 +2051,8 @@ namespace libsemigroups {
     //!
     //! \returns A value of type `WordGraph<uint32_t>`.
     //!
-    //! \exceptions \no_libsemigroups_except
+    //! \exceptions
+    //! \no_libsemigroups_except
     [[nodiscard]] Sims1::word_graph_type word_graph() const;
   };
 
