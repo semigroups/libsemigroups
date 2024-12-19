@@ -216,18 +216,6 @@ namespace libsemigroups {
     return _exclude_pruner_index;
   }
 
-  template <typename Subclass>
-  Subclass& SimsSettings<Subclass>::include_exclude(
-      word_type const&        lhs,
-      word_type const&        rhs,
-      std::vector<word_type>& include_or_exclude) {
-    presentation().validate_word(lhs.cbegin(), lhs.cend());
-    presentation().validate_word(rhs.cbegin(), rhs.cend());
-    include_or_exclude.push_back(lhs);
-    include_or_exclude.push_back(rhs);
-    return static_cast<Subclass&>(*this);
-  }
-
   template class SimsSettings<Sims1>;
   template class SimsSettings<Sims2>;
   template class SimsSettings<RepOrc>;
@@ -403,14 +391,16 @@ namespace libsemigroups {
       auto longest_short  = presentation::longest_rule_length(presentation());
 
       std::string pairs;
-      if (!include().empty() && !exclude().empty()) {
+      if (!included_pairs().empty() && !excluded_pairs().empty()) {
         pairs = fmt::format(", including {} + excluding {} pairs",
-                            include().size() / 2,
-                            exclude().size() / 2);
-      } else if (!include().empty()) {
-        pairs = fmt::format(", including {} pairs", include().size() / 2);
-      } else if (!exclude().empty()) {
-        pairs = fmt::format(", excluding {} pairs", exclude().size() / 2);
+                            included_pairs().size() / 2,
+                            excluded_pairs().size() / 2);
+      } else if (!included_pairs().empty()) {
+        pairs
+            = fmt::format(", including {} pairs", included_pairs().size() / 2);
+      } else if (!excluded_pairs().empty()) {
+        pairs
+            = fmt::format(", excluding {} pairs", excluded_pairs().size() / 2);
       }
 
       report_no_prefix("{:+<80}\n", "");
@@ -611,8 +601,8 @@ namespace libsemigroups {
       _felsch_graph.target_no_checks(
           current.source, current.generator, current.target);
 
-      auto first = _sims1or2->include().cbegin();
-      auto last  = _sims1or2->include().cend();
+      auto first = _sims1or2->included_pairs().cbegin();
+      auto last  = _sims1or2->included_pairs().cend();
       while (start != _felsch_graph.definitions().size()) {
         if (!_felsch_graph.process_definitions(start)) {
           return false;
@@ -1194,8 +1184,8 @@ namespace libsemigroups {
 
     size_type start     = _felsch_graph.definitions().size();
     size_type num_nodes = _felsch_graph.number_of_active_nodes();
-    auto      first     = _sims1or2->include().cbegin();
-    auto      last      = _sims1or2->include().cend();
+    auto      first     = _sims1or2->included_pairs().cbegin();
+    auto      last      = _sims1or2->included_pairs().cend();
 
     // That the graph is compatible at 0 with include is checked in
     // Sims1::iterator_base::try_define.
@@ -1203,7 +1193,7 @@ namespace libsemigroups {
         && (!detail::felsch_graph::make_compatible<detail::RegisterDefs>(
                 _felsch_graph, 1, num_nodes, first, last)
             || !_felsch_graph.process_definitions(start))) {
-      // Seems to be important to check include() first then
+      // Seems to be important to check included_pairs() first then
       // process_definitions
       return false;
     }
@@ -1519,15 +1509,15 @@ namespace libsemigroups {
 
     LIBSEMIGROUPS_ASSERT(detail::this_threads_id()
                          < std::thread::hardware_concurrency() + 1);
-    // TODO(0) change this to be const& when we have const_contains for knuth
-    // bendix
-    auto& kb = _knuth_bendices[detail::this_threads_id()];
+    auto const& kb = _knuth_bendices[detail::this_threads_id()];
     for (auto const& p : right_generating_pairs_no_checks(wg)) {
       auto const& u = p.first;
       auto const& v = p.second;
-      // TODO(0) change this to be const_contains for knuth
-      // bendix when we have it
-      if (!knuth_bendix::contains(kb, u, v)) {
+      // KnuthBendix gets run on initialization, so using currently_contains
+      // should be fine
+      LIBSEMIGROUPS_ASSERT(knuth_bendix::currently_contains_no_checks(kb, u, v)
+                           != tril::unknown);
+      if (knuth_bendix::currently_contains_no_checks(kb, u, v) == tril::FALSE) {
         auto beta
             = word_graph::follow_path_no_checks(wg, 0, u.cbegin(), u.cend());
         if (sink == UNDEFINED) {
@@ -1569,27 +1559,28 @@ namespace libsemigroups {
 
       result += fmt::format("object over {} with",
                             to_human_readable_repr(x.presentation()));
-      std::string comma = (x.pruners().empty()
-                           || (x.pruners().size() == 1 && !x.exclude().empty()))
-                                  && extra_text.empty()
-                              ? ""
-                              : ",";
-      if ((x.include().size() > 0) && (x.exclude().size() > 0)) {
-        result += fmt::format(" {} include and {} exclude pairs{}",
-                              x.include().size() / 2,
-                              x.exclude().size() / 2,
+      std::string comma
+          = (x.pruners().empty()
+             || (x.pruners().size() == 1 && !x.excluded_pairs().empty()))
+                    && extra_text.empty()
+                ? ""
+                : ",";
+      if ((x.included_pairs().size() > 0) && (x.excluded_pairs().size() > 0)) {
+        result += fmt::format(" {} included and {} excluded pairs{}",
+                              x.included_pairs().size() / 2,
+                              x.excluded_pairs().size() / 2,
                               comma);
         needs_and = true;
-      } else if (x.include().size() > 0) {
-        result += fmt::format(" {} include pair{}{}",
-                              x.include().size() / 2,
-                              x.include().size() / 2 == 1 ? "" : "s",
+      } else if (x.included_pairs().size() > 0) {
+        result += fmt::format(" {} included pair{}{}",
+                              x.included_pairs().size() / 2,
+                              x.included_pairs().size() / 2 == 1 ? "" : "s",
                               comma);
         needs_and = true;
-      } else if (x.exclude().size() > 0) {
-        result += fmt::format(" {} exclude pair{}{}",
-                              x.exclude().size() / 2,
-                              x.exclude().size() / 2 == 1 ? "" : "s",
+      } else if (x.excluded_pairs().size() > 0) {
+        result += fmt::format(" {} excluded pair{}{}",
+                              x.excluded_pairs().size() / 2,
+                              x.excluded_pairs().size() / 2 == 1 ? "" : "s",
                               comma);
         needs_and = true;
       }
@@ -1600,15 +1591,16 @@ namespace libsemigroups {
       }
 
       if (x.pruners().size() > 1
-          || (x.exclude().empty() && !x.pruners().empty())) {
-        result += fmt::format(" {} pruner{}",
-                              x.exclude().size() == 0 ? x.pruners().size()
-                                                      : x.pruners().size() - 1,
-                              (x.exclude().size() == 0 ? x.pruners().size()
-                                                       : x.pruners().size() - 1)
-                                      == 1
-                                  ? ""
-                                  : "s");
+          || (x.excluded_pairs().empty() && !x.pruners().empty())) {
+        result += fmt::format(
+            " {} pruner{}",
+            x.excluded_pairs().size() == 0 ? x.pruners().size()
+                                           : x.pruners().size() - 1,
+            (x.excluded_pairs().size() == 0 ? x.pruners().size()
+                                            : x.pruners().size() - 1)
+                    == 1
+                ? ""
+                : "s");
         needs_and = true;
       }
       result += needs_and ? " and" : "";
@@ -1635,27 +1627,28 @@ namespace libsemigroups {
         "<RepOrc {}>",
         helper::sims_to_human_readable_repr_helper(
             x,
-            fmt::format(" node bounds [{}, {}), target size {}{}",
-                        x.min_nodes(),
-                        x.max_nodes(),
-                        x.target_size(),
-                        (x.pruners().size() > 1
-                         || (x.exclude().empty() && !x.pruners().empty()))
-                            ? ","
-                            : "")));
+            fmt::format(
+                " node bounds [{}, {}), target size {}{}",
+                x.min_nodes(),
+                x.max_nodes(),
+                x.target_size(),
+                (x.pruners().size() > 1
+                 || (x.excluded_pairs().empty() && !x.pruners().empty()))
+                    ? ","
+                    : "")));
   }
 
   [[nodiscard]] std::string to_human_readable_repr(MinimalRepOrc const& x) {
-    return fmt::format(
-        "<MinimalRepOrc {}>",
-        helper::sims_to_human_readable_repr_helper(
-            x,
-            fmt::format(" target size {}{}",
-                        x.target_size(),
-                        (x.pruners().size() > 1
-                         || (x.exclude().empty() && !x.pruners().empty()))
-                            ? ","
-                            : "")));
+    return fmt::format("<MinimalRepOrc {}>",
+                       helper::sims_to_human_readable_repr_helper(
+                           x,
+                           fmt::format(" target size {}{}",
+                                       x.target_size(),
+                                       (x.pruners().size() > 1
+                                        || (x.excluded_pairs().empty()
+                                            && !x.pruners().empty()))
+                                           ? ","
+                                           : "")));
   }
 
   [[nodiscard]] std::string to_human_readable_repr(SimsRefinerIdeals const& x) {

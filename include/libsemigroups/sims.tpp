@@ -36,14 +36,12 @@ namespace libsemigroups {
     return static_cast<Subclass&>(*this);
   }
 
-// TODO(0) is this ifndef required here?
-#ifndef PARSED_BY_DOXYGEN
   template <typename Subclass>
   template <typename OtherSubclass>
   SimsSettings<Subclass>&
   SimsSettings<Subclass>::init(SimsSettings<OtherSubclass> const& that) {
-    _exclude      = that.exclude();
-    _include      = that.include();
+    _exclude      = that.excluded_pairs();
+    _include      = that.included_pairs();
     _presentation = that.presentation();
 
     _idle_thread_restarts = that.idle_thread_restarts();
@@ -55,7 +53,6 @@ namespace libsemigroups {
     _pruners     = that.pruners();
     return *this;
   }
-#endif  // PARSED_BY_DOXYGEN
 
   template <typename Subclass>
   template <typename Word>
@@ -75,35 +72,18 @@ namespace libsemigroups {
     }
     try {
       presentation::validate_rules(
-          p_copy, include().cbegin(), include().cend());
+          p_copy, included_pairs().cbegin(), included_pairs().cend());
       presentation::validate_rules(
-          p_copy, exclude().cbegin(), exclude().cend());
+          p_copy, excluded_pairs().cbegin(), excluded_pairs().cend());
     } catch (LibsemigroupsException const& e) {
       LIBSEMIGROUPS_EXCEPTION(
-          "the argument (a presentation) is not compatible with include() and "
-          "exclude(), the following exception was thrown:\n{}",
+          "the argument (a presentation) is not compatible with "
+          "included_pairs() and "
+          "excluded_pairs(), the following exception was thrown:\n{}",
           e.what());
     }
     _presentation = std::move(p_copy);
     _longs_begin  = _presentation.rules.cend();
-    return static_cast<Subclass&>(*this);
-  }
-
-  template <typename Subclass>
-  template <typename Iterator>
-  Subclass& SimsSettings<Subclass>::include_exclude(
-      Iterator                first,
-      Iterator                last,
-      std::vector<word_type>& include_or_exclude) {
-    if (std::distance(first, last) % 2 != 0) {
-      LIBSEMIGROUPS_EXCEPTION("expected the distance between the 1st and 2nd "
-                              "arguments (iterators) to be even, found {}",
-                              std::distance(first, last));
-    }
-    for (auto it = first; it != last; ++it) {
-      presentation().validate_word(it->cbegin(), it->cend());
-    }
-    include_or_exclude.assign(first, last);
     return static_cast<Subclass&>(*this);
   }
 
@@ -174,11 +154,10 @@ namespace libsemigroups {
                                           wg.number_of_active_nodes());
           tc.init(congruence_kind::onesided, p, copy);
           todd_coxeter::add_generating_pair(tc, wx, wy);
-          // TODO(1) uncomment these assertions when ToddCoxeter initialization
-          // is fixed LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
-          //                      == wg.number_of_active_nodes());
-          // LIBSEMIGROUPS_ASSERT(tc.number_of_classes()
-          //                      < wg.number_of_active_nodes());
+          LIBSEMIGROUPS_ASSERT(tc.word_graph().number_of_nodes()
+                               == wg.number_of_active_nodes());
+          LIBSEMIGROUPS_ASSERT(tc.number_of_classes()
+                               < wg.number_of_active_nodes());
           if (tc.number_of_classes() > 1) {
             return false;
           }

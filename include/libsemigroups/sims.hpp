@@ -334,8 +334,8 @@ namespace libsemigroups {
     //! idle thread restarts, no other settings set. Use
     //! * \ref presentation to set the presentation;
     //! * \ref number_of_threads to set the number of threads;
-    //! * \ref include to set the pairs to be included;
-    //! * \ref exclude to set the pairs to be excluded;
+    //! * \ref included_pairs to set the pairs to be included;
+    //! * \ref excluded_pairs to set the pairs to be excluded;
     //! * \ref add_pruner to add a pruner;
     //! * \ref long_rule_length to set the length of long rules;
     //! * \ref idle_thread_restarts to set the number of idle thread restarts.
@@ -499,7 +499,7 @@ namespace libsemigroups {
     //! \throws LibsemigroupsException if `p` is not valid.
     //!
     //! \throws LibsemigroupsException if the alphabet of `p` is non-empty and
-    //! not compatible with \ref include or \ref exclude.
+    //! not compatible with \ref included_pairs or \ref excluded_pairs.
     //!
     //! \throws LibsemigroupsException if `p` has 0-generators and 0-relations.
     template <typename Word>
@@ -689,117 +689,74 @@ namespace libsemigroups {
     //! \brief Get the set of pairs that must be included in every
     //! congruence.
     //!
-    //! \anchor include
-    //! Returns a const reference to the (one-sided) defining pairs.
+    //! This function returns the set of included pairs.
     //!
-    //! The congruences computed by a Sims1 or Sims2 instance always contain the
-    //! relations of this presentation. In other words, the congruences
+    //! The congruences computed by a Sims1 or Sims2 instance always include the
+    //! pairs returned by \ref included_pairs. In other words, the congruences
     //! computed by this instance are only taken among those that contains the
     //! pairs of elements of the underlying semigroup (defined by the
     //! presentation returned by \ref presentation and \ref long_rules)
-    //! represented by the relations of the presentation returned by
-    //! \ref include.
+    //! represented by the relations of the presentation returned by \ref
+    //! included_pairs.
     //!
     //! \returns A const reference to `std::vector<word_type>`.
     //!
     //! \exceptions
     //! \noexcept
-    [[nodiscard]] std::vector<word_type> const& include() const noexcept {
+    [[nodiscard]] std::vector<word_type> const&
+    included_pairs() const noexcept {
       return _include;
     }
 
-    //! \brief Define the set of pairs that must be included in every
-    //! congruence (iterator).
+    //! \brief Add an included pair via iterators.
     //!
-    //! Define the set of pairs that must be included in every congruence.
+    //! This function adds a pair that must be included in every congruence
+    //! returned by a \ref Sims1 or \ref Sims2 instance.
     //!
-    //! The congruences computed by an instance of this type will always contain
-    //! the relations input here. In other words, the congruences computed are
-    //! only taken among those that contains the pairs of elements of the
-    //! underlying semigroup (defined by the presentation returned by \ref
-    //! presentation) represented by the relations returned by \ref include.
-    //!
-    //! \tparam Iterator the type of the arguments, an iterator pointing at a
-    //! word_type.
-    //!
-    //! \param first an iterator pointing to the first rule to be included.
-    //! \param last an iterator pointing one beyond the last rule to be
-    //! included.
+    //! \cong_intf_params_contains
     //!
     //! \returns A reference to \c this.
     //!
-    //! \throws LibsemigroupsException if the iterators do not define a set of
-    //! pairs, i.e. there are an odd number of words between `first` and `last`.
-    //!
-    //! \throws LibsemigroupsException if `validate_word(w)` throws for any word
-    //! `w` between `first` and `last`.
-    //!
-    //! \warning This function replaces all previously set `include` pairs with
-    //! those found in `[first, last)`.
-    template <typename Iterator>
-    Subclass& include(Iterator first, Iterator last) {
-      return include_exclude(first, last, _include);
+    //! \cong_intf_warn_assume_letters_in_bounds
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    Subclass& add_included_pair_no_checks(Iterator1 first1,
+                                          Iterator2 last1,
+                                          Iterator3 first2,
+                                          Iterator4 last2) {
+      return include_exclude_no_checks(first1, last1, first2, last2, _include);
     }
 
-    //! \brief Add a pair that should be included in every congruence.
+    //! \brief Add an included pair via iterators (no checks).
     //!
-    //! Add a pair that should be included in every congruence.
+    //! This function adds a pair that must be included in every congruence
+    //! returned by a \ref Sims1 or \ref Sims2 instance.
     //!
-    //! \param lhs the left hand side of the rule being added.
-    //! \param rhs the right hand side of the rule being added.
+    //! \cong_intf_params_contains
     //!
     //! \returns A reference to \c this.
     //!
-    //! \throws LibsemigroupsException if `validate_word(lhs)` or
-    //! `validate_word(rhs)` throws.
-    //!
-    //! \sa \ref include
-    // TODO(0) to helper
-    Subclass& include(word_type const& lhs, word_type const& rhs) {
-      return include_exclude(lhs, rhs, _include);
+    //! \cong_intf_throws_if_letters_out_of_bounds
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    Subclass& add_included_pair(Iterator1 first1,
+                                Iterator2 last1,
+                                Iterator3 first2,
+                                Iterator4 last2) {
+      return include_exclude(first1, last1, first2, last2, _include);
     }
 
-    //! \brief Define the set of pairs that must be included in every
-    //! congruence (container).
-    //!
-    //! Define the set of pairs that must be included in every congruence.
-    //!
-    //! The congruences computed by an instance of this type will always contain
-    //! the relations input here. In other words, the congruences computed are
-    //! only taken among those that contains the pairs of elements of the
-    //! underlying semigroup (defined by the presentation returned by \ref
-    //! presentation) represented by the relations returned by \ref include.
-    //!
-    //! \tparam Container the type of the argument, an container of
-    //! word_type objects.
-    //!
-    //! \param c A container of rules to be included.
-    //!
-    //! \returns A reference to \c this.
-    //!
-    //! \throws LibsemigroupsException if `c` does not define a set of
-    //! pairs, i.e. there are an odd number of words in `c`.
-    //!
-    //! \throws LibsemigroupsException if `validate_word(w)` throws for any word
-    //! `w` in `c`.
-    //!
-    //! \warning
-    //! This function replaces all previously set `include` pairs with
-    //! those found in \p c.
-    // TODO(0) move to helper namespace
-    template <typename Container>
-    Subclass& include(Container const& c) {
-      include(std::begin(c), std::end(c));
-      return static_cast<Subclass&>(*this);
-    }
-
-    //! \brief Clear the set of included words.
+    //! \brief Clear the set of included pairs.
     //!
     //! \returns A reference to \c this.
     //!
     //! \exceptions
     //! \no_libsemigroups_except
-    Subclass& clear_include() {
+    Subclass& clear_included_pairs() {
       _include.clear();
       return static_cast<Subclass&>(*this);
     }
@@ -807,109 +764,67 @@ namespace libsemigroups {
     //! \brief Get the set of pairs that must be excluded from every
     //! congruence.
     //!
-    //! \anchor exclude
-    //! Returns a const reference to the excluded pairs.
+    //! This function returns the set of excluded pairs.
     //!
     //! The congruences computed by a Sims1 or Sims2 instance will never contain
-    //! the relations of this presentation. In other words, the congruences
-    //! computed by this instance are only taken among those that do not contain
-    //! any of the pairs of elements of the underlying semigroup (defined by the
-    //! presentation returned by \ref presentation and \ref long_rules)
-    //! represented by the relations of the presentation returned by
-    //! \ref exclude.
+    //! the pairs returned by \ref excluded_pairs. In other words, the
+    //! congruences computed by this instance are only taken among those that do
+    //! not contain any of the pairs of elements of the underlying semigroup
+    //! (defined by the presentation returned by \ref presentation and \ref
+    //! long_rules) represented by the relations of the presentation returned by
+    //! \ref excluded_pairs.
     //!
     //! \returns A const reference to `std::vector<word_type>`.
     //!
     //! \exceptions
     //! \noexcept
-    [[nodiscard]] std::vector<word_type> const& exclude() const noexcept {
+    [[nodiscard]] std::vector<word_type> const&
+    excluded_pairs() const noexcept {
       return _exclude;
     }
 
-    //! \brief Define the set of pairs that must be excluded from every
-    //! congruence (iterator).
+    //! \brief Add an excluded pair via iterators (no checks).
     //!
-    //! Define a set of pairs that should be excluded from every congruence.
+    //! This function adds a pair that must be excluded from every congruence
+    //! returned by a \ref Sims1 or \ref Sims2 instance.
     //!
-    //! The congruences computed by an instance of this type will never contain
-    //! the relations input here. In other words, the congruences computed are
-    //! only taken among those that do not contain the pairs of elements of the
-    //! underlying semigroup (defined by the presentation returned by \ref
-    //! presentation) represented by the relations returned by \ref exclude.
-    //!
-    //! \tparam Iterator the type of the arguments, an iterator pointing at a
-    //! word_type.
-    //!
-    //! \param first an iterator pointing to the first rule to be excluded.
-    //! \param last an iterator pointing one beyond the last rule to be
-    //! excluded.
+    //! \cong_intf_params_contains
     //!
     //! \returns A reference to \c this.
     //!
-    //! \throws LibsemigroupsException if the iterators do not define a set of
-    //! pairs, i.e. there are an odd number of words between `first` and `last`.
-    //!
-    //! \throws LibsemigroupsException if `validate_word(w)` throws for any word
-    //! `w` between `first` and `last`.
-    //!
-    //! \warning
-    //! This function replaces all previously set `exclude` pairs with
-    //! those found in `[first, last)`.
-    template <typename Iterator>
-    Subclass& exclude(Iterator first, Iterator last) {
+    //! \cong_intf_warn_assume_letters_in_bounds
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    Subclass& add_excluded_pair_no_checks(Iterator1 first1,
+                                          Iterator2 last1,
+                                          Iterator3 first2,
+                                          Iterator4 last2) {
       add_exclude_pruner();
-      return include_exclude(first, last, _exclude);
+      return include_exclude_no_checks(first1, last1, first2, last2, _exclude);
     }
 
-    //! \brief Add a pair that must be excluded from every congruence.
+    //! \brief Add an excluded pair via iterators.
     //!
-    //! Add a pair that must be excluded from every congruence.
+    //! This function adds a pair that must be excluded from every congruence
+    //! returned by a \ref Sims1 or \ref Sims2 instance.
     //!
-    //! \param lhs the left hand side of the rule being added.
-    //! \param rhs the right hand side of the rule being added.
-    //!
-    //! \throws LibsemigroupsException if `validate_word(lhs)` or
-    //! `validate_word(rhs)` throws.
-    //!
-    //! \sa \ref exclude
-    // TODO(0) to helper
-    Subclass& exclude(word_type const& lhs, word_type const& rhs) {
-      add_exclude_pruner();
-      return include_exclude(lhs, rhs, _exclude);
-    }
-
-    //! \brief Define the set of pairs that must be excluded from every
-    //! congruence (container).
-    //!
-    //! Define the set of pairs that must be excluded from every congruence.
-    //!
-    //! The congruences computed by an instance of this type will never contain
-    //! the relations input here. In other words, the congruences computed are
-    //! only taken among those that do not contain the pairs of elements of the
-    //! underlying semigroup (defined by the presentation returned by \ref
-    //! presentation) represented by the relations returned by `exclude()`.
-    //!
-    //! \tparam Container the type of the argument, an container of
-    //! word_type objects.
-    //!
-    //! \param c A container of rules to be excluded.
+    //! \cong_intf_params_contains
     //!
     //! \returns A reference to \c this.
     //!
-    //! \throws LibsemigroupsException if `c` does not define a set of
-    //! pairs, i.e. there are an odd number of words in `c`.
-    //!
-    //! \throws LibsemigroupsException if `validate_word(w)` throws for any word
-    //! `w` in `c`.
-    //!
-    //! \warning
-    //! This function replaces all previously set `exclude` pairs with
-    //! those found in \p c.
-    // TODO(0) move to helper namespace
-    template <typename Container>
-    Subclass& exclude(Container const& c) {
-      exclude(std::begin(c), std::end(c));
-      return static_cast<Subclass&>(*this);
+    //! \cong_intf_throws_if_letters_out_of_bounds
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    Subclass& add_excluded_pair(Iterator1 first1,
+                                Iterator2 last1,
+                                Iterator3 first2,
+                                Iterator4 last2) {
+      add_exclude_pruner();
+      return include_exclude(first1, last1, first2, last2, _exclude);
     }
 
     //! \brief Clear the set of excluded words.
@@ -919,7 +834,7 @@ namespace libsemigroups {
     //! \exceptions
     //! \no_libsemigroups_except
     // TODO(0) to tpp file
-    Subclass& clear_exclude() {
+    Subclass& clear_excluded_pairs() {
       if (_exclude_pruner_index != UNDEFINED) {
         _exclude.clear();
         _pruners.erase(_pruners.cbegin() + _exclude_pruner_index);
@@ -977,6 +892,26 @@ namespace libsemigroups {
     // Number of times an idle thread will attempt to restart before yielding.
     Subclass& idle_thread_restarts(size_t val);
 
+    //! \brief Throws if any letter in a range is out of bounds.
+    //!
+    //! This function throws a LibsemigroupsException if any value pointed at
+    //! by an iterator in the range \p first to \p last is out of bounds (i.e.
+    //! does not belong to the alphabet of the \ref presentation used to
+    //! construct the \ref Sims1 or \ref Sims2 instance).
+    //!
+    //! \tparam Iterator1 the type of first argument \p first.
+    //! \tparam Iterator2 the type of second argument \p last.
+    //!
+    //! \param first iterator pointing at the first letter of the word.
+    //! \param last iterator pointing one beyond the last letter of the word.
+    //!
+    //! \throw LibsemigroupsException if any letter in the range from \p first
+    //! to \p last is out of bounds.
+    template <typename Iterator1, typename Iterator2>
+    void throw_if_letter_out_of_bounds(Iterator1 first, Iterator2 last) const {
+      presentation().validate_word(first, last);
+    }
+
    protected:
     Subclass const& stats_copy_from(SimsStats const& stts) const {
       _stats = std::move(stts);
@@ -984,18 +919,317 @@ namespace libsemigroups {
     }
 
    private:
-    template <typename Iterator>
-    Subclass& include_exclude(Iterator                first,
-                              Iterator                last,
-                              std::vector<word_type>& include_or_exclude);
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    Subclass&
+    include_exclude_no_checks(Iterator1               first1,
+                              Iterator2               last1,
+                              Iterator3               first2,
+                              Iterator4               last2,
+                              std::vector<word_type>& include_or_exclude) {
+      include_or_exclude.emplace_back(first1, last1);
+      include_or_exclude.emplace_back(first2, last2);
+      return static_cast<Subclass&>(*this);
+    }
 
-    // TODO(0) remove
-    Subclass& include_exclude(word_type const&        lhs,
-                              word_type const&        rhs,
-                              std::vector<word_type>& include_or_exclude);
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    Subclass& include_exclude(Iterator1               first1,
+                              Iterator2               last1,
+                              Iterator3               first2,
+                              Iterator4               last2,
+                              std::vector<word_type>& include_or_exclude) {
+      throw_if_letter_out_of_bounds(first1, last1);
+      throw_if_letter_out_of_bounds(first2, last2);
+      return static_cast<Subclass&>(*this).include_exclude_no_checks(
+          first1, last1, first2, last2, include_or_exclude);
+    }
 
     size_t add_exclude_pruner();
   };
+
+  namespace sims {
+    //! \brief Helper for adding an included pair of words.
+    //!
+    //! This function can be used to add an included pair to \p
+    //! sims using the objects themselves rather than
+    //! using iterators.
+    //!
+    //! \tparam Subclass the type of the first parameter.
+    //! \tparam Word the type of the second and third parameters.
+    //!
+    //! \param sims a \ref Sims1 or \ref Sims2 object.
+    //! \param u the left hand side of the pair to add.
+    //! \param v the right hand side of the pair to add.
+    //!
+    //! \return A reference to \p sims.
+    //!
+    //! \cong_intf_warn_assume_letters_in_bounds
+    //!
+    //! \sa \ref Sims1::included_pairs
+    template <typename Subclass, typename Word>
+    Subclass& add_included_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          Word const&             u,
+                                          Word const&             v) {
+      return sims.add_included_pair_no_checks(
+          u.cbegin(), u.cend(), v.cbegin(), v.cend());
+    }
+
+    //! \brief Helper for adding a generating pair of words
+    //! (std::initializer_list).
+    //!
+    //! See \ref
+    //! add_included_pair_no_checks<Subclass, Word>(SimsSettings<Subclass>&,
+    //! Word const&, Word const&) for details.
+    template <typename Subclass, typename Int>
+    Subclass& add_included_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          std::initializer_list<Int> const& u,
+                                          std::initializer_list<Int> const& v) {
+      return add_included_pair_no_checks<Subclass, std::vector<Int>>(
+          sims, u, v);
+    }
+
+    //! \brief Helper for adding a generating pair of words
+    //! (string literals).
+    //!
+    //! See \ref
+    //! add_included_pair_no_checks<Subclass, Word>(SimsSettings<Subclass>&,
+    //! Word const&, Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_included_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          char const*             u,
+                                          char const*             v) {
+      return sims.add_included_pair_no_checks(
+          u, u + std::strlen(u), v, v + std::strlen(v));
+    }
+
+    // This version of the function catches the cases when u & v are not of the
+    // same type but both convertible to string_view
+    //! \brief Helper for adding a generating pair of words
+    //! (std::string_view).
+    //!
+    //! See \ref
+    //! add_included_pair_no_checks<Subclass, Word>(SimsSettings<Subclass>&,
+    //! Word const&, Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_included_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          std::string_view        u,
+                                          std::string_view        v) {
+      return sims.add_included_pair_no_checks(
+          std::begin(u), std::end(u), std::begin(v), std::end(v));
+    }
+
+    //! \brief Helper for adding an included pair of words.
+    //!
+    //! This function can be used to add an included pair to \p
+    //! sims using the objects themselves rather than
+    //! using iterators.
+    //!
+    //! \tparam Subclass the type of the first parameter.
+    //! \tparam Word the type of the second and third parameters.
+    //!
+    //! \param sims a \ref Sims1 or \ref Sims2 object.
+    //! \param u the left hand side of the pair to add.
+    //! \param v the right hand side of the pair to add.
+    //!
+    //! \return A reference to \p sims.
+    //!
+    //! \cong_intf_throws_if_letters_out_of_bounds
+    //!
+    //! \sa \ref Sims1::included_pairs
+    template <typename Subclass, typename Word>
+    Subclass& add_included_pair(SimsSettings<Subclass>& sims,
+                                Word const&             u,
+                                Word const&             v) {
+      return sims.add_included_pair(u.cbegin(), u.cend(), v.cbegin(), v.cend());
+    }
+
+    //! \brief Helper for adding a included pair of words
+    //! (std::initializer_list).
+    //!
+    //! See \ref
+    //! add_included_pair<Subclass, Word>(SimsSettings<Subclass>&, Word const&,
+    //! Word const&) for details.
+    template <typename Subclass, typename Int>
+    Subclass& add_included_pair(SimsSettings<Subclass>&           sims,
+                                std::initializer_list<Int> const& u,
+                                std::initializer_list<Int> const& v) {
+      return add_included_pair<Subclass, std::vector<Int>>(sims, u, v);
+    }
+
+    //! \brief Helper for adding a included pair of words
+    //! (string literals).
+    //!
+    //! See \ref
+    //! add_included_pair<Subclass, Word>(SimsSettings<Subclass>&, Word const&,
+    //! Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_included_pair(SimsSettings<Subclass>& sims,
+                                char const*             u,
+                                char const*             v) {
+      return sims.add_included_pair(
+          u, u + std::strlen(u), v, v + std::strlen(v));
+    }
+
+    // This version of the function catches the cases when u & v are not of the
+    // same type but both convertible to string_view
+    //! \brief Helper for adding a included pair of words
+    //! (std::string_view).
+    //!
+    //! See \ref
+    //! add_included_pair<Subclass, Word>(SimsSettings<Subclass>&, Word const&,
+    //! Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_included_pair(SimsSettings<Subclass>& sims,
+                                std::string_view        u,
+                                std::string_view        v) {
+      return sims.add_included_pair(
+          std::begin(u), std::end(u), std::begin(v), std::end(v));
+    }
+
+    //! \brief Helper for adding an excluded pair of words.
+    //!
+    //! This function can be used to add an excluded pair to \p
+    //! sims using the objects themselves rather than
+    //! using iterators.
+    //!
+    //! \tparam Subclass the type of the first parameter.
+    //! \tparam Word the type of the second and third parameters.
+    //!
+    //! \param sims a \ref Sims1 or \ref Sims2 object.
+    //! \param u the left hand side of the pair to add.
+    //! \param v the right hand side of the pair to add.
+    //!
+    //! \return A reference to \p sims.
+    //!
+    //! \cong_intf_warn_assume_letters_in_bounds
+    //!
+    //! \sa \ref Sims1::excluded_pairs
+    template <typename Subclass, typename Word>
+    Subclass& add_excluded_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          Word const&             u,
+                                          Word const&             v) {
+      return sims.add_excluded_pair_no_checks(
+          u.cbegin(), u.cend(), v.cbegin(), v.cend());
+    }
+
+    //! \brief Helper for adding a excluded pair of words
+    //! (std::initializer_list).
+    //!
+    //! See \ref
+    //! add_excluded_pair_no_checks<Subclass, Word>(SimsSettings<Subclass>&,
+    //! Word const&, Word const&) for details.
+    template <typename Subclass, typename Int>
+    Subclass& add_excluded_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          std::initializer_list<Int> const& u,
+                                          std::initializer_list<Int> const& v) {
+      return add_excluded_pair_no_checks<Subclass, std::vector<Int>>(
+          sims, u, v);
+    }
+
+    //! \brief Helper for adding a excluded pair of words
+    //! (string literals).
+    //!
+    //! See \ref
+    //! add_excluded_pair_no_checks<Subclass, Word>(SimsSettings<Subclass>&,
+    //! Word const&, Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_excluded_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          char const*             u,
+                                          char const*             v) {
+      return sims.add_excluded_pair_no_checks(
+          u, u + std::strlen(u), v, v + std::strlen(v));
+    }
+
+    // This version of the function catches the cases when u & v are not of the
+    // same type but both convertible to string_view
+    //! \brief Helper for adding a excluded pair of words
+    //! (std::string_view).
+    //!
+    //! See \ref
+    //! add_excluded_pair_no_checks<Subclass, Word>(SimsSettings<Subclass>&,
+    //! Word const&, Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_excluded_pair_no_checks(SimsSettings<Subclass>& sims,
+                                          std::string_view        u,
+                                          std::string_view        v) {
+      return sims.add_excluded_pair_no_checks(
+          std::begin(u), std::end(u), std::begin(v), std::end(v));
+    }
+
+    //! \brief Helper for adding an excluded pair of words.
+    //!
+    //! This function can be used to add an excluded pair to \p
+    //! sims using the objects themselves rather than
+    //! using iterators.
+    //!
+    //! \tparam Subclass the type of the first parameter.
+    //! \tparam Word the type of the second and third parameters.
+    //!
+    //! \param sims a \ref Sims1 or \ref Sims2 object.
+    //! \param u the left hand side of the pair to add.
+    //! \param v the right hand side of the pair to add.
+    //!
+    //! \return A reference to \p sims.
+    //!
+    //! \cong_intf_throws_if_letters_out_of_bounds
+    //!
+    //! \sa \ref Sims1::excluded_pairs
+    template <typename Subclass, typename Word>
+    Subclass& add_excluded_pair(SimsSettings<Subclass>& sims,
+                                Word const&             u,
+                                Word const&             v) {
+      return sims.add_excluded_pair(u.cbegin(), u.cend(), v.cbegin(), v.cend());
+    }
+
+    //! \brief Helper for adding a excluded pair of words
+    //! (std::initializer_list).
+    //!
+    //! See \ref
+    //! add_excluded_pair<Subclass, Word>(SimsSettings<Subclass>&, Word const&,
+    //! Word const&) for details.
+    template <typename Subclass, typename Int>
+    Subclass& add_excluded_pair(SimsSettings<Subclass>&           sims,
+                                std::initializer_list<Int> const& u,
+                                std::initializer_list<Int> const& v) {
+      return add_excluded_pair<Subclass, std::vector<Int>>(sims, u, v);
+    }
+
+    //! \brief Helper for adding a excluded pair of words
+    //! (string literals).
+    //!
+    //! See \ref
+    //! add_excluded_pair<Subclass, Word>(SimsSettings<Subclass>&, Word const&,
+    //! Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_excluded_pair(SimsSettings<Subclass>& sims,
+                                char const*             u,
+                                char const*             v) {
+      return sims.add_excluded_pair(
+          u, u + std::strlen(u), v, v + std::strlen(v));
+    }
+
+    // This version of the function catches the cases when u & v are not of the
+    // same type but both convertible to string_view
+    //! \brief Helper for adding a excluded pair of words
+    //! (std::string_view).
+    //!
+    //! See \ref
+    //! add_excluded_pair<Subclass, Word>(SimsSettings<Subclass>&, Word const&,
+    //! Word const&) for details.
+    template <typename Subclass>
+    Subclass& add_excluded_pair(SimsSettings<Subclass>& sims,
+                                std::string_view        u,
+                                std::string_view        v) {
+      return sims.add_excluded_pair(
+          std::begin(u), std::end(u), std::begin(v), std::end(v));
+    }
+
+  }  // namespace sims
 
   ////////////////////////////////////////////////////////////////////////
   // Sims1 - Sims2 - forward decl
@@ -1072,8 +1306,8 @@ namespace libsemigroups {
           _felsch_graph = that._felsch_graph;
         }
 
-        // Try to pop from _pending into the argument (reference), returns true
-        // if successful and false if not.
+        // Try to pop from _pending into the argument (reference), returns
+        // true if successful and false if not.
         [[nodiscard]] bool try_pop(PendingDef& pd);
 
         // Try to make the definition represented by PendingDef, returns false
@@ -1223,8 +1457,8 @@ namespace libsemigroups {
       using SimsSettings<Sims1or2>::presentation;
       using SimsSettings<Sims1or2>::number_of_threads;
       using SimsSettings<Sims1or2>::stats;
-      using SimsSettings<Sims1or2>::include;
-      using SimsSettings<Sims1or2>::exclude;
+      using SimsSettings<Sims1or2>::included_pairs;
+      using SimsSettings<Sims1or2>::excluded_pairs;
       using SimsSettings<Sims1or2>::cbegin_long_rules;
 
       [[nodiscard]] iterator cbegin(size_type n) const {
