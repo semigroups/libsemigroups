@@ -137,7 +137,7 @@ namespace libsemigroups {
 
   //! Make a FroidurePin object from a WordGraph.
   //!
-  //! Calls `make(ad, 0, ad.number_of_nodes())`; see above.
+  //! Calls `to_froidure_pin(ad, 0, ad.number_of_nodes())`; see above.
   template <typename Element, typename Node>
   FroidurePin<Element> to_froidure_pin(WordGraph<Node> const& ad) {
     return to_froidure_pin<Element>(ad, 0, ad.number_of_nodes());

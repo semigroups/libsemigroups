@@ -143,11 +143,10 @@ namespace libsemigroups {
     }
   }
 
-  // STATIC
   template <size_t N, typename Scalar>
-  void PPerm<N, Scalar>::validate_args(std::vector<Scalar> const& dom,
-                                       std::vector<Scalar> const& ran,
-                                       size_t                     deg) {
+  void detail::validate_args(std::vector<Scalar> const& dom,
+                             std::vector<Scalar> const& ran,
+                             size_t                     deg) {
     if (N != 0 && deg != N) {
       // Sanity check that the final argument is compatible with the
       // template param N, if we have a dynamic pperm
@@ -173,15 +172,13 @@ namespace libsemigroups {
     detail::validate_no_duplicates(ran.cbegin(), ran.cend(), seen);
   }
 
-  // STATIC
-  template <size_t N, typename Scalar>
-  template <typename OtherScalar>
-  [[nodiscard]] PPerm<N, Scalar>
-  PPerm<N, Scalar>::make(std::vector<OtherScalar> const& dom,
-                         std::vector<OtherScalar> const& ran,
-                         size_t const                    M) {
-    validate_args(dom, ran, M);
-    PPerm result(dom, ran, M);
+  template <typename Return>
+  [[nodiscard]] std::enable_if_t<IsPPerm<Return>, Return>
+  to(std::vector<typename Return::point_type> const& dom,
+     std::vector<typename Return::point_type> const& ran,
+     size_t const                                    M) {
+    detail::validate_args(dom, ran, M);
+    Return result(dom, ran, M);
     validate(result);
     return result;
   }

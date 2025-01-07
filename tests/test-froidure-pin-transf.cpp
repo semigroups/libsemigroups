@@ -87,16 +87,18 @@ namespace libsemigroups {
       REQUIRE_NOTHROW(to_froidure_pin(gens1));
     }
 
-    template <typename T>
+    template <size_t N = 0>
     void test002() {
-      auto           rg = ReportGuard(REPORT);
+      auto rg = ReportGuard(REPORT);
+      using T = Transf<N>;
       FroidurePin<T> S;
       S.add_generator(T({2, 4, 6, 1, 4, 5, 2, 7, 3}));
       // For dynamic Transf exception is thrown by FroidurePin because degree
       // is wrong, for static Transf exception is thrown by make, because the
       // container has the wrong size
-      REQUIRE_THROWS_AS(S.add_generator(T::make({1, 7, 2, 6, 0, 0, 1, 2})),
-                        LibsemigroupsException);
+      REQUIRE_THROWS_AS(
+          S.add_generator(to<Transf<N>>({1, 7, 2, 6, 0, 0, 1, 2})),
+          LibsemigroupsException);
     }
 
     void test_idempotent(FroidurePin<Transf<>>& S, Transf<> const& x) {
@@ -148,8 +150,8 @@ namespace libsemigroups {
                              "exception generators of "
                              "different degrees",
                              "[quick][froidure-pin][transformation][transf]") {
-    test002<Transf<>>();
-    test002<Transf<9>>();
+    test002<>();
+    test002<9>();
   }
 
   LIBSEMIGROUPS_TEST_CASE_V3("FroidurePin<Transf<>>",

@@ -7035,7 +7035,7 @@ namespace libsemigroups {
     //! \par Example
     //!
     //! \code
-    //! auto x == ProjMaxPlusMat<>::make({{-2, 2, 0}, {-1, 0, 0}, {1, -3,
+    //! auto x == ProjMaxPlusMat<>::to_matrix({{-2, 2, 0}, {-1, 0, 0}, {1, -3,
     //! 1}}));
     //! // returns {{-1, 0, -1}, {-2, -1, -2}, {-1, 0, -1}}
     //! matrix::pow(x, 100);
@@ -7783,7 +7783,7 @@ namespace libsemigroups {
     //! \par Example
     //!
     //! \code
-    //! auto x = BMat<>::make({{1, 0, 0}, {0, 0, 1}, {0, 1, 0}});
+    //! auto x = BMat<>::to_matrix({{1, 0, 0}, {0, 0, 1}, {0, 1, 0}});
     //! matrix::row_space_size(x); // returns 7
     //! \endcode
     template <typename Mat, typename = std::enable_if_t<IsBMat<Mat>>>
