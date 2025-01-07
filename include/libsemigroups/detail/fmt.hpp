@@ -26,6 +26,7 @@
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 #pragma GCC diagnostic ignored "-Winline"
+#pragma GCC diagnostic ignored "-Wtautological-compare"
 
 #include <fmt/chrono.h>
 #include <fmt/color.h>

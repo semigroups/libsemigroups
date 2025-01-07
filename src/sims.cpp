@@ -28,21 +28,24 @@
 
 #include "libsemigroups/sims.hpp"
 
-#include <algorithm>   // for max, find_if, fill
-#include <chrono>      // for duration, durat...
-#include <functional>  // for ref
-#include <memory>      // for unique_ptr, mak...
-#include <string>      // for operator+, basi...
+#include <algorithm>   // for fill, reverse
+#include <functional>  // for function, ref
+#include <memory>      // for unique_ptr, make_unique, swap
+#include <string>      // for basic_string, string, operator+
 #include <thread>      // for thread, yield
-#include <utility>     // for swap
+#include <tuple>       // for _Swallow_assign, ignore
+#include <utility>     // for move, swap, pair
 
 #include "libsemigroups/constants.hpp"        // for operator!=, ope...
 #include "libsemigroups/debug.hpp"            // for LIBSEMIGROUPS_A...
 #include "libsemigroups/exception.hpp"        // for LIBSEMIGROUPS_E...
+#include "libsemigroups/forest.hpp"           // for Forest
 #include "libsemigroups/froidure-pin.hpp"     // for FroidurePin
+#include "libsemigroups/knuth-bendix.hpp"     // for KnuthBendix, to_present...
 #include "libsemigroups/presentation.hpp"     // for Presentation
+#include "libsemigroups/runner.hpp"           // for delta, Reporter
 #include "libsemigroups/to-froidure-pin.hpp"  // for to_word_graph
-#include "libsemigroups/transf.hpp"           // for Transf, validate
+#include "libsemigroups/transf.hpp"           // for Transf, one
 #include "libsemigroups/types.hpp"            // for congruence_kind
 #include "libsemigroups/word-graph.hpp"       // for follow_path_no_...
 
@@ -76,7 +79,7 @@ namespace libsemigroups {
     return *this;
   }
 
-  SimsStats& SimsStats::init_from(SimsStats const& that) {
+  SimsStats& SimsStats::init(SimsStats const& that) {
     count_last         = that.count_last.load();
     count_now          = that.count_now.load();
     max_pending        = that.max_pending.load();
@@ -92,6 +95,7 @@ namespace libsemigroups {
   template <typename Subclass>
   SimsSettings<Subclass>::SimsSettings()
       : _exclude(),
+        _exclude_pruner_index(UNDEFINED),
         _idle_thread_restarts(64),
         _include(),
         _longs_begin(),
@@ -105,29 +109,19 @@ namespace libsemigroups {
   template <typename Subclass>
   Subclass& SimsSettings<Subclass>::init() {
     _exclude.clear();
+    _exclude_pruner_index = UNDEFINED;
     _idle_thread_restarts = 64;
     _include.clear();
-    _longs_begin = _presentation.rules.cend();
     _num_threads = 1;
     _presentation.init();
     _pruners.clear();
-    auto pruner = [this](auto const& wg) {
-      auto      first = _exclude.cbegin();
-      auto      last  = _exclude.cend();
-      node_type root  = 0;
 
-      for (auto it = first; it != last; it += 2) {
-        auto l = word_graph::follow_path_no_checks(wg, root, *it);
-        if (l != UNDEFINED) {
-          auto r = word_graph::follow_path_no_checks(wg, root, *(it + 1));
-          if (l == r) {
-            return false;
-          }
-        }
-      }
-      return true;
-    };
-    add_pruner(pruner);
+    // Need to set after presentation is initialized to avoid out of bound
+    // access.
+    _longs_begin = _presentation.rules.cend();
+
+    _stats.init();
+
     return static_cast<Subclass&>(*this);
   }
 
@@ -158,6 +152,11 @@ namespace libsemigroups {
     if (val == 0) {
       LIBSEMIGROUPS_EXCEPTION(
           "the argument (number of threads) must be non-zero");
+    }
+
+    if ((std::thread::hardware_concurrency() > 0)
+        && (val > std::thread::hardware_concurrency())) {
+      val = std::thread::hardware_concurrency();
     }
     _num_threads = val;
     return static_cast<Subclass&>(*this);
@@ -190,15 +189,31 @@ namespace libsemigroups {
   }
 
   template <typename Subclass>
-  Subclass& SimsSettings<Subclass>::include_exclude(
-      word_type const&        lhs,
-      word_type const&        rhs,
-      std::vector<word_type>& include_or_exclude) {
-    presentation().validate_word(lhs.cbegin(), lhs.cend());
-    presentation().validate_word(rhs.cbegin(), rhs.cend());
-    include_or_exclude.push_back(lhs);
-    include_or_exclude.push_back(rhs);
-    return static_cast<Subclass&>(*this);
+  size_t SimsSettings<Subclass>::add_exclude_pruner() {
+    if (_exclude_pruner_index != UNDEFINED) {
+      return _exclude_pruner_index;
+    }
+    auto pruner = [this](auto const& wg) {
+      auto      first = _exclude.cbegin();
+      auto      last  = _exclude.cend();
+      node_type root  = 0;
+
+      for (auto it = first; it != last; it += 2) {
+        auto l = word_graph::follow_path_no_checks(wg, root, *it);
+        if (l != UNDEFINED) {
+          auto r = word_graph::follow_path_no_checks(wg, root, *(it + 1));
+          if (l == r) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+    // NOTE:: setting _exclude_pruner_index here depends on the implementation
+    // of add_pruner, if that changes bad things may happen.
+    _exclude_pruner_index = _pruners.size();
+    add_pruner(pruner);
+    return _exclude_pruner_index;
   }
 
   template class SimsSettings<Sims1>;
@@ -376,14 +391,16 @@ namespace libsemigroups {
       auto longest_short  = presentation::longest_rule_length(presentation());
 
       std::string pairs;
-      if (!include().empty() && !exclude().empty()) {
+      if (!included_pairs().empty() && !excluded_pairs().empty()) {
         pairs = fmt::format(", including {} + excluding {} pairs",
-                            include().size() / 2,
-                            exclude().size() / 2);
-      } else if (!include().empty()) {
-        pairs = fmt::format(", including {} pairs", include().size() / 2);
-      } else if (!exclude().empty()) {
-        pairs = fmt::format(", excluding {} pairs", exclude().size() / 2);
+                            included_pairs().size() / 2,
+                            excluded_pairs().size() / 2);
+      } else if (!included_pairs().empty()) {
+        pairs
+            = fmt::format(", including {} pairs", included_pairs().size() / 2);
+      } else if (!excluded_pairs().empty()) {
+        pairs
+            = fmt::format(", excluding {} pairs", excluded_pairs().size() / 2);
       }
 
       report_no_prefix("{:+<80}\n", "");
@@ -584,8 +601,8 @@ namespace libsemigroups {
       _felsch_graph.target_no_checks(
           current.source, current.generator, current.target);
 
-      auto first = _sims1or2->include().cbegin();
-      auto last  = _sims1or2->include().cend();
+      auto first = _sims1or2->included_pairs().cbegin();
+      auto last  = _sims1or2->included_pairs().cend();
       while (start != _felsch_graph.definitions().size()) {
         if (!_felsch_graph.process_definitions(start)) {
           return false;
@@ -889,10 +906,10 @@ namespace libsemigroups {
       // into [begin, begin + size / 2) and [begin + size / 2, end)
       size_t i = 0;
       for (; i < n - 2; i += 2) {
-        iterator_base::_pending.push_back(std::move(that._pending[i]));
+        push(std::move(that._pending[i]));
         that._pending[i / 2] = std::move(that._pending[i + 1]);
       }
-      iterator_base::_pending.push_back(std::move(that._pending[i]));
+      push(std::move(that._pending[i]));
       if (i == n - 2) {
         that._pending[i / 2] = std::move(that._pending[i + 1]);
       }
@@ -901,6 +918,13 @@ namespace libsemigroups {
                           that._pending.cend());
     }
 
+    // NOTE: (reiniscirpons)
+    // When running the thread sanitizer we get the error
+    // ThreadSanitizer: lock-order-inversion (potential deadlock)
+    // This can be ignored here, despite the lock order inversion, since we only
+    // every try to steal when we are empty from a non-empty thread, it cannot
+    // be the case that two threads try to steal from each other simultaneously.
+    // In other words the thread sanitizer is overly cautious here.
     template <typename Sims1or2>
     bool SimsBase<Sims1or2>::thread_iterator::try_steal(thread_iterator& that) {
       std::lock_guard<std::mutex> lock(iterator_base::_mtx);
@@ -1002,6 +1026,9 @@ namespace libsemigroups {
         _done = true;
         throw;
       }
+      // TODO(2) Implement a ThreadIdGuard so that thread ids are automatically
+      // reset after they exit scope.
+      detail::reset_thread_ids();
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -1031,7 +1058,8 @@ namespace libsemigroups {
     ~RuleContainer() = default;
 
     void resize(size_t m) {
-      // TODO should we use resize?
+      // TODO(2) should we use resize?
+      // I.e. is it ok to overwrite values as we go along instead at start.
       _used_slots.assign(m, UNDEFINED);
       if (m > 0) {
         _used_slots[0] = 0;
@@ -1087,8 +1115,8 @@ namespace libsemigroups {
   void Sims2::iterator_base::partial_copy_for_steal_from(
       Sims2::iterator_base const& that) {
     SimsBase::IteratorBase::partial_copy_for_steal_from(that);
-    *_2_sided_include = *that._2_sided_include;
-    _2_sided_words    = that._2_sided_words;
+    _2_sided_include = std::make_unique<RuleContainer>(*that._2_sided_include);
+    _2_sided_words   = that._2_sided_words;
   }
 
   Sims2::iterator_base::iterator_base(Sims2 const* s, size_type n)
@@ -1096,7 +1124,7 @@ namespace libsemigroups {
         // protected
         _2_sided_include(new RuleContainer()),
         _2_sided_words() {
-    // TODO could be slightly less space allocated here
+    // TODO(2) could be slightly less space allocated here
     size_t const m = SimsBase::IteratorBase::maximum_number_of_classes();
     Presentation<word_type> const& p = this->_felsch_graph.presentation();
     _2_sided_include->resize(2 * m * p.alphabet().size());
@@ -1106,28 +1134,31 @@ namespace libsemigroups {
     // here (i.e. the number of nodes in the resulting graphs is n + 1.
   }
 
+  Sims2::iterator_base::iterator_base()
+      : SimsBase::IteratorBase(), _2_sided_include(nullptr), _2_sided_words() {}
+
   Sims2::iterator_base::iterator_base(Sims2::iterator_base const& that)
       : SimsBase::IteratorBase(that),
         _2_sided_include(new RuleContainer(*that._2_sided_include)),
         _2_sided_words(that._2_sided_words) {}
 
   Sims2::iterator_base::iterator_base(Sims2::iterator_base&& that)
-      : SimsBase::IteratorBase(std::move(that)),  // TODO std::move correct?
+      : SimsBase::IteratorBase(std::move(that)),
         _2_sided_include(std::move(that._2_sided_include)),
         _2_sided_words(std::move(that._2_sided_words)) {}
 
   typename Sims2::iterator_base&
   Sims2::iterator_base::operator=(Sims2::iterator_base const& that) {
     SimsBase::IteratorBase::operator=(that);
-    *_2_sided_include = *that._2_sided_include;
-    _2_sided_words    = that._2_sided_words;
+    _2_sided_include = std::make_unique<RuleContainer>(*that._2_sided_include);
+    _2_sided_words   = that._2_sided_words;
 
     return *this;
   }
 
   typename Sims2::iterator_base&
   Sims2::iterator_base::operator=(Sims2::iterator_base&& that) {
-    SimsBase::IteratorBase::operator=(std::move(that));  // TODO std::move ok?
+    SimsBase::IteratorBase::operator=(std::move(that));
     _2_sided_include = std::move(that._2_sided_include);
     _2_sided_words   = std::move(that._2_sided_words);
     return *this;
@@ -1153,8 +1184,8 @@ namespace libsemigroups {
 
     size_type start     = _felsch_graph.definitions().size();
     size_type num_nodes = _felsch_graph.number_of_active_nodes();
-    auto      first     = _sims1or2->include().cbegin();
-    auto      last      = _sims1or2->include().cend();
+    auto      first     = _sims1or2->included_pairs().cbegin();
+    auto      last      = _sims1or2->included_pairs().cend();
 
     // That the graph is compatible at 0 with include is checked in
     // Sims1::iterator_base::try_define.
@@ -1162,7 +1193,7 @@ namespace libsemigroups {
         && (!detail::felsch_graph::make_compatible<detail::RegisterDefs>(
                 _felsch_graph, 1, num_nodes, first, last)
             || !_felsch_graph.process_definitions(start))) {
-      // Seems to be important to check include() first then
+      // Seems to be important to check included_pairs() first then
       // process_definitions
       return false;
     }
@@ -1304,7 +1335,7 @@ namespace libsemigroups {
   // doesn't construct a FroidurePin object for these). So, it seems to be
   // best to just search through the digraphs with [1, 57) nodes once.
   //
-  // TODO(later) perhaps find minimal 2-sided congruences first (or try to)
+  // TODO(2) perhaps find minimal 2-sided congruences first (or try to)
   // and then run MinimalRepOrc for right congruences excluding all the
   // generating pairs from the minimal 2-sided congruences. Also with this
   // approach FroidurePin wouldn't be required in RepOrc. This might not work,
@@ -1427,6 +1458,209 @@ namespace libsemigroups {
 
     const_cgp_iterator::~const_cgp_iterator() = default;
 
+    const_cgp_iterator const& const_cgp_iterator::operator++() {
+      size_type start = _reconstructed_word_graph.definitions().size();
+      const_rcgp_iterator::operator++();
+      if (at_end()) {
+        return *this;
+      }
+      // Copy wasteful
+      auto p = _reconstructed_word_graph.presentation();
+      presentation::add_rule_no_checks(p, (**this).first, (**this).second);
+      _reconstructed_word_graph.presentation(std::move(p));
+
+      std::ignore = _reconstructed_word_graph.process_definitions(start);
+      return *this;
+    }
+
   }  // namespace sims
+
+  bool SimsRefinerFaithful::operator()(Sims1::word_graph_type const& wg) {
+    auto first = _forbid.cbegin(), last = _forbid.cend();
+    // TODO(2) use 1 felsch tree per excluded pairs, and use it to check if
+    // paths containing newly added edges, lead to the same place
+    for (auto it = first; it != last; it += 2) {
+      bool this_rule_compatible = true;
+      for (uint32_t n = 0; n < wg.number_of_active_nodes(); ++n) {
+        auto l = word_graph::follow_path_no_checks(wg, n, *it);
+        if (l != UNDEFINED) {
+          auto r = word_graph::follow_path_no_checks(wg, n, *(it + 1));
+          if (r == UNDEFINED || (r != UNDEFINED && l != r)) {
+            this_rule_compatible = false;
+            break;
+          }
+        } else {
+          this_rule_compatible = false;
+          break;
+        }
+      }
+      if (this_rule_compatible) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool SimsRefinerIdeals::operator()(Sims1::word_graph_type const& wg) {
+    // TODO(2) Make knuth bendix thread safe to use here without the bodge
+    using sims::right_generating_pairs_no_checks;
+
+    node_type sink = UNDEFINED;
+
+    LIBSEMIGROUPS_ASSERT(detail::this_threads_id()
+                         < std::thread::hardware_concurrency() + 1);
+    auto const& kb = _knuth_bendices[detail::this_threads_id()];
+    for (auto const& p : right_generating_pairs_no_checks(wg)) {
+      auto const& u = p.first;
+      auto const& v = p.second;
+      // KnuthBendix gets run on initialization, so using currently_contains
+      // should be fine
+      LIBSEMIGROUPS_ASSERT(knuth_bendix::currently_contains_no_checks(kb, u, v)
+                           != tril::unknown);
+      if (knuth_bendix::currently_contains_no_checks(kb, u, v) == tril::FALSE) {
+        auto beta
+            = word_graph::follow_path_no_checks(wg, 0, u.cbegin(), u.cend());
+        if (sink == UNDEFINED) {
+          sink = beta;
+        } else if (sink != beta) {
+          return false;
+        }
+      }
+    }
+    if (sink != UNDEFINED) {
+      for (auto [a, t] : wg.labels_and_targets_no_checks(sink)) {
+        if (t != UNDEFINED && t != sink) {
+          return false;
+        }
+      }
+    } else {
+      auto const N     = wg.number_of_active_nodes();
+      auto       first = wg.cbegin_nodes();
+      auto       last  = wg.cbegin_nodes() + N;
+      if (word_graph::is_complete(wg, first, last)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  [[nodiscard]] std::string to_human_readable_repr(SimsStats const&) {
+    return fmt::format("<SimsStats object>");
+  }
+
+  namespace helper {
+
+    template <typename Subclass>
+    [[nodiscard]] std::string
+    sims_to_human_readable_repr_helper(SimsSettings<Subclass> const& x,
+                                       std::string extra_text) {
+      std::string result    = "";
+      bool        needs_and = false;
+
+      result += fmt::format("object over {} with",
+                            to_human_readable_repr(x.presentation()));
+      std::string comma
+          = (x.pruners().empty()
+             || (x.pruners().size() == 1 && !x.excluded_pairs().empty()))
+                    && extra_text.empty()
+                ? ""
+                : ",";
+      if ((x.included_pairs().size() > 0) && (x.excluded_pairs().size() > 0)) {
+        result += fmt::format(" {} included and {} excluded pairs{}",
+                              x.included_pairs().size() / 2,
+                              x.excluded_pairs().size() / 2,
+                              comma);
+        needs_and = true;
+      } else if (x.included_pairs().size() > 0) {
+        result += fmt::format(" {} included pair{}{}",
+                              x.included_pairs().size() / 2,
+                              x.included_pairs().size() / 2 == 1 ? "" : "s",
+                              comma);
+        needs_and = true;
+      } else if (x.excluded_pairs().size() > 0) {
+        result += fmt::format(" {} excluded pair{}{}",
+                              x.excluded_pairs().size() / 2,
+                              x.excluded_pairs().size() / 2 == 1 ? "" : "s",
+                              comma);
+        needs_and = true;
+      }
+
+      result += extra_text;
+      if (extra_text.size()) {
+        needs_and = true;
+      }
+
+      if (x.pruners().size() > 1
+          || (x.excluded_pairs().empty() && !x.pruners().empty())) {
+        result += fmt::format(
+            " {} pruner{}",
+            x.excluded_pairs().size() == 0 ? x.pruners().size()
+                                           : x.pruners().size() - 1,
+            (x.excluded_pairs().size() == 0 ? x.pruners().size()
+                                            : x.pruners().size() - 1)
+                    == 1
+                ? ""
+                : "s");
+        needs_and = true;
+      }
+      result += needs_and ? " and" : "";
+      result += fmt::format(" {} thread{}",
+                            x.number_of_threads(),
+                            x.number_of_threads() == 1 ? "" : "s");
+      return result;
+    }
+
+  }  // namespace helper
+
+  [[nodiscard]] std::string to_human_readable_repr(Sims1 const& x) {
+    return fmt::format("<Sims1 {}>",
+                       helper::sims_to_human_readable_repr_helper(x, ""));
+  }
+
+  [[nodiscard]] std::string to_human_readable_repr(Sims2 const& x) {
+    return fmt::format("<Sims2 {}>",
+                       helper::sims_to_human_readable_repr_helper(x, ""));
+  }
+
+  [[nodiscard]] std::string to_human_readable_repr(RepOrc const& x) {
+    return fmt::format(
+        "<RepOrc {}>",
+        helper::sims_to_human_readable_repr_helper(
+            x,
+            fmt::format(
+                " node bounds [{}, {}), target size {}{}",
+                x.min_nodes(),
+                x.max_nodes(),
+                x.target_size(),
+                (x.pruners().size() > 1
+                 || (x.excluded_pairs().empty() && !x.pruners().empty()))
+                    ? ","
+                    : "")));
+  }
+
+  [[nodiscard]] std::string to_human_readable_repr(MinimalRepOrc const& x) {
+    return fmt::format("<MinimalRepOrc {}>",
+                       helper::sims_to_human_readable_repr_helper(
+                           x,
+                           fmt::format(" target size {}{}",
+                                       x.target_size(),
+                                       (x.pruners().size() > 1
+                                        || (x.excluded_pairs().empty()
+                                            && !x.pruners().empty()))
+                                           ? ","
+                                           : "")));
+  }
+
+  [[nodiscard]] std::string to_human_readable_repr(SimsRefinerIdeals const& x) {
+    return fmt::format("<SimsRefinerIdeals object over presentation {}>",
+                       to_human_readable_repr(x.presentation()));
+  }
+
+  [[nodiscard]] std::string
+  to_human_readable_repr(SimsRefinerFaithful const& x) {
+    return fmt::format("<SimsRefinerFaithful object with {} forbidden pair{}>",
+                       x.forbid().size() / 2,
+                       x.forbid().size() / 2 == 1 ? "" : "s");
+  }
 
 }  // namespace libsemigroups
