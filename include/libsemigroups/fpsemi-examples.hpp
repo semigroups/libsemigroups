@@ -28,8 +28,6 @@
 #include "presentation.hpp"  // for Presentation
 #include "types.hpp"         // for word_type
 
-// TODO: Run include-what-you-use on this file (I (Murray) couldn't)
-
 namespace libsemigroups {
 
   //! \ingroup presentations_group
