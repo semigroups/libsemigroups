@@ -25,50 +25,50 @@
 #include <cstddef>  // for size_t
 #include <memory>   // for shared_ptr
 
-#include "cong-intf.hpp"
-#include "exception.hpp"     // for LIBSEMIGROUPS_EXCEPTION
-#include "kambites.hpp"      // for Kambites
-#include "knuth-bendix.hpp"  // for KnuthBendix
-#include "runner.hpp"        // for Runner
-#include "to-todd-coxeter.hpp"
-#include "todd-coxeter.hpp"  // for ToddCoxeter
-#include "types.hpp"         // for word_type
+#include "cong-intf.hpp"        // for CongruenceInterface
+#include "exception.hpp"        // for LIBSEMIGROUPS_EXCEPTION
+#include "kambites.hpp"         // for Kambites
+#include "knuth-bendix.hpp"     // for KnuthBendix
+#include "to-todd-coxeter.hpp"  // for to_todd_coxeter
+#include "todd-coxeter.hpp"     // for ToddCoxeter
+#include "types.hpp"            // for word_type
 
 #include "detail/race.hpp"  // for Race
 
 namespace libsemigroups {
   class FroidurePinBase;  // Forward declaration, constructor parameters
 
-  // The purpose of this class in v3 is just to deliver the winner, then that
-  // object is used to answer whatever questions.
-
+  //! \ingroup cong_all_classes_group
+  //!
+  //! \brief Class for running Kambites, KnuthBendix, and \ref
+  //! todd_coxeter_class_group "ToddCoxeter" in parallel.
+  //!
   //! Defined in ``cong.hpp``.
   //!
-  //! On this page we describe the functionality relating to the Congruence
-  //! class. This class can be used for computing a congruence over a semigroup
-  //! by running every applicable algorithm from ``libsemigroups`` (and some
-  //! variants of the same algorithm) in parallel. This class is provided for
-  //! convenience, at present it is not very customisable, and lacks some of
-  //! the fine grained control offered by the classes implementing individual
-  //! algorithms, such as ToddCoxeter and KnuthBendix.
+  //! On this page we describe the functionality relating to the class
+  //! Congruence in ``libsemigroups``. This class can be used for computing a
+  //! congruence over a semigroup or monoid by running every applicable
+  //! algorithm from ``libsemigroups`` (and some variants of the same algorithm)
+  //! in parallel. This class is provided for convenience, at present it is not
+  //! very customisable, and lacks some of the fine grained control offered by
+  //! the classes implementing individual algorithms, such as Kambites,
+  //! KnuthBendix, and \ref todd_coxeter_class_group "ToddCoxeter".
   //!
   //! \sa congruence_kind and tril.
+  //!
   //! \par Example
   //! \code
-  //! FpSemigroup S;
-  //! S.set_alphabet(3);
-  //! S.set_identity(0);
-  //! S.add_rule({1, 2}, {0});
-  //! S.is_obviously_infinite();  // false
-  //!
-  //! Congruence cong(twosided, S);
-  //! cong.add_generating_pair({1, 1, 1}, {0});
+  //! Presentation<word_type> p;
+  //! p.alphabet(3)
+  //! presentation::add_rule(p, {1, 2}, {0});
+  //! Congruence cong(congruence_kind::twosided, p);
+  //! is_obviously_infinite(cong);  // false
+  //! congruence::add_generating_pair(cong, {1, 1, 1}, {0});
   //! cong.number_of_classes(); // 3
   //! \endcode
-  // TODO(0):
-  // * impl presentation mem fn
   class Congruence : public CongruenceInterface {
     enum class RunnerKind : size_t { TC = 0, KB = 1, K = 2 };
+
     /////////////////////////////////////////////////////////////////////////
     // Congruence - data - private
     /////////////////////////////////////////////////////////////////////////
@@ -82,149 +82,152 @@ namespace libsemigroups {
     // Congruence - constructors - public
     //////////////////////////////////////////////////////////////////////////
 
-    // TODO doc
+    //! \brief Default constructor.
+    //!
+    //! This function default constructs an uninitialised Congruence instance.
     Congruence()
         : CongruenceInterface(), _race(), _runners_initted(), _runner_kinds() {
       init();
     }
 
-    // TODO doc
+    //! \brief Re-initialize a Congruence instance.
+    //!
+    //! This function puts a Congruence instance back into the state that it
+    //! would have been in if it had just been newly default constructed.
+    //!
+    //! \returns A reference to `*this`.
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
     Congruence& init();
 
-    //! Construct from kind (left/right/2-sided) and options.
-    //!
-    //! Constructs an empty instance of an interface to a congruence of type
-    //! specified by the argument.
-    //!
-    //! \param type the type of the congruence.
-    //! \param opt  optionally specify algorithms to be used (defaults to
-    //! options::runners::standard).
-    //!
-    //! \complexity
-    //! Constant.
-    //!
-    //! \sa set_number_of_generators and add_generating_pair.
-    // TODO remove
-    explicit Congruence(congruence_kind type) : CongruenceInterface() {
-      init(type);
-    }
-
-    // TODO doc
-    // TODO remove
-    Congruence& init(congruence_kind type) {
-      CongruenceInterface::init(type);
-      return init();
-    }
-
-    //! Construct from kind (left/right/2-sided) and FroidurePin.
-    //!
-    //! Constructs a Congruence over the FroidurePin instance \p S
-    //! representing a left/right/2-sided congruence according to \p type.
-    //!
-    //! \tparam T a class derived from FroidurePinBase.
-    //!
-    //! \param type whether the congruence is left, right, or 2-sided
-    //! \param S  a const reference to the semigroup over which the congruence
-    //! is defined.
-    //!
-    //! \exceptions
-    //! \no_libsemigroups_except
-    //!
-    //! \complexity
-    //! Linear in  the size of \p S.
-    //!
-    //! \warning the parameter `T const& S` is copied, this might be expensive,
-    //! use a std::shared_ptr to avoid the copy!
-    // template <typename T>
-    // TODO(0) should be a helper
-    template <typename Node>
-    Congruence(congruence_kind        type,
-               FroidurePinBase&       S,
-               WordGraph<Node> const& wg)
-        : Congruence() {
-      init(type, S, wg);
-    }
-
-    // TODO doc
-    // TODO(0) helper
-    template <typename Node>
-    Congruence& init(congruence_kind        type,
-                     FroidurePinBase&       S,
-                     WordGraph<Node> const& wg) {
-      if (S.is_finite() != tril::FALSE) {
-        S.run();
-      } else {
-        LIBSEMIGROUPS_EXCEPTION(
-            "the 2nd argument does not represent a finite semigroup!");
-      }
-      init(type);
-
-      // TODO(later) if necessary make a runner that tries to S.run(), then get
-      // the Cayley graph and use that in the ToddCoxeter, at present that'll
-      // happen here in the constructor
-      auto tc = std::make_shared<ToddCoxeter>(to_todd_coxeter(type, S, wg));
-      add_runner(tc);
-      // TODO add felsch TC also
-      return *this;
-    }
-
-    //! Construct from kind (left/right/2-sided) and Presentation.
-    //!
-    //! Constructs a Congruence over the Presentation instance \p p
-    //! representing a left/right/2-sided congruence according to \p type.
-    //!
-    //! \param type whether the congruence is left, right, or 2-sided
-    //! \param p  a const reference to the presentation.
-    //!
-    //! \exceptions
-    //! \no_libsemigroups_except
-    //!
-    //! \complexity
-    //! Constant.
-    // No rvalue ref version because we anyway must copy p multiple times
-    Congruence(congruence_kind type, Presentation<word_type> const& p)
-        : Congruence() {
-      init(type, p);
-    }
-
-    // TODO doc
-    // No rvalue ref version because we anyway must copy p multiple times
-    Congruence& init(congruence_kind type, Presentation<word_type> const& p);
-
-    // TODO doc
-    // No rvalue ref version because we are not able to use p directly anyway
-    template <typename Word>
-    Congruence(congruence_kind type, Presentation<Word> const& p)
-        : Congruence(type, to_presentation<word_type>(p, [](auto const& x) {
-                       return x;
-                     })) {}
-
-    //! TODO(doc)
-    template <typename Word>
-    Congruence& init(congruence_kind type, Presentation<Word> const& p) {
-      init(type,
-           to_presentation<word_type>(p, [](auto const& x) { return x; }));
-      return *this;
-    }
-
-    //! TODO(doc)
+    //! Copy constructor.
     Congruence(Congruence const&) = default;
 
-    //! TODO(doc)
-    Congruence& operator=(Congruence const&) = default;
-
-    //! TODO(doc)
+    //! Move constructor.
     Congruence(Congruence&&) = default;
 
-    //! TODO(doc)
+    //! Copy assignment operator.
+    Congruence& operator=(Congruence const&) = default;
+
+    //! Move assignment operator.
     Congruence& operator=(Congruence&&) = default;
 
     ~Congruence() = default;
+
+    //! \brief Construct from \ref congruence_kind and Presentation.
+    //!
+    //! This function constructs a Congruence instance representing a
+    //! congruence of kind \p knd over the semigroup or monoid defined by the
+    //! presentation \p p.
+    //!
+    //! \param knd the kind (onesided or twosided) of the congruence.
+    //! \param p the presentation.
+    //!
+    //! \throws LibsemigroupsException if \p p is not valid.
+    // No rvalue ref version because we anyway must copy p multiple times
+    Congruence(congruence_kind knd, Presentation<word_type> const& p)
+        : Congruence() {
+      init(knd, p);
+    }
+
+    //! \brief Re-initialize a Congruence instance.
+    //!
+    //! This function puts a Congruence instance back into the state that it
+    //! would have been in if it had just been newly constructed from \p knd and
+    //! \p p.
+    //!
+    //! \param knd the kind (onesided or twosided) of the congruence.
+    //! \param p the presentation.
+    //!
+    //! \returns A reference to `*this`.
+    //!
+    //! \throws LibsemigroupsException if \p p is not valid.
+    // No rvalue ref version because we anyway must copy p multiple times
+    Congruence& init(congruence_kind knd, Presentation<word_type> const& p);
+
+    //! \copydoc Congruence(congruence_kind, Presentation<word_type> const&)
+    // No rvalue ref version because we are not able to use p directly anyway
+    template <typename Word>
+    Congruence(congruence_kind knd, Presentation<Word> const& p)
+        : Congruence(knd, to_presentation<word_type>(p, [](auto const& x) {
+                       return x;
+                     })) {}
+
+    //! \copydoc init(congruence_kind, Presentation<word_type> const&)
+    // No rvalue ref version because we are not able to use p directly anyway
+    template <typename Word>
+    Congruence& init(congruence_kind knd, Presentation<Word> const& p) {
+      init(knd, to_presentation<word_type>(p, [](auto const& x) { return x; }));
+      return *this;
+    }
+
+    //! \brief Construct from congruence_kind, FroidurePin, and WordGraph.
+    //!
+    //! Constructs a Congruence over the FroidurePin instance \p S
+    //! representing a 1- or 2-sided congruence according to \p knd.
+    //!
+    //! \tparam Node the type of the nodes in the 3rd argument \p wg (word
+    //! graph).
+    //!
+    //! \param knd the kind (onesided or twosided) of the congruence.
+    //! \param S a reference to the FroidurePin over which the congruence
+    //! is being defined.
+    //! \param wg the left or right Cayley graph of S.
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
+    //!
+    //! \warning This constructor does not check its arguments.
+    template <typename Node>
+    Congruence(congruence_kind        knd,
+               FroidurePinBase&       S,
+               WordGraph<Node> const& wg)
+        : Congruence() {
+      init(knd, S, wg);
+    }
+
+    //! \brief Re-initialize from congruence_kind, FroidurePin, and WordGraph.
+    //!
+    //! This function re-initializes a Congruence instance as if it had been
+    //! newly constructed over the FroidurePin instance \p S representing a 1-
+    //! or 2-sided congruence according to \p knd.
+    //!
+    //! \tparam Node the type of the nodes in the 3rd argument \p wg (word
+    //! graph).
+    //!
+    //! \param knd the kind (onesided or twosided) of the congruence.
+    //! \param S a reference to the FroidurePin over which the congruence
+    //! is being defined.
+    //! \param wg the left or right Cayley graph of S.
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
+    //!
+    //! \warning This constructor does not check its arguments.
+    template <typename Node>
+    Congruence& init(congruence_kind        knd,
+                     FroidurePinBase&       S,
+                     WordGraph<Node> const& wg);
 
     //////////////////////////////////////////////////////////////////////////
     // Congruence - interface requirements - add_generating_pair
     //////////////////////////////////////////////////////////////////////////
 
+    //! \brief Add generating pair via iterators.
+    //!
+    //! This function adds a generating pair to the congruence represented by a
+    //! \ref Congruence instance.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns A reference to `*this`.
+    //!
+    //! \cong_intf_warn_assume_letters_in_bounds
+    //!
+    //! \warning It is assumed that \ref started returns \c false. Adding
+    //! generating pairs after \ref started is not permitted (but also not
+    //! checked by this function).
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -237,6 +240,18 @@ namespace libsemigroups {
           first1, last1, first2, last2);
     }
 
+    //! \brief Add generating pair via iterators.
+    //!
+    //! This function adds a generating pair to the congruence represented by a
+    //! Congruence instance.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns A reference to `*this`.
+    //!
+    //! \cong_intf_throws_if_letters_out_of_bounds
+    //!
+    //! \cong_intf_throws_if_started
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -253,69 +268,45 @@ namespace libsemigroups {
     // Congruence - interface requirements - number_of_classes
     ////////////////////////////////////////////////////////////////////////
 
+    //! \brief Compute the number of classes in the congruence.
+    //!
+    //! This function computes the number of classes in the congruence
+    //! represented by a \ref todd_coxeter_class_group "ToddCoxeter" instance by
+    //! running the congruence enumeration until it terminates.
+    //!
+    //! \returns The number of congruences classes of a \ref
+    //! todd_coxeter_class_group "ToddCoxeter" instance if this number is
+    //! finite, or \ref POSITIVE_INFINITY in some cases if this number is not
+    //! finite.
+    //!
+    //! \warning Determining the number of classes is undecidable in general,
+    //! and this may never terminate.
     [[nodiscard]] uint64_t number_of_classes();
 
     ////////////////////////////////////////////////////////////////////////
     // Congruence - interface requirements - contains
     ////////////////////////////////////////////////////////////////////////
+   private:
+    using CongruenceInterface::contains;
+    using CongruenceInterface::currently_contains;
 
-    // TODO(0) out of line
-    template <typename Iterator1,
-              typename Iterator2,
-              typename Iterator3,
-              typename Iterator4>
-    [[nodiscard]] tril currently_contains_no_checks(Iterator1 first1,
-                                                    Iterator2 last1,
-                                                    Iterator3 first2,
-                                                    Iterator4 last2) const {
-      //      using iterator_points_at = decltype(*std::declval<Iterator1>());
-
-      if (finished()) {
-        auto winner_kind = _runner_kinds[_race.winner_index()];
-        if (winner_kind == RunnerKind::TC) {
-          return std::static_pointer_cast<ToddCoxeter>(_race.winner())
-                         ->contains_no_checks(first1, last1, first2, last2)
-                     ? tril::TRUE
-                     : tril::FALSE;
-        } else if (winner_kind == RunnerKind::KB) {
-          return std::static_pointer_cast<KnuthBendix<>>(_race.winner())
-                         ->contains_no_checks(first1, last1, first2, last2)
-                     ? tril::TRUE
-                     : tril::FALSE;
-        } else {
-          LIBSEMIGROUPS_ASSERT(winner_kind == RunnerKind::K);
-          return std::static_pointer_cast<Kambites<word_type>>(_race.winner())
-                         ->contains_no_checks(first1, last1, first2, last2)
-                     ? tril::TRUE
-                     : tril::FALSE;
-        }
-      }
-      init_runners();
-      tril result = tril::unknown;
-      for (auto const& [i, runner] : rx::enumerate(_race)) {
-        if (_runner_kinds[i] == RunnerKind::TC) {
-          result = std::static_pointer_cast<ToddCoxeter>(runner)
-                       ->currently_contains_no_checks(
-                           first1, last1, first2, last2);
-        } else if (_runner_kinds[i] == RunnerKind::KB) {
-          result = std::static_pointer_cast<KnuthBendix<>>(runner)
-                       ->currently_contains_no_checks(
-                           first1, last1, first2, last2);
-        } else {
-          LIBSEMIGROUPS_ASSERT(_runner_kinds[i] == RunnerKind::K);
-          result = std::static_pointer_cast<Kambites<word_type>>(runner)
-                       ->currently_contains_no_checks(
-                           first1, last1, first2, last2);
-        }
-        if (result != tril::unknown) {
-          break;
-        }
-      }
-      return result;
-    }
-
-    // TODO(0) can this be included in CongruenceInterface if it's the same in
-    // every derived class?
+   public:
+    //! \brief Check containment of a pair of words via iterators.
+    //!
+    //! This function checks whether or not the words represented by the ranges
+    //! \p first1 to \p last1 and \p first2 to \p last2 are already known to be
+    //! contained in the congruence represented by a \ref Congruence instance.
+    //! This function performs no enumeration, so it is possible for the words
+    //! to be contained in the congruence, but that this is not currently known.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns
+    //! * tril::TRUE if the words are known to belong to the congruence;
+    //! * tril::FALSE if the words are known to not belong to the congruence;
+    //! * tril::unknown otherwise.
+    //!
+    //! \cong_intf_throws_if_letters_out_of_bounds
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -324,39 +315,25 @@ namespace libsemigroups {
                                           Iterator2 last1,
                                           Iterator3 first2,
                                           Iterator4 last2) const {
-      throw_if_letter_out_of_bounds(first1, last1);
-      throw_if_letter_out_of_bounds(first2, last2);
-      return currently_contains_no_checks(first1, last1, first2, last2);
+      return currently_contains<Congruence>(first1, last1, first2, last2);
     }
 
-    // TODO(0) can this be included in CongruenceInterface if it's the same in
-    // every derived class?
-    template <typename Iterator1,
-              typename Iterator2,
-              typename Iterator3,
-              typename Iterator4>
-    [[nodiscard]] bool contains_no_checks(Iterator1 first1,
-                                          Iterator2 last1,
-                                          Iterator3 first2,
-                                          Iterator4 last2) {
-      run();
-      LIBSEMIGROUPS_ASSERT(_race.winner_index() != UNDEFINED);
-      auto winner_kind = _runner_kinds[_race.winner_index()];
-      if (winner_kind == RunnerKind::TC) {
-        return std::static_pointer_cast<ToddCoxeter>(_race.winner())
-            ->contains_no_checks(first1, last1, first2, last2);
-      } else if (winner_kind == RunnerKind::KB) {
-        return std::static_pointer_cast<KnuthBendix<>>(_race.winner())
-            ->contains_no_checks(first1, last1, first2, last2);
-      } else {
-        LIBSEMIGROUPS_ASSERT(winner_kind == RunnerKind::K);
-        return std::static_pointer_cast<Kambites<word_type>>(_race.winner())
-            ->contains_no_checks(first1, last1, first2, last2);
-      }
-    }
-
-    // TODO(0) can this be included in CongruenceInterface if it's the same in
-    // every derived class?
+    //! \brief Check containment of a pair of words via iterators.
+    //!
+    //! This function checks whether or not the words represented by the ranges
+    //! \p first1 to \p last1 and \p first2 to \p last2 are contained in the
+    //! congruence represented by a \ref todd_coxeter_class_group "ToddCoxeter"
+    //! instance. This function triggers a full enumeration, which may never
+    //! terminate.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns Whether or not the pair belongs to the congruence.
+    //!
+    //! \warning Determining the number of classes is undecidable in general,
+    //! and this may never terminate.
+    //!
+    //! \cong_intf_warn_assume_letters_in_bounds
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -365,50 +342,102 @@ namespace libsemigroups {
                                 Iterator2 last1,
                                 Iterator3 first2,
                                 Iterator4 last2) {
-      throw_if_letter_out_of_bounds(first1, last1);
-      throw_if_letter_out_of_bounds(first2, last2);
-      return contains_no_checks(first1, last1, first2, last2);
+      return contains<Congruence>(first1, last1, first2, last2);
     }
 
-    ////////////////////////////////////////////////////////////////////////
-    // OLD
-    ////////////////////////////////////////////////////////////////////////
+    //! \brief Check containment of a pair of words via iterators.
+    //!
+    //! This function checks whether or not the words represented by the ranges
+    //! \p first1 to \p last1 and \p first2 to \p last2 are already known to be
+    //! contained in the congruence represented by a \ref Congruence instance.
+    //! This function performs no enumeration, so it is possible for the words
+    //! to be contained in the congruence, but that this is not currently known.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns
+    //! * tril::TRUE if the words are known to belong to the congruence;
+    //! * tril::FALSE if the words are known to not belong to the congruence;
+    //! * tril::unknown otherwise.
+    //!
+    //! \cong_intf_warn_assume_letters_in_bounds
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    [[nodiscard]] tril currently_contains_no_checks(Iterator1 first1,
+                                                    Iterator2 last1,
+                                                    Iterator3 first2,
+                                                    Iterator4 last2) const;
 
-    // TODO(0) replace with iterators
-    // TODO(0) out of line
-    [[nodiscard]] bool contains(word_type const& u, word_type const& v) {
-      return contains(std::begin(u), std::end(u), std::begin(v), std::end(v));
-    }
+    //! \brief Check containment of a pair of words via iterators.
+    //!
+    //! This function checks whether or not the words represented by the ranges
+    //! \p first1 to \p last1 and \p first2 to \p last2 are already known to be
+    //! contained in the congruence represented by a \ref Congruence instance.
+    //! This function performs no enumeration, so it is possible for the words
+    //! to be contained in the congruence, but that this is not currently known.
+    //!
+    //! \cong_intf_params_contains
+    //!
+    //! \returns
+    //! * tril::TRUE if the words are known to belong to the congruence;
+    //! * tril::FALSE if the words are known to not belong to the congruence;
+    //! * tril::unknown otherwise.
+    //!
+    //! \cong_intf_throws_if_letters_out_of_bounds
+    //!
+    //! \warning Determining the number of classes is undecidable in general,
+    //! and this may never terminate.
+    template <typename Iterator1,
+              typename Iterator2,
+              typename Iterator3,
+              typename Iterator4>
+    [[nodiscard]] bool contains_no_checks(Iterator1 first1,
+                                          Iterator2 last1,
+                                          Iterator3 first2,
+                                          Iterator4 last2);
 
-    // TODO(0) out of line
+    //! \brief Throws if any letter in a range is out of bounds.
+    //!
+    //! This function throws a LibsemigroupsException if any value pointed at
+    //! by an iterator in the range \p first to \p last is out of bounds (i.e.
+    //! does not belong to the alphabet of the \ref presentation used to
+    //! construct the \ref Congruence instance).
+    //!
+    //! \tparam Iterator1 the type of first argument \p first.
+    //! \tparam Iterator2 the type of second argument \p last.
+    //!
+    //! \param first iterator pointing at the first letter of the word.
+    //! \param last iterator pointing one beyond the last letter of the word.
+    //!
+    //! \throw LibsemigroupsException if any letter in the range from \p first
+    //! to \p last is out of bounds.
     template <typename Iterator1, typename Iterator2>
-    void throw_if_letter_out_of_bounds(Iterator1 first, Iterator2 last) const {
-      if (!_race.empty()) {
-        size_t index = (finished() ? _race.winner_index() : 0);
-
-        if (_runner_kinds[index] == RunnerKind::TC) {
-          std::static_pointer_cast<ToddCoxeter>(*_race.begin())
-              ->throw_if_letter_out_of_bounds(first, last);
-        } else if (_runner_kinds[index] == RunnerKind::KB) {
-          std::static_pointer_cast<KnuthBendix<>>(*_race.begin())
-              ->throw_if_letter_out_of_bounds(first, last);
-        } else {
-          LIBSEMIGROUPS_ASSERT(_runner_kinds[index] == RunnerKind::K);
-          std::static_pointer_cast<Kambites<word_type>>(*_race.begin())
-              ->throw_if_letter_out_of_bounds(first, last);
-        }
-        return;
-      }
-      LIBSEMIGROUPS_EXCEPTION(
-          "No presentation has been set, so cannot validate the word!");
-    }
+    void throw_if_letter_out_of_bounds(Iterator1 first, Iterator2 last) const;
 
     //////////////////////////////////////////////////////////////////////////
     // Congruence - member functions - public
     //////////////////////////////////////////////////////////////////////////
 
+    //! \brief Get a derived class of CongruenceInterface being used to compute
+    //! a Congruence instance.
+    //!
+    //! This function returns a std::shared_ptr to a \p Thing if such an object
+    //! is being used or could be used to compute the congruence represented by
+    //! a Congruence instance. If no such \p Thing is available, then an
+    //! exception is thrown.
+    //!
+    //! \tparam Thing the type of the CongruenceInterface object being sought.
+    //!
+    //! \returns The derived class of CongruenceInterface.
+    //!
+    //! \throws LibsemigroupsException if no \p Thing is available.
+    //!
+    //! \sa has.
     template <typename Thing>
     std::shared_ptr<Thing> get() {
+      static_assert(std::is_base_of_v<CongruenceInterface, Thing>);
       init_runners();
       auto result = _race.find_runner<Thing>();
       if (result == nullptr) {
@@ -417,38 +446,31 @@ namespace libsemigroups {
       return result;
     }
 
+    //! \brief Check if a derived class of CongruenceInterface being used to
+    //! compute a Congruence instance.
+    //!
+    //! This function returns \c true if a \p Thing is being used or could be
+    //! used to compute the congruence represented by a Congruence instance; or
+    //! \c false if not.
+    //!
+    //! \tparam Thing the type of the CongruenceInterface object being sought.
+    //!
+    //! \returns Whether or not a \p Thing is being used to compute the
+    //! Congruence instance.
+    //!
+    //! \exceptions
+    //! \no_libsemigroups_except
+    //!
+    //! \sa get.
     template <typename Thing>
     [[nodiscard]] bool has() {
       return _race.find_runner<Thing>() != nullptr;
     }
 
-    //! Returns the KnuthBendix instance used to compute the congruence (if
-    //! any).
+    //! \brief Get the current maximum number of threads.
     //!
-    //! \returns A std::shared_ptr to a KnuthBendix or \c nullptr.
-    //!
-    //! \exceptions
-    //! \no_libsemigroups_except
-    //!
-    //! \complexity
-    //! Constant.
-    //!
-    //! \sa has<KnuthBendix>.
-
-    //! Checks if a KnuthBendix instance is being used to compute
-    //! the congruence.
-    //!
-    //! \returns A value of type `bool`.
-    //!
-    //! \exceptions
-    //! \no_libsemigroups_except
-    //!
-    //! \complexity
-    //! Constant.
-    //!
-    //! \sa get<KnuthBendix>.
-
-    //! Get the current maximum number of threads.
+    //! This function returns the current maximum number of threads that a
+    //! Congruence instance can use.
     //!
     //! \returns
     //! A value of type \c size_t.
@@ -462,7 +484,10 @@ namespace libsemigroups {
       return _race.max_threads();
     }
 
-    //! Set the maximum number of threads.
+    //! \brief Set the maximum number of threads.
+    //!
+    //! This function can be used to set the maximum number of threads that a
+    //! Congruence instance can use.
     //!
     //! \param val the number of threads.
     //!
@@ -478,29 +503,53 @@ namespace libsemigroups {
       return *this;
     }
 
+    //! \brief Get the number of runners.
+    //!
+    //! This function returns the number of distinct CongruenceInterface
+    //! instances that are contained in a Congruence object.
+    //!
+    //! \returns The number of runners.
+    //!
+    //! \exceptions
+    //! \noexcept
     [[nodiscard]] size_t number_of_runners() const noexcept {
       return _race.number_of_runners();
     }
 
+    //! \brief Get the presentation defining the parent semigroup of the
+    //! congruence.
+    //!
+    //! This function returns the presentation used to construct a Congruence
+    //! object. This is not always possible.
+    //!
+    //! \returns The number of runners.
+    //!
+    //! \throws LibsemigroupsException if no presentation was used to
+    //! construct or initialise the object.
+    //!
+    //! \throws LibsemigroupsException if \ref finished returns \c true and
+    //! ``has<KnuthBendix>()`` returns \c true.
+    [[nodiscard]] Presentation<word_type> const& presentation() const;
+
    private:
-    void add_runner(std::shared_ptr<ToddCoxeter> ptr) {
-      _race.add_runner(ptr);  // TODO move?
-      _runner_kinds.push_back(RunnerKind::TC);
-    }
-
-    void add_runner(std::shared_ptr<KnuthBendix<>> ptr) {
-      _race.add_runner(ptr);  // TODO move?
-      _runner_kinds.push_back(RunnerKind::KB);
-    }
-
-    void add_runner(std::shared_ptr<Kambites<word_type>> ptr) {
-      _race.add_runner(ptr);  // TODO move?
-      _runner_kinds.push_back(RunnerKind::K);
-    }
-
     //////////////////////////////////////////////////////////////////////////
     // Congruence - member functions - private
     //////////////////////////////////////////////////////////////////////////
+
+    void add_runner(std::shared_ptr<ToddCoxeter>&& ptr) {
+      _race.add_runner(std::move(ptr));
+      _runner_kinds.push_back(RunnerKind::TC);
+    }
+
+    void add_runner(std::shared_ptr<KnuthBendix<>>&& ptr) {
+      _race.add_runner(std::move(ptr));
+      _runner_kinds.push_back(RunnerKind::KB);
+    }
+
+    void add_runner(std::shared_ptr<Kambites<word_type>>&& ptr) {
+      _race.add_runner(std::move(ptr));
+      _runner_kinds.push_back(RunnerKind::K);
+    }
 
     void init_runners() const;
 
@@ -512,8 +561,10 @@ namespace libsemigroups {
     bool finished_impl() const override {
       return _race.finished();
     }
-  };
+  };  // class Congruence
 
+  // There's no doc for anything in this section it's covered by the congruence
+  // interface helpers.
   namespace congruence {
 
     ////////////////////////////////////////////////////////////////////////
@@ -545,42 +596,13 @@ namespace libsemigroups {
     // Interface helpers - normal_forms
     ////////////////////////////////////////////////////////////////////////
 
-    // The following doesn't work, because the types of the two returned values
-    // aren't the same.
-    // TODO(0) implement a class containing a variant for this.
-    // template <typename Word>
-    // auto normal_forms(Congruence& cong) {
-    //   cong.run();
-    //   if (cong.has<ToddCoxeter>() && cong.get<ToddCoxeter>()->finished()) {
-    //     return todd_coxeter::normal_forms(*cong.get<ToddCoxeter>());
-    //   } else if (cong.has<KnuthBendix<>>()
-    //              && cong.get<KnuthBendix<>>()->finished()) {
-    //     return knuth_bendix::normal_forms(*cong.get<KnuthBendix<>>());
-    //   }
-    //   // There's currently no normal_forms function for Kambites, so can't
-    //   // return anything in that case.
-    //   LIBSEMIGROUPS_EXCEPTION("Cannot compute the non-trivial classes!");
-    // }
-
     ////////////////////////////////////////////////////////////////////////
     // Interface helpers - partition
     ////////////////////////////////////////////////////////////////////////
 
     template <typename Range>
     std::vector<std::vector<std::decay_t<typename Range::output_type>>>
-    partition(Congruence& cong, Range r) {
-      cong.run();
-      if (cong.has<ToddCoxeter>() && cong.get<ToddCoxeter>()->finished()) {
-        return todd_coxeter::partition(*cong.get<ToddCoxeter>(), r);
-      } else if (cong.has<KnuthBendix<>>()
-                 && cong.get<KnuthBendix<>>()->finished()) {
-        return knuth_bendix::partition(*cong.get<KnuthBendix<>>(), r);
-      } else if (cong.has<Kambites<word_type>>()
-                 && cong.get<Kambites<word_type>>()->success()) {
-        return kambites::partition(*cong.get<Kambites<word_type>>(), r);
-      }
-      LIBSEMIGROUPS_EXCEPTION("Cannot compute the non-trivial classes!");
-    }
+    partition(Congruence& cong, Range r);
 
     ////////////////////////////////////////////////////////////////////////
     // Interface helpers - non_trivial_classes
@@ -594,35 +616,46 @@ namespace libsemigroups {
     template <typename Range,
               typename Word = std::decay_t<typename Range::output_type>,
               typename      = std::enable_if_t<rx::is_input_or_sink_v<Range>>>
-    std::vector<std::vector<Word>> non_trivial_classes(Congruence& ci,
-                                                       Range       r) {
-      auto result = partition(ci, r);
-      result.erase(
-          std::remove_if(result.begin(),
-                         result.end(),
-                         [](auto const& x) -> bool { return x.size() <= 1; }),
-          result.end());
-      return result;
-    }
+    std::vector<std::vector<Word>> non_trivial_classes(Congruence& ci, Range r);
 
-    // template <typename Word>
-    // std::vector<std::vector<Word>> non_trivial_classes(Congruence& cong1,
-    //                                                   Congruence& cong2);
-    // TODO(1) can't really do this until normal_forms is working.
-
-    // Not required.
     // We have to pass the presentation here, because o/w we have no way of
     // knowing over what we should compute the non-trivial classes (i.e. we
     // cannot always recover p from cong).
-    // TODO remove?
+    // TODO(1) implement an analogous version of this for KnuthBendix,
+    // ToddCoxeter, and Kambites.
+    // TODO(1) document this (not currently docced because nothing else in this
+    // namespace is documented directly at present)
     std::vector<std::vector<word_type>>
     non_trivial_classes(Congruence& cong, Presentation<word_type> const& p);
 
-    // TODO remove?
+    // TODO(1) implement an analogous version of this for KnuthBendix,
+    // ToddCoxeter, and Kambites.
+    // TODO(1) document this (not currently docced because nothing else in this
+    // namespace is documented directly at present)
     std::vector<std::vector<std::string>>
     non_trivial_classes(Congruence& cong, Presentation<std::string> const& p);
 
   }  // namespace congruence
+
+  //! \ingroup cong_all_group
+  //!
+  //! \brief Return a human readable representation of a \ref
+  //! Congruence object.
+  //!
+  //! Defined in ``cong.hpp``.
+  //!
+  //! This function returns a human readable representation of a
+  //! \ref Congruence object.
+  //!
+  //! \param c the \ref Congruence object.
+  //!
+  //! \returns A std::string containing the representation.
+  //!
+  //! \exceptions
+  //! \no_libsemigroups_except
+  std::string to_human_readable_repr(Congruence const& c);
 }  // namespace libsemigroups
+
+#include "cong.tpp"
 
 #endif  // LIBSEMIGROUPS_CONG_HPP_

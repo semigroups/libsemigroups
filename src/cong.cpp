@@ -49,7 +49,8 @@ namespace libsemigroups {
 
   Congruence& Congruence::init(congruence_kind                type,
                                Presentation<word_type> const& p) {
-    init(type);
+    CongruenceInterface::init(type);
+    init();
     _race.max_threads(POSITIVE_INFINITY);
     if (type == congruence_kind::twosided) {
       add_runner(std::make_shared<Kambites<word_type>>(type, p));
@@ -59,7 +60,7 @@ namespace libsemigroups {
     add_runner(std::make_shared<ToddCoxeter>(type, p));
     auto tc = std::make_shared<ToddCoxeter>(type, p);
     tc->strategy(ToddCoxeter::options::strategy::felsch);
-    add_runner(tc);
+    add_runner(std::move(tc));
     return *this;
   }
 
@@ -123,6 +124,47 @@ namespace libsemigroups {
     _race.run_until([this]() { return this->stopped(); });
   }
 
+  Presentation<word_type> const& Congruence::presentation() const {
+    if (!_race.empty()) {
+      if (finished()) {
+        size_t index = _race.winner_index();
+
+        if (_runner_kinds[index] == RunnerKind::TC) {
+          return std::static_pointer_cast<ToddCoxeter>(_race.winner())
+              ->presentation();
+        } else if (_runner_kinds[index] == RunnerKind::K) {
+          return std::static_pointer_cast<Kambites<word_type>>(_race.winner())
+              ->presentation();
+        }
+        // KnuthBendix uses a std::string Presentation and this can't be
+        // returned by reference here. There are probably better ways of
+        // handling this:
+        // 1. store a copy in the congruence object itself
+        // 2. return by value
+        // 3. Something else?
+      } else {
+        auto it = std::find_if(
+            _runner_kinds.begin(), _runner_kinds.end(), [](auto const& val) {
+              return val != RunnerKind::KB;
+            });
+        if (it != _runner_kinds.end()) {
+          size_t index = std::distance(_runner_kinds.begin(), it);
+          if (_runner_kinds[index] == RunnerKind::TC) {
+            return std::static_pointer_cast<ToddCoxeter>(
+                       *(_race.begin() + index))
+                ->presentation();
+          } else if (_runner_kinds[index] == RunnerKind::K) {
+            return std::static_pointer_cast<Kambites<word_type>>(
+                       *(_race.begin() + index))
+                ->presentation();
+          }
+        }
+      }
+    }
+    LIBSEMIGROUPS_EXCEPTION(
+        "No presentation has been set, or it cannot be returned!");
+  }
+
   namespace congruence {
     // We have to pass the presentation here, because o/w we have no way of
     // knowing over what we should compute the non-trivial classes (i.e. we
@@ -183,4 +225,10 @@ namespace libsemigroups {
       LIBSEMIGROUPS_EXCEPTION("Cannot compute the non-trivial classes!");
     }
   }  // namespace congruence
+
+  std::string to_human_readable_repr(Congruence const& c) {
+    return fmt::format("<Congruence over {} with {} runners>",
+                       to_human_readable_repr(c.presentation()),
+                       c.number_of_runners());
+  }
 }  // namespace libsemigroups
