@@ -24,8 +24,8 @@
 // * nodiscard
 // * tests for code coverage
 
-#ifndef LIBSEMIGROUPS_WORDS_HPP_
-#define LIBSEMIGROUPS_WORDS_HPP_
+#ifndef LIBSEMIGROUPS_WORD_RANGE_HPP_
+#define LIBSEMIGROUPS_WORD_RANGE_HPP_
 
 #ifndef PARSED_BY_DOXYGEN
 #define NOT_PARSED_BY_DOXYGEN
@@ -2399,4 +2399,4 @@ namespace libsemigroups {
   //
 }  // namespace libsemigroups
 
-#endif  // LIBSEMIGROUPS_WORDS_HPP_
+#endif  // LIBSEMIGROUPS_WORD_RANGE_HPP_
