@@ -110,7 +110,7 @@ struct LibsemigroupsListener : Catch::EventListenerBase {
 
     SectionStats(Catch::SectionStats const& ss, SectionInfo const& si)
         : duration(std::chrono::nanoseconds(
-              static_cast<uint64_t>(ss.durationInSeconds * std::pow(10, 9)))),
+            static_cast<uint64_t>(ss.durationInSeconds * std::pow(10, 9)))),
           name(si.name) {}
   };
 
