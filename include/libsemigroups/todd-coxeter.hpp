@@ -1037,6 +1037,7 @@ namespace libsemigroups {
     ////////////////////////////////////////////////////////////////////////
 
    private:
+    // TODO(0) out of line
     template <typename Iterator1,
               typename Iterator2,
               typename Iterator3,
@@ -1962,7 +1963,8 @@ namespace libsemigroups {
     //
     // The function native_presentation returns number 3, but the name suggests
     // it returns 2. Maybe internal_presentation() would be better?
-    Presentation<word_type> const& native_presentation() const noexcept {
+    [[nodiscard]] Presentation<word_type> const&
+    native_presentation() const noexcept {
       return _word_graph.presentation();
     }
 #endif
@@ -2007,7 +2009,7 @@ namespace libsemigroups {
     //!
     //! \exceptions
     //! \noexcept
-    Presentation<word_type> const& presentation() const noexcept {
+    [[nodiscard]] Presentation<word_type> const& presentation() const noexcept {
       return _input_presentation;
     }
 

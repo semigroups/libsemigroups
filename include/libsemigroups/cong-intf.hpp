@@ -38,17 +38,26 @@ namespace libsemigroups {
   class Congruence;
   class ToddCoxeter;
 
-  //! \defgroup cong_intf_group The congruence interface
+  //! \defgroup cong_all_group Congruences
   //!
-  //! This page contains links to the documentation of the common functionality
-  //! that for all  the classes in ``libsemigroups`` that represent congruences
-  //! on semigroups and monoids. These classes are:
+  //! This page contains links to the documentation for the classes Congruence
+  //! and CongruenceInterface, and to helper functions for all of the classes in
+  //! ``libsemigroups`` that are derived from CongruenceInterface.
+  //! These classes are:
   //! * \ref Congruence
   //! * \ref Kambites
   //! * \ref KnuthBendix
   //! * \ref todd_coxeter_class_group "ToddCoxeter"
 
-  //! \ingroup cong_intf_group
+  //! \defgroup cong_all_classes_group Classes
+  //! \ingroup cong_all_group
+  //!
+  //! \brief Documentation for the classes CongruenceInterface and Congruence.
+  //!
+  //! This page contains links to the documentation for the classes \ref
+  //! CongruenceInterface and \ref Congruence.
+
+  //! \ingroup cong_all_classes_group
   //!
   //! \brief Class collecting common aspects of classes representing
   //! congruences.
@@ -141,7 +150,8 @@ namespace libsemigroups {
     //! This function returns the generating pairs of the congruence
     //! represented by any derived class of a CongruenceInterface. This is
     //! always a std::vector of \ref word_type, regardless of the
-    //! \ref native_presentation_type of the derived class.
+    //! type of the presentation used by the implementation in the derived
+    //! class.
     //!
     //! \returns
     //! A const reference to the generating pairs.
@@ -224,7 +234,8 @@ namespace libsemigroups {
     // CongruenceInterface - contains
     ////////////////////////////////////////////////////////////////////////
 
-    template <typename Iterator1,
+    template <typename Subclass,
+              typename Iterator1,
               typename Iterator2,
               typename Iterator3,
               typename Iterator4>
@@ -232,12 +243,14 @@ namespace libsemigroups {
                                           Iterator2 last1,
                                           Iterator3 first2,
                                           Iterator4 last2) const {
-      throw_if_letter_out_of_bounds(first1, last1);
-      throw_if_letter_out_of_bounds(first2, last2);
-      return currently_contains_no_checks(first1, last1, first2, last2);
+      throw_if_letter_out_of_bounds<Subclass>(first1, last1);
+      throw_if_letter_out_of_bounds<Subclass>(first2, last2);
+      return static_cast<Subclass const&>(*this).currently_contains_no_checks(
+          first1, last1, first2, last2);
     }
 
-    template <typename Iterator1,
+    template <typename Subclass,
+              typename Iterator1,
               typename Iterator2,
               typename Iterator3,
               typename Iterator4>
@@ -245,9 +258,10 @@ namespace libsemigroups {
                                 Iterator2 last1,
                                 Iterator3 first2,
                                 Iterator4 last2) {
-      throw_if_letter_out_of_bounds(first1, last1);
-      throw_if_letter_out_of_bounds(first2, last2);
-      return contains_no_checks(first1, last1, first2, last2);
+      throw_if_letter_out_of_bounds<Subclass>(first1, last1);
+      throw_if_letter_out_of_bounds<Subclass>(first2, last2);
+      return static_cast<Subclass&>(*this).contains_no_checks(
+          first1, last1, first2, last2);
     }
 
    private:
@@ -255,16 +269,18 @@ namespace libsemigroups {
   };
 
   namespace congruence_interface {
+
     //! \defgroup cong_intf_helpers_group Generic congruence helpers
-    //! \ingroup cong_intf_group
+    //! \ingroup cong_all_group
     //!
     //! \brief Helper functions for subclasses of \ref CongruenceInterface.
     //!
     //! This page contains documentation for helper functions for the classes
     //! Congruence, Kambites, KnuthBendix, and \ref todd_coxeter_class_group
     //! "ToddCoxeter". The functions documented on this page belong to all of
-    //! the namespaces ``congruence_interface``, ``congruence``, ``kambites``,
-    //! ``knuth_bendix``, and ``todd_coxeter``.
+    //! the namespaces \ref cong_intf_helpers_group "congruence_interface",
+    //! ``congruence``, \ref kambites, \ref knuth_bendix, and \ref
+    //! todd_coxeter_helpers_group "todd_coxeter".
 
     ////////////////////////////////////////////////////////////////////////
     // Interface helpers - add_generating_pair
@@ -276,7 +292,7 @@ namespace libsemigroups {
     //! \brief Add a generating pair using objects instead of iterators.
     //!
     //! This page contains the documentation of the functions
-    //! ``add_generating_pair`` and ``add_generating_pair_no_checks``
+    //! \ref add_generating_pair and \ref add_generating_pair_no_checks
     //! which can be invoked with a variety of different argument types.
     //!
     //! @{
@@ -433,8 +449,8 @@ namespace libsemigroups {
     //! \brief Check containment of a pair of words in a congruence.
     //!
     //! This page contains the documentation of the functions
-    //! ``currently_contains_no_checks``; ``currently_contains``;
-    //! ``contains_no_checks``; and ``contains`` which can be invoked with a
+    //! \ref currently_contains_no_checks; \ref currently_contains;
+    //! \ref contains_no_checks; and \ref contains which can be invoked with a
     //! variety of different argument types.
     //!
     //! Functions with the prefix ``currently_`` do not perform any enumeration
@@ -762,10 +778,10 @@ namespace libsemigroups {
     //!
     //! \brief Check containment of a pair of words in a congruence.
     //!
-    //! This page contains the documentation of the functions
-    //! ``reduce_no_run_no_checks``; ``reduce_no_run``;
-    //! ``reduce_no_checks``; and ``reduce`` which can be invoked with a
-    //! variety of different argument types.
+    //! This page contains the documentation of the functions \ref
+    //! reduce_no_run_no_checks; \ref reduce_no_run; \ref reduce_no_checks; and
+    //! \ref reduce which can be invoked with a variety of different argument
+    //! types.
     //!
     //! Functions with the suffix ``_no_run`` do not perform any enumeration
     //! of the \ref CongruenceInterface derived class instances; and those with
@@ -1096,8 +1112,8 @@ namespace libsemigroups {
     //!
     //! \brief Partition a range of words by a congruence.
     //!
-    //! This page contains the documentation of the functions ``partition`` and
-    //! ``non_trivial_classes`` for partitioning a range of words by a
+    //! This page contains the documentation of the functions \ref partition and
+    //! \ref non_trivial_classes for partitioning a range of words by a
     //! congruence.
     //!
     //! @{
@@ -1195,14 +1211,12 @@ namespace libsemigroups {
     //! \tparam OutputWord the type of the words in the output (defaults to the
     //! type of the words in the input range).
     //!
-    //! \param tc the \ref todd_coxeter_class_group "ToddCoxeter" instance.
+    //! \param ci a derived class of CongruenceInterface.
     //! \param r the input range of words.
     //!
     //! \returns The partition of the input range.
     //!
     //! \throws LibsemigroupsException if the input range of words is infinite.
-    //!
-    //! \cong_intf_warn_undecidable{Todd-Coxeter}.
     // couldn't get it to compile without copying
     template <typename Subclass,
               typename Range,

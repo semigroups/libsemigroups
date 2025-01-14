@@ -316,7 +316,7 @@ namespace libsemigroups {
             t.at(i).join();
           }
           report_elapsed_time("Race: ", tmr);
-          report_default("\n");
+          report_no_prefix("\n");
           for (auto method = _runners.begin(); method < _runners.end();
                ++method) {
             if ((*method)->success()) {
