@@ -174,9 +174,9 @@ namespace libsemigroups {
 
   template <typename Return>
   [[nodiscard]] std::enable_if_t<IsPPerm<Return>, Return>
-  to(std::vector<typename Return::point_type> const& dom,
-     std::vector<typename Return::point_type> const& ran,
-     size_t const                                    M) {
+  make(std::vector<typename Return::point_type> const& dom,
+       std::vector<typename Return::point_type> const& ran,
+       size_t const                                    M) {
     detail::validate_args(dom, ran, M);
     Return result(dom, ran, M);
     validate(result);

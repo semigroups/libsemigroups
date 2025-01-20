@@ -37,8 +37,8 @@ namespace libsemigroups {
                                    MaxPlusMat<>) {
     auto                  rg = ReportGuard(REPORT);
     FroidurePin<TestType> S;
-    S.add_generator(to_matrix<TestType>({{0, -4}, {-4, -1}}));
-    S.add_generator(to_matrix<TestType>({{0, -3}, {-3, -1}}));
+    S.add_generator(make<TestType>({{0, -4}, {-4, -1}}));
+    S.add_generator(make<TestType>({{0, -3}, {-3, -1}}));
 
     REQUIRE(S.size() == 26);
     REQUIRE(S.degree() == 2);
@@ -103,7 +103,7 @@ namespace libsemigroups {
                                    MinPlusMat<2>) {
     auto                  rg = ReportGuard(REPORT);
     FroidurePin<TestType> S;
-    S.add_generator(to_matrix<TestType>({{1, 0}, {0, POSITIVE_INFINITY}}));
+    S.add_generator(make<TestType>({{1, 0}, {0, POSITIVE_INFINITY}}));
 
     REQUIRE(S.size() == 3);
     REQUIRE(S.degree() == 2);
@@ -137,9 +137,8 @@ namespace libsemigroups {
       sr = new MaxPlusTruncSemiring<>(33);
     }
     FroidurePin<TestType> S;
-    S.add_generator(
-        to_matrix<TestType>(sr, {{22, 21, 0}, {10, 0, 0}, {1, 32, 1}}));
-    S.add_generator(to_matrix<TestType>(sr, {{0, 0, 0}, {0, 1, 0}, {1, 1, 0}}));
+    S.add_generator(make<TestType>(sr, {{22, 21, 0}, {10, 0, 0}, {1, 32, 1}}));
+    S.add_generator(make<TestType>(sr, {{0, 0, 0}, {0, 1, 0}, {1, 1, 0}}));
 
     REQUIRE(S.size() == 119);
     REQUIRE(S.degree() == 3);
@@ -151,7 +150,7 @@ namespace libsemigroups {
     REQUIRE(S.position(S.generator(0)) == 0);
     REQUIRE(S.contains(S.generator(0)));
 
-    auto x = to_matrix<TestType>(sr, {{2, 2}, {1, 0}});
+    auto x = make<TestType>(sr, {{2, 2}, {1, 0}});
     REQUIRE(S.position(x) == UNDEFINED);
     delete sr;
   }
@@ -170,10 +169,8 @@ namespace libsemigroups {
       sr = new MinPlusTruncSemiring(11);
     }
     FroidurePin<TestType> S;
-    S.add_generator(
-        to_matrix<TestType>(sr, {{2, 1, 0}, {10, 0, 0}, {1, 2, 1}}));
-    S.add_generator(
-        to_matrix<TestType>(sr, {{10, 0, 0}, {0, 1, 0}, {1, 1, 0}}));
+    S.add_generator(make<TestType>(sr, {{2, 1, 0}, {10, 0, 0}, {1, 2, 1}}));
+    S.add_generator(make<TestType>(sr, {{10, 0, 0}, {0, 1, 0}, {1, 1, 0}}));
 
     REQUIRE(S.size() == 1039);
     REQUIRE(S.degree() == 3);
@@ -185,7 +182,7 @@ namespace libsemigroups {
     REQUIRE(S.position(S.generator(0)) == 0);
     REQUIRE(S.contains(S.generator(0)));
 
-    auto x = to_matrix<TestType>(sr, {{2, 2, 0}, {1, 0, 0}, {0, 0, 0}});
+    auto x = make<TestType>(sr, {{2, 2, 0}, {1, 0, 0}, {0, 0, 0}});
     REQUIRE(S.position(x) == UNDEFINED);
     REQUIRE(!S.contains(x));
     x.product_inplace_no_checks(S.generator(0), S.generator(0));
@@ -207,10 +204,8 @@ namespace libsemigroups {
       sr = new NTPSemiring<>(11, 3);
     }
     FroidurePin<TestType> S;
-    S.add_generator(
-        to_matrix<TestType>(sr, {{2, 1, 0}, {10, 0, 0}, {1, 2, 1}}));
-    S.add_generator(
-        to_matrix<TestType>(sr, {{10, 0, 0}, {0, 1, 0}, {1, 1, 0}}));
+    S.add_generator(make<TestType>(sr, {{2, 1, 0}, {10, 0, 0}, {1, 2, 1}}));
+    S.add_generator(make<TestType>(sr, {{10, 0, 0}, {0, 1, 0}, {1, 1, 0}}));
 
     REQUIRE(S.size() == 86);
     REQUIRE(S.degree() == 3);
@@ -222,7 +217,7 @@ namespace libsemigroups {
     REQUIRE(S.position(S.generator(0)) == 0);
     REQUIRE(S.contains(S.generator(0)));
 
-    auto x = to_matrix<TestType>(sr, {{2, 2, 0}, {1, 0, 0}, {0, 0, 0}});
+    auto x = make<TestType>(sr, {{2, 2, 0}, {1, 0, 0}, {0, 0, 0}});
     REQUIRE(S.position(x) == UNDEFINED);
     REQUIRE(!S.contains(x));
     x.product_inplace_no_checks(S.generator(1), S.generator(0));

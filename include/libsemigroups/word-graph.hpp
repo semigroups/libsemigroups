@@ -45,7 +45,7 @@
 #include "forest.hpp"     // for Forest
 #include "order.hpp"      // for Order
 #include "ranges.hpp"     // for ??
-#include "types.hpp"      // for word_type
+#include "types.hpp"      // for word_type, enable_if_is_same
 
 #include "detail/containers.hpp"  // for DynamicArray2
 #include "detail/int-range.hpp"   // for IntRange
@@ -2044,7 +2044,7 @@ namespace libsemigroups {
     //!
     //! \par Example
     //! \code
-    //! auto wg = to_word_graph<uint8_t>(
+    //! auto wg = make<WordGraph<uint8_t>>(
     //!     5, {{0, 0}, {1, 1}, {2}, {3, 3}});
     //! word_graph::is_strictly_cyclic(wg);  // returns false
     //! \endcode
@@ -2639,9 +2639,28 @@ namespace libsemigroups {
 
   }  // namespace word_graph
 
+  namespace detail {
+
+    template <typename T>
+    struct IsWordGraphHelper : std::false_type {};
+
+    template <typename Node>
+    struct IsWordGraphHelper<WordGraph<Node>> : std::true_type {};
+  }  // namespace detail
+
   //////////////////////////////////////////////////////////////////////////
   // WordGraph - non-member functions
   //////////////////////////////////////////////////////////////////////////
+
+  //! \ingroup word_graph_group
+  //! \brief Helper variable template.
+  //!
+  //! The value of this variable is \c true if the template parameter \p T is
+  //! \ref WordGraph for any template parameters.
+  //!
+  //! \tparam T a type.
+  template <typename T>
+  static constexpr bool IsWordGraph = detail::IsWordGraphHelper<T>::value;
 
   //! \ingroup word_graph_group
   //! Output the edges of a wordGraph to a stream.
@@ -2665,7 +2684,7 @@ namespace libsemigroups {
   template <typename Node>
   std::ostream& operator<<(std::ostream& os, WordGraph<Node> const& wg);
 
-  //! \ingroup word_graph_group
+  //! \relates WordGraph
   //!
   //! \brief Constructs a word graph from a number of nodes and targets.
   //!
@@ -2673,7 +2692,7 @@ namespace libsemigroups {
   //! out-degree is specified by the length of the first item
   //! in the 2nd parameter.
   //!
-  //! \tparam Node the type of the nodes of the word graph.
+  //! \tparam Return the return type. Must satisfy \ref IsWordGraph<Return>.
   //!
   //! \param num_nodes the number of nodes in the word graph.
   //! \param targets the targets of the word graph.
@@ -2690,24 +2709,22 @@ namespace libsemigroups {
   //! \par Example
   //! \code
   //! // Construct a word graph with 5 nodes and 10 edges (7 specified)
-  //! to_word_graph<uint8_t>(5, {{0, 0}, {1, 1}, {2}, {3, 3}});
+  //! make<WordGraph<uint8_t>>(5, {{0, 0}, {1, 1}, {2}, {3, 3}});
   //! \endcode
   // Passing the 2nd parameter "targets" by value disambiguates it from the
-  // other to_word_graph.
-  template <typename Node>
-  [[nodiscard]] WordGraph<Node>
-  to_word_graph(size_t                                   num_nodes,
-                std::initializer_list<std::vector<Node>> targets);
+  // other make<WordGraph>.
+  template <typename Return>
+  [[nodiscard]] std::enable_if_t<IsWordGraph<Return>, Return>
+  make(size_t                                                         num_nodes,
+       std::initializer_list<std::vector<typename Return::node_type>> targets);
 
-  // clang-format off
-  //! \ingroup word_graph_group
+  //! \relates WordGraph
   //!
-  //! \copydoc to_word_graph(size_t, std::initializer_list<std::vector<Node>> const&)  // NOLINT(whitespace/line_length)
-  // clang-format on
-  template <typename Node>
-  [[nodiscard]] WordGraph<Node>
-  to_word_graph(size_t                                num_nodes,
-                std::vector<std::vector<Node>> const& targets);
+  //! \copydoc make
+  template <typename Return>
+  [[nodiscard]] std::enable_if_t<IsWordGraph<Return>, Return>
+  make(size_t                                                      num_nodes,
+       std::vector<std::vector<typename Return::node_type>> const& targets);
 
   namespace detail {
     template <typename Subclass>

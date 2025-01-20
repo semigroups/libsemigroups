@@ -105,39 +105,6 @@ namespace libsemigroups {
     }
   }
 
-  Forest to_forest(std::vector<size_t> parent, std::vector<size_t> edge_label) {
-    if (parent.size() != edge_label.size()) {
-      LIBSEMIGROUPS_EXCEPTION(
-          "expected the 1st and 2nd arguments (parents and edge labels) to "
-          "have equal size equal, found {} != {}",
-          parent.size(),
-          edge_label.size());
-    }
-    size_t const num_nodes = parent.size();
-    Forest       result(num_nodes);
-    for (size_t i = 0; i < num_nodes; ++i) {
-      auto p = *(parent.begin() + i);
-      auto l = *(edge_label.begin() + i);
-      if (p != UNDEFINED && l != UNDEFINED) {
-        result.set_parent_and_label(i, p, l);
-      } else if (!(p == UNDEFINED && l == UNDEFINED)) {
-        LIBSEMIGROUPS_EXCEPTION(
-            "roots not at the same indices in the 1st and 2nd arguments "
-            "(parents and edge labels), expected UNDEFINED at index {} found "
-            "{} and {}",
-            i,
-            p,
-            l);
-      }
-    }
-    return result;
-  }
-
-  Forest to_forest(std::initializer_list<size_t> parent,
-                   std::initializer_list<size_t> edge_labels) {
-    return to_forest(std::vector<size_t>(parent), std::vector(edge_labels));
-  }
-
   std::string to_human_readable_repr(Forest const& f) {
     size_t const num_roots
         = std::count(f.parents().begin(), f.parents().end(), UNDEFINED);

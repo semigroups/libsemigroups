@@ -112,15 +112,6 @@ namespace libsemigroups {
       return out;
     }
 
-    std::vector<std::vector<uint32_t>>
-    process_left_right(PBR::vector_type<int32_t> left,
-                       PBR::vector_type<int32_t> right) {
-      throw_if_invalid_left_right(left, right);
-      PBR::vector_type<int32_t> sorted_left(sorted_side(left));
-      PBR::vector_type<int32_t> sorted_right(sorted_side(right));
-      return process_left_right_no_checks(sorted_left, sorted_right);
-    }
-
     void unite_rows(detail::DynamicArray2<bool>& out,
                     detail::DynamicArray2<bool>& tmp,
                     size_t const&                i,
@@ -181,6 +172,15 @@ namespace libsemigroups {
 
   }  // namespace
 
+  std::vector<std::vector<uint32_t>>
+  detail::process_left_right(PBR::vector_type<int32_t> left,
+                             PBR::vector_type<int32_t> right) {
+    throw_if_invalid_left_right(left, right);
+    PBR::vector_type<int32_t> sorted_left(sorted_side(left));
+    PBR::vector_type<int32_t> sorted_right(sorted_side(right));
+    return process_left_right_no_checks(sorted_left, sorted_right);
+  }
+
   PBR operator*(PBR const& x, PBR const& y) {
     PBR xy(x.degree());
     xy.product_inplace_no_checks(x, y);
@@ -234,15 +234,6 @@ namespace libsemigroups {
                                 detail::to_string(u));
       }
     }
-  }
-
-  PBR to_pbr(PBR::initializer_list_type<int32_t> left,
-             PBR::initializer_list_type<int32_t> right) {
-    return PBR(process_left_right(left, right));
-  }
-
-  PBR to_pbr(PBR::vector_type<int32_t> left, PBR::vector_type<int32_t> right) {
-    return PBR(process_left_right(left, right));
   }
 
   [[nodiscard]] std::string to_human_readable_repr(PBR const& x) {

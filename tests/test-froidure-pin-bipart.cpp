@@ -40,19 +40,19 @@ namespace libsemigroups {
                           "[quick][froidure-pin][bipartition][bipart]") {
     auto        rg = ReportGuard(REPORT);
     FroidurePin S  = to_froidure_pin(
-        {to_bipartition({{1, 5, 8, -1, -2, -4, -10},
-                          {2, 4, 7, -8},
-                          {3, 6, 9, 10, -3},
-                          {-5, -9},
-                          {-6, -7}}),
-          to_bipartition({{1},
-                          {2, 3, 4, 5, -5, -6, -7},
-                          {6, 8, -2, -4, -8, -10},
-                          {7, -9},
-                          {9, -3},
-                          {10, -1}}),
-          to_bipartition({{1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
-                           -1, -2, -3, -4, -5, -6, -7, -8, -9, -10}})});
+        {make<Bipartition>({{1, 5, 8, -1, -2, -4, -10},
+                             {2, 4, 7, -8},
+                             {3, 6, 9, 10, -3},
+                             {-5, -9},
+                             {-6, -7}}),
+          make<Bipartition>({{1},
+                             {2, 3, 4, 5, -5, -6, -7},
+                             {6, 8, -2, -4, -8, -10},
+                             {7, -9},
+                             {9, -3},
+                             {10, -1}}),
+          make<Bipartition>({{1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
+                              -1, -2, -3, -4, -5, -6, -7, -8, -9, -10}})});
 
     S.reserve(10);
 
@@ -65,12 +65,12 @@ namespace libsemigroups {
       pos++;
     }
 
-    auto x = to_bipartition({{1, -2, -10},
-                             {2, 4, 5, 7, -1, -8},
-                             {3, 9, -4},
-                             {6, 10, -3, -5, -9},
-                             {8, -7},
-                             {-6}});
+    auto x = make<Bipartition>({{1, -2, -10},
+                                {2, 4, 5, 7, -1, -8},
+                                {3, 9, -4},
+                                {6, 10, -3, -5, -9},
+                                {8, -7},
+                                {-6}});
     S.add_generator(x);
     REQUIRE(S.number_of_generators() == 4);
     REQUIRE(S.size() == 21);

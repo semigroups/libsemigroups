@@ -1109,7 +1109,7 @@ namespace libsemigroups {
   void validate(Transf<N, Scalar> const& f);
 
   ////////////////////////////////////////////////////////////////////////
-  // to<Transf>
+  // make<Transf>
   ////////////////////////////////////////////////////////////////////////
 
   //! \relates Transf
@@ -1121,7 +1121,7 @@ namespace libsemigroups {
   //! follows: the image of the point \c i under the transformation is the value
   //! in position \c i of the container \p cont.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsTransf<Return>.
   //! \tparam OtherContainer universal reference for the type of the container.
   //!
   //! \param cont the container.
@@ -1129,14 +1129,14 @@ namespace libsemigroups {
   //! \returns A \ref Transf instance with degree \c N.
   //!
   //! \throw LibsemigroupsException if any of the following hold:
-  //! * the size of \p cont is incompatible with \ref container_type.
+  //! * the size of \p cont is incompatible with \ref Transf::container_type.
   //! * any value in \p cont exceeds `cont.size()`.
   //!
   //! \complexity
   //! Linear in the size of the container \p cont.
   template <typename Return, typename OtherContainer>
   [[nodiscard]] std::enable_if_t<IsTransf<Return>, Return>
-  to(OtherContainer&& cont) {
+  make(OtherContainer&& cont) {
     return Return::template make<Return>(std::forward<OtherContainer>(cont));
   }
 
@@ -1148,7 +1148,7 @@ namespace libsemigroups {
   //! follows: the image of the point \c i under the transformation is the value
   //! in position \c i of the container \p cont.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsTransf<Return>.
   //! \tparam OtherContainer universal reference for the type of the container.
   //!
   //! \param cont the container.
@@ -1156,7 +1156,7 @@ namespace libsemigroups {
   //! \returns A \ref Transf instance with degree \c N.
   //!
   //! \throw LibsemigroupsException if any of the following hold:
-  //! * the size of \p cont is incompatible with \ref container_type.
+  //! * the size of \p cont is incompatible with \ref Transf::container_type.
   //! * any value in \p cont exceeds `cont.size()` and is not equal to
   //!   UNDEFINED.
   //! * the value \ref UNDEFINED belongs to \p cont.
@@ -1165,8 +1165,8 @@ namespace libsemigroups {
   //! Linear in the size of the container \p cont.
   template <typename Return, typename OtherScalar>
   [[nodiscard]] std::enable_if_t<IsTransf<Return>, Return>
-  to(std::initializer_list<OtherScalar> cont) {
-    return to<Return, std::initializer_list<OtherScalar>>(std::move(cont));
+  make(std::initializer_list<OtherScalar> cont) {
+    return make<Return, std::initializer_list<OtherScalar>>(std::move(cont));
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -1379,7 +1379,7 @@ namespace libsemigroups {
   }
 
   ////////////////////////////////////////////////////////////////////////
-  // to<PPerm>
+  // make<PPerm>
   ////////////////////////////////////////////////////////////////////////
 
   //! \relates PPerm
@@ -1391,7 +1391,7 @@ namespace libsemigroups {
   //! follows: the image of the point \c i under the partial permutation is the
   //! value in position \c i of the container \p cont.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsPPerm<Return>.
   //! \tparam OtherContainer universal reference for the type of the container.
   //!
   //! \param cont the container.
@@ -1399,7 +1399,7 @@ namespace libsemigroups {
   //! \returns A \ref PPerm instance with degree \c N.
   //!
   //! \throw LibsemigroupsException if any of the following hold:
-  //! * the size of \p cont is incompatible with \ref container_type.
+  //! * the size of \p cont is incompatible with \ref PPerm::container_type.
   //! * any value in \p cont exceeds `cont.size()` and is not equal to
   //!   UNDEFINED.
   //!
@@ -1407,7 +1407,7 @@ namespace libsemigroups {
   //! Linear in the size of the container \p cont.
   template <typename Return, typename OtherContainer>
   [[nodiscard]] std::enable_if_t<IsPPerm<Return>, Return>
-  to(OtherContainer&& cont) {
+  make(OtherContainer&& cont) {
     return Return::template make<Return>(std::forward<OtherContainer>(cont));
   }
 
@@ -1419,14 +1419,14 @@ namespace libsemigroups {
   //! follows: the image of the point \c i under the partial permutation is the
   //! value in position \c i of the container \p cont.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsPPerm<Return>.
   //!
   //! \param cont the container.
   //!
   //! \returns A \ref PPerm instance with degree \c N.
   //!
   //! \throw LibsemigroupsException if any of the following hold:
-  //! * the size of \p cont is incompatible with \ref container_type.
+  //! * the size of \p cont is incompatible with \ref PPerm::container_type.
   //! * any value in \p cont exceeds `cont.size()` and is not equal to
   //!   UNDEFINED.
   //!
@@ -1434,8 +1434,8 @@ namespace libsemigroups {
   //! Linear in the size of the container \p cont.
   template <typename Return>
   [[nodiscard]] std::enable_if_t<IsPPerm<Return>, Return>
-  to(std::initializer_list<typename Return::point_type> cont) {
-    return to<Return, std::initializer_list<typename Return::point_type>>(
+  make(std::initializer_list<typename Return::point_type> cont) {
+    return make<Return, std::initializer_list<typename Return::point_type>>(
         std::move(cont));
   }
 
@@ -1448,7 +1448,7 @@ namespace libsemigroups {
   //! ran[i]` for all \c i and which is \ref UNDEFINED on every other value
   //! in the range \f$[0, M)\f$.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsPPerm<Return>.
   //!
   //! \param dom the domain
   //! \param ran the range
@@ -1464,9 +1464,9 @@ namespace libsemigroups {
   //! Linear in the size of \p dom.
   template <typename Return>
   [[nodiscard]] std::enable_if_t<IsPPerm<Return>, Return>
-  to(std::vector<typename Return::point_type> const& dom,
-     std::vector<typename Return::point_type> const& ran,
-     size_t                                          M);
+  make(std::vector<typename Return::point_type> const& dom,
+       std::vector<typename Return::point_type> const& ran,
+       size_t                                          M);
 
   //! \relates PPerm
   //!
@@ -1477,7 +1477,7 @@ namespace libsemigroups {
   //! ran[i]` for all \c i and which is \ref UNDEFINED on every other value
   //! in the range \f$[0, M)\f$.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsPPerm<Return>.
   //!
   //! \param dom the domain
   //! \param ran the range
@@ -1493,12 +1493,12 @@ namespace libsemigroups {
   //! Linear in the size of \p dom.
   template <typename Return>
   [[nodiscard]] std::enable_if_t<IsPPerm<Return>, Return>
-  to(std::initializer_list<typename Return::point_type> dom,
-     std::initializer_list<typename Return::point_type> ran,
-     size_t                                             M) {
-    return to<Return>(std::vector<typename Return::point_type>(dom),
-                      std::vector<typename Return::point_type>(ran),
-                      M);
+  make(std::initializer_list<typename Return::point_type> dom,
+       std::initializer_list<typename Return::point_type> ran,
+       size_t                                             M) {
+    return make<Return>(std::vector<typename Return::point_type>(dom),
+                        std::vector<typename Return::point_type>(ran),
+                        M);
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -1604,7 +1604,7 @@ namespace libsemigroups {
   }
 
   ////////////////////////////////////////////////////////////////////////
-  // to<Perm>
+  // make<Perm>
   ////////////////////////////////////////////////////////////////////////
 
   //! \relates Perm
@@ -1615,7 +1615,7 @@ namespace libsemigroups {
   //! follows: the image of the point \c i under the permutation is the value in
   //! position \c i of the container \p cont.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsPerm<Return>.
   //! \tparam OtherContainer universal reference for the type of the container.
   //!
   //! \param cont the container.
@@ -1623,7 +1623,7 @@ namespace libsemigroups {
   //! \returns A \ref Perm instance with degree \c N.
   //!
   //! \throw LibsemigroupsException if any of the following hold:
-  //! * the size of \p cont is incompatible with \ref container_type.
+  //! * the size of \p cont is incompatible with \ref Perm::container_type.
   //! * any value in \p cont exceeds `cont.size()` and is not equal to
   //!   UNDEFINED.
   //! * there are repeated values in \p cont.
@@ -1632,7 +1632,7 @@ namespace libsemigroups {
   //! Linear in the size of the container \p cont.
   template <typename Return, typename OtherContainer>
   [[nodiscard]] std::enable_if_t<IsPerm<Return>, Return>
-  to(OtherContainer&& cont) {
+  make(OtherContainer&& cont) {
     return Return::template make<Return>(std::forward<OtherContainer>(cont));
   }
 
@@ -1644,14 +1644,14 @@ namespace libsemigroups {
   //! follows: the image of the point \c i under the permutation is the value in
   //! position \c i of the container \p cont.
   //!
-  //! \tparam Return the return type.
+  //! \tparam Return the return type. Must satisfy \ref IsPerm<Return>.
   //!
   //! \param cont the container.
   //!
   //! \returns A \ref Perm instance with degree \c N.
   //!
   //! \throw LibsemigroupsException if any of the following hold:
-  //! * the size of \p cont is incompatible with \ref container_type.
+  //! * the size of \p cont is incompatible with \ref Perm::container_type.
   //! * any value in \p cont exceeds `cont.size()` and is not equal to
   //!   UNDEFINED.
   //! * there are repeated values in \p cont.
@@ -1660,8 +1660,8 @@ namespace libsemigroups {
   //! Linear in the size of the container \p cont.
   template <typename Return>
   [[nodiscard]] std::enable_if_t<IsPerm<Return>, Return>
-  to(std::initializer_list<typename Return::point_type> cont) {
-    return to<Return, std::initializer_list<typename Return::point_type>>(
+  make(std::initializer_list<typename Return::point_type> cont) {
+    return make<Return, std::initializer_list<typename Return::point_type>>(
         std::move(cont));
   }
 
@@ -2101,8 +2101,8 @@ namespace libsemigroups {
   };
 
   // T = std::vector<S> or StaticVector1<S, N>
-  //! Specialization of the adapter Rho for instances of Transf<N, Scalar> and
-  //! std::vector<S> or detail::StaticVector1<S, N>
+  //! Specialization of the adapter Rho for instances of `Transf<N, Scalar>` and
+  //! `std::vector<S> or detail::StaticVector1<S, N>`
   //!
   //! \sa Rho.
   template <size_t N, typename Scalar, typename T>

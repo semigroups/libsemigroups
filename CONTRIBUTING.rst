@@ -26,7 +26,7 @@ Object                Convention
 class                 NamedLikeThis
 struct                NamedLikeThis
 function              named\_like\_this
-enum class            namedlikethis 
+enum class            namedlikethis
 enum class member     named_like_this
 stateful type alias   named\_like\_this\_type
 stateless type alias  LikeThis
@@ -43,7 +43,7 @@ Some more conventions:
   functions), then it must have the suffix `_no_checks` if there is any
   possibility that the function will fail. This indicates that anything may
   happen if the function is called on a non-valid object or for non-valid
-  arguments. 
+  arguments.
 
   In the python bindings ``libsemigroups_pybind11`` it should not be possible
   to construct or modify an object so that it is invalid. For example, it
@@ -52,22 +52,33 @@ Some more conventions:
   `Bipartition::rank_no_checks` member function as if it was the
   `Bipartition::rank` function. Hence in the python bindings we bind a
   functions called `Bipartition.rank` to the C++ function
-  `Bipartition::rank_no_checks`. 
+  `Bipartition::rank_no_checks`.
 
 * All class helper functions (i.e. those free functions taking a class as an
   argument, and using public member functions of that class) should be in a
-  helper namespace with the same name as the class (but in lower case). I.e. 
+  helper namespace with the same name as the class (but in lower case). I.e.
   `bipartition::one`, or `ptransf::one`. Exceptions are:
-  
+
   - operators such as `operator*` etc. This is because these are more or less
     difficult to use if they are in a nested namespace.
   - functions that are (or should be) implemented for all of the public facing
     classes in ``libsemigroups``, such as, for example
     `to_human_readable_repr`
-  - other functions with prefix `to_` such as `to_blocks`, `to_word_graph` etc,
-    to avoid the repetition in `blocks::to_blocks`, or other functions where
-    the namespace would belong to the function name (like
-    `words::number_of_words`).
+
+* Functions that construct an object must be of one of three types;
+  constructors, `make` functions, or `to` functions:
+
+  * A constructor should be used to construct an object without checking its
+    arguments.
+  * A `make` function should be a free function template in the libsemigroups
+    namespace that is used to construct an object from non-libsemigroups
+    objects such as containers, integers and strings. It should check its
+    arguments.
+  * A `to` function should a free function template in the libsemigroups
+    namespace that is used to convert from one `libsemigroups` type to another.
+    A typical signature might look something like
+    `to<ToddCoxeter>(Presentation<word_type> p)`. It should check its
+    arguments.
 
 * The documentation for each function may contain the following section
   indicators in the following order:
@@ -84,19 +95,19 @@ Some more conventions:
 Debugging and valgrinding
 -------------------------
 
-To run `lldb`: 
+To run `lldb`:
 
 .. code-block:: bash
 
-    ./configure --enable-debug && make test_all 
-    libtool --mode=execute lldb test_all 
+    ./configure --enable-debug && make test_all
+    libtool --mode=execute lldb test_all
 
 `test_all` is the name of the check program produced by `make check`. Similarly
 to run valgrind you have to do:
 
 .. code-block:: bash
 
-    ./configure --enable-debug --disable-hpcombi && make test_all 
+    ./configure --enable-debug --disable-hpcombi && make test_all
     libtool --mode=execute valgrind --leak-check=full ./test_all [quick] 2>&1 | tee --append valgrind.txt
 
 Adding new test cases
@@ -105,14 +116,14 @@ Adding new test cases
 Any new tests should be tagged with one of the following:
 
 ========  =======
-Tag       Runtime 
+Tag       Runtime
 --------  -------
 quick     < 200ms
 standard  < 3s
 extreme   > 3s
 ========  =======
 
-They should be declared using 
+They should be declared using
 
 .. code-block:: cpp
 
@@ -120,13 +131,13 @@ They should be declared using
 
 "tags" should include "[FilePrefix]" where "FilePrefix" would be
 "cong-pair" in the file "tests/cong-pair.test.cc", if the file prefix is the
-same as "classname", then it should not be included. Tags are case insensitive. 
+same as "classname", then it should not be included. Tags are case insensitive.
 
 Making a release
 ----------------
 
-A ***bugfix release*** is one of the form `x.y.z -> x.y.z+1`, and                
-a ***non-bugfix release*** is one of the form `x.y.z -> x+1.y.z` or `x.y+1.z`. 
+A ***bugfix release*** is one of the form `x.y.z -> x.y.z+1`, and
+a ***non-bugfix release*** is one of the form `x.y.z -> x+1.y.z` or `x.y+1.z`.
 
 Use the script `etc/release-libsemigroups.py`.
 

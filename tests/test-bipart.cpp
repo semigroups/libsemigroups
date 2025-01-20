@@ -51,8 +51,8 @@ namespace libsemigroups {
   }  // namespace
 
   LIBSEMIGROUPS_TEST_CASE("Blocks", "001", "empty blocks", "[quick]") {
-    Blocks b1 = to_blocks({});
-    Blocks b2 = to_blocks({{4, 2}, {-1, -5}, {-3, -6}});
+    Blocks b1 = make<Blocks>({});
+    Blocks b2 = make<Blocks>({{4, 2}, {-1, -5}, {-3, -6}});
     REQUIRE(b2.lookup() == std::vector<bool>({true, false, true}));
     REQUIRE(b1 == b1);
     REQUIRE(!(b1 == b2));
@@ -216,7 +216,7 @@ namespace libsemigroups {
         {0, 1, 2, 1, 0, 2, 1, 0, 2, 2, 0, 0, 2, 0, 3, 4, 4, 1, 3, 0});
     auto y = Bipartition(
         {0, 1, 1, 1, 1, 2, 3, 2, 4, 5, 5, 2, 4, 2, 1, 1, 1, 2, 3, 2});
-    auto z = to_bipartition(
+    auto z = make<Bipartition>(
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     REQUIRE(!(y == z));
 
@@ -367,8 +367,8 @@ namespace libsemigroups {
                           "exceptions",
                           "[quick][bipartition]") {
     REQUIRE_NOTHROW(Bipartition(std::vector<uint32_t>()));
-    REQUIRE_THROWS_AS(to_bipartition({0}), LibsemigroupsException);
-    REQUIRE_THROWS_AS(to_bipartition({1, 0}), LibsemigroupsException);
+    REQUIRE_THROWS_AS(make<Bipartition>({0}), LibsemigroupsException);
+    REQUIRE_THROWS_AS(make<Bipartition>({1, 0}), LibsemigroupsException);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Bipartition",
@@ -378,30 +378,30 @@ namespace libsemigroups {
     Bipartition xx(
         {0, 0, 0, 0, 0, 0, 1, 2, 0, 1, 0, 0, 1, 2, 3, 3, 0, 4, 1, 1});
 
-    auto x = to_bipartition({{1, 2, 3, 4, 5, 6, 9, -1, -2, -7},
-                             {7, 10, -3, -9, -10},
-                             {8, -4},
-                             {-5, -6},
-                             {-8}});
+    auto x = make<Bipartition>({{1, 2, 3, 4, 5, 6, 9, -1, -2, -7},
+                                {7, 10, -3, -9, -10},
+                                {8, -4},
+                                {-5, -6},
+                                {-8}});
 
-    REQUIRE_THROWS_AS(to_bipartition({{1, 2, 3, 4, 5, 6, 9, 0, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{1, 2, 3, 4, 5, 6, 9, 0, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
-    REQUIRE_THROWS_AS(to_bipartition({{1, 2, 3, 4, 5, 6, 9, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{1, 2, 3, 4, 5, 6, 9, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{1, 2, 3, 4, 5, 6, 9, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, 0x40000000},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{1, 2, 3, 4, 5, 6, 9, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, 0x40000000},
+                                         {-8}}),
                       LibsemigroupsException);
     REQUIRE(x == xx);
 
@@ -485,48 +485,48 @@ namespace libsemigroups {
     REQUIRE(xx >= xxx);
 
     // Check for odd degree
-    REQUIRE_THROWS_AS(to_bipartition({0, 1, 2}), LibsemigroupsException);
+    REQUIRE_THROWS_AS(make<Bipartition>({0, 1, 2}), LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{0, 2, 3, 4, 5, 6, 9, -1, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{0, 2, 3, 4, 5, 6, 9, -1, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{1, 2, 3, 4, 5, 6, 9, 11, -1, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{1, 2, 3, 4, 5, 6, 9, 11, -1, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{1, 2, 3, 4, 5, 6, 11, -1, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{1, 2, 3, 4, 5, 6, 11, -1, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{1, 2, 3, 4, 5, 6, -11, -1, -2, -7},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{1, 2, 3, 4, 5, 6, -11, -1, -2, -7},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{0, 2, 3, 4, 5, 6, 9, -1},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{0, 2, 3, 4, 5, 6, 9, -1},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
 
-    REQUIRE_THROWS_AS(to_bipartition({{0, 2, 3, 4, 5, 6, 9, -1, -2},
-                                      {7, 10, -3, -9, -10},
-                                      {8, -4},
-                                      {-5, -6},
-                                      {-8}}),
+    REQUIRE_THROWS_AS(make<Bipartition>({{0, 2, 3, 4, 5, 6, 9, -1, -2},
+                                         {7, 10, -3, -9, -10},
+                                         {8, -4},
+                                         {-5, -6},
+                                         {-8}}),
                       LibsemigroupsException);
   }
 

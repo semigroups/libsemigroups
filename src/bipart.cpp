@@ -178,11 +178,6 @@ namespace libsemigroups {
         x.rank());
   }
 
-  [[nodiscard]] Blocks
-  to_blocks(std::initializer_list<std::vector<int32_t>> const& cont) {
-    return to_blocks<std::initializer_list<std::vector<int32_t>>>(cont);
-  }
-
   ////////////////////////////////////////////////////////////////////////
   // Blocks
   ////////////////////////////////////////////////////////////////////////
@@ -343,19 +338,6 @@ namespace libsemigroups {
     }
 
   }  // namespace bipartition
-
-  [[nodiscard]] Bipartition
-  to_bipartition(std::initializer_list<uint32_t> const& cont) {
-    return to_bipartition<std::initializer_list<uint32_t>>(cont);
-  }
-
-  //! \brief Validate the arguments, construct a bipartition, and validate it.
-  //!
-  //! See to_bipartition(T const&) for full details.
-  [[nodiscard]] Bipartition
-  to_bipartition(std::initializer_list<std::vector<int32_t>> const& cont) {
-    return to_bipartition<std::initializer_list<std::vector<int32_t>>>(cont);
-  }
 
   [[nodiscard]] std::string to_human_readable_repr(Bipartition const& x,
                                                    std::string_view   braces,

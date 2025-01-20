@@ -55,13 +55,13 @@ namespace libsemigroups {
   TEST_CASE("POI(3) from FroidurePin", "[POI3][Sim1][quick][talk]") {
     auto                  rg = ReportGuard(false);
     FroidurePin<PPerm<3>> S;
-    S.add_generator(to<PPerm<3>>({0, 1, 2}, {0, 1, 2}, 3));
-    S.add_generator(to<PPerm<3>>({1, 2}, {0, 1}, 3));
-    S.add_generator(to<PPerm<3>>({0, 1}, {0, 2}, 3));
-    S.add_generator(to<PPerm<3>>({0, 2}, {1, 2}, 3));
-    S.add_generator(to<PPerm<3>>({0, 1}, {1, 2}, 3));
-    S.add_generator(to<PPerm<3>>({0, 2}, {0, 1}, 3));
-    S.add_generator(to<PPerm<3>>({1, 2}, {0, 2}, 3));
+    S.add_generator(make<PPerm<3>>({0, 1, 2}, {0, 1, 2}, 3));
+    S.add_generator(make<PPerm<3>>({1, 2}, {0, 1}, 3));
+    S.add_generator(make<PPerm<3>>({0, 1}, {0, 2}, 3));
+    S.add_generator(make<PPerm<3>>({0, 2}, {1, 2}, 3));
+    S.add_generator(make<PPerm<3>>({0, 1}, {1, 2}, 3));
+    S.add_generator(make<PPerm<3>>({0, 2}, {0, 1}, 3));
+    S.add_generator(make<PPerm<3>>({1, 2}, {0, 2}, 3));
     REQUIRE(S.size() == 20);
 
     auto p = to_presentation<word_type>(S);
@@ -81,15 +81,15 @@ namespace libsemigroups {
   TEST_CASE("POI(4) from FroidurePin", "[POI4][Sim1][standard]") {
     auto                  rg = ReportGuard(false);
     FroidurePin<PPerm<4>> S;
-    S.add_generator(to<PPerm<4>>({0, 1, 2, 3}, {0, 1, 2, 3}, 4));
-    S.add_generator(to<PPerm<4>>({1, 2, 3}, {0, 1, 2}, 4));
-    S.add_generator(to<PPerm<4>>({0, 1, 2}, {0, 1, 3}, 4));
-    S.add_generator(to<PPerm<4>>({0, 1, 3}, {0, 2, 3}, 4));
-    S.add_generator(to<PPerm<4>>({0, 2, 3}, {1, 2, 3}, 4));
-    S.add_generator(to<PPerm<4>>({0, 1, 2}, {1, 2, 3}, 4));
-    S.add_generator(to<PPerm<4>>({0, 1, 3}, {0, 1, 2}, 4));
-    S.add_generator(to<PPerm<4>>({0, 2, 3}, {0, 1, 3}, 4));
-    S.add_generator(to<PPerm<4>>({1, 2, 3}, {0, 2, 3}, 4));
+    S.add_generator(make<PPerm<4>>({0, 1, 2, 3}, {0, 1, 2, 3}, 4));
+    S.add_generator(make<PPerm<4>>({1, 2, 3}, {0, 1, 2}, 4));
+    S.add_generator(make<PPerm<4>>({0, 1, 2}, {0, 1, 3}, 4));
+    S.add_generator(make<PPerm<4>>({0, 1, 3}, {0, 2, 3}, 4));
+    S.add_generator(make<PPerm<4>>({0, 2, 3}, {1, 2, 3}, 4));
+    S.add_generator(make<PPerm<4>>({0, 1, 2}, {1, 2, 3}, 4));
+    S.add_generator(make<PPerm<4>>({0, 1, 3}, {0, 1, 2}, 4));
+    S.add_generator(make<PPerm<4>>({0, 2, 3}, {0, 1, 3}, 4));
+    S.add_generator(make<PPerm<4>>({1, 2, 3}, {0, 2, 3}, 4));
     REQUIRE(S.size() == 70);
 
     auto p = to_presentation<word_type>(S);
@@ -374,9 +374,9 @@ namespace libsemigroups {
             "[full_transf_monoid][length][002]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<4>> S;
-    S.add_generator(to<Transf<4>>({1, 2, 3, 0}));
-    S.add_generator(to<Transf<4>>({1, 0, 2, 3}));
-    S.add_generator(to<Transf<4>>({0, 1, 2, 0}));
+    S.add_generator(make<Transf<4>>({1, 2, 3, 0}));
+    S.add_generator(make<Transf<4>>({1, 0, 2, 3}));
+    S.add_generator(make<Transf<4>>({0, 1, 2, 0}));
     REQUIRE(S.size() == 256);
     auto p = to_presentation<word_type>(S);
     bench_length(p);
@@ -408,26 +408,26 @@ namespace libsemigroups {
     auto rg = ReportGuard(false);
 
     FroidurePin<PPerm<10>> S;
-    S.add_generator(to<PPerm<10>>({1, 2, 3, 4, 5, 6, 7, 8, 9, 0}));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>({1, 2, 3, 4, 5, 6, 7, 8, 9, 0}));
+    S.add_generator(make<PPerm<10>>(
         {1, 2, 3, 4, 5, 6, 7, 8, 9}, {1, 2, 3, 4, 5, 6, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 2, 3, 4, 5, 6, 7, 8, 9}, {0, 2, 3, 4, 5, 6, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 3, 4, 5, 6, 7, 8, 9}, {0, 1, 3, 4, 5, 6, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 4, 5, 6, 7, 8, 9}, {0, 1, 2, 4, 5, 6, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 3, 5, 6, 7, 8, 9}, {0, 1, 2, 3, 5, 6, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 3, 4, 6, 7, 8, 9}, {0, 1, 2, 3, 4, 6, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 3, 4, 5, 7, 8, 9}, {0, 1, 2, 3, 4, 5, 7, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 3, 4, 5, 6, 8, 9}, {0, 1, 2, 3, 4, 5, 6, 8, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 3, 4, 5, 6, 7, 9}, {0, 1, 2, 3, 4, 5, 6, 7, 9}, 10));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>(
         {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, 10));
 
     size_t n = 10;
@@ -441,8 +441,8 @@ namespace libsemigroups {
     auto rg = ReportGuard(false);
 
     FroidurePin<PPerm<10>> S;
-    S.add_generator(to<PPerm<10>>({1, 2, 3, 4, 5, 6, 7, 8, 9, 0}));
-    S.add_generator(to<PPerm<10>>(
+    S.add_generator(make<PPerm<10>>({1, 2, 3, 4, 5, 6, 7, 8, 9, 0}));
+    S.add_generator(make<PPerm<10>>(
         {1, 2, 3, 4, 5, 6, 7, 8, 9}, {1, 2, 3, 4, 5, 6, 7, 8, 9}, 10));
 
     size_t n = 10;
@@ -546,7 +546,7 @@ namespace libsemigroups {
   TEST_CASE("Catalan monoid n = 1 - all", "[catalan][n=1]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<1>> S;
-    S.add_generator(to<Transf<1>>({0}));
+    S.add_generator(make<Transf<1>>({0}));
     REQUIRE(S.size() == 1);
     auto p = to_presentation<word_type>(S);
 
@@ -560,8 +560,8 @@ namespace libsemigroups {
   TEST_CASE("Catalan monoid n = 2 - all", "[catalan][n=2]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<2>> S;
-    S.add_generator(to<Transf<2>>({0, 1}));
-    S.add_generator(to<Transf<2>>({0, 0}));
+    S.add_generator(make<Transf<2>>({0, 1}));
+    S.add_generator(make<Transf<2>>({0, 0}));
     REQUIRE(S.size() == 2);
     auto p = to_presentation<word_type>(S);
 
@@ -575,9 +575,9 @@ namespace libsemigroups {
   TEST_CASE("Catalan monoid n = 3 - all", "[catalan][n=3]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<3>> S;
-    S.add_generator(to<Transf<3>>({0, 1, 2}));
-    S.add_generator(to<Transf<3>>({0, 0, 2}));
-    S.add_generator(to<Transf<3>>({0, 1, 1}));
+    S.add_generator(make<Transf<3>>({0, 1, 2}));
+    S.add_generator(make<Transf<3>>({0, 0, 2}));
+    S.add_generator(make<Transf<3>>({0, 1, 1}));
     REQUIRE(S.size() == 5);
     auto p = to_presentation<word_type>(S);
 
@@ -591,10 +591,10 @@ namespace libsemigroups {
   TEST_CASE("Catalan monoid n = 4 - all", "[catalan][n=4]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<4>> S;
-    S.add_generator(to<Transf<4>>({0, 1, 2, 3}));
-    S.add_generator(to<Transf<4>>({0, 0, 2, 3}));
-    S.add_generator(to<Transf<4>>({0, 1, 1, 3}));
-    S.add_generator(to<Transf<4>>({0, 1, 2, 2}));
+    S.add_generator(make<Transf<4>>({0, 1, 2, 3}));
+    S.add_generator(make<Transf<4>>({0, 0, 2, 3}));
+    S.add_generator(make<Transf<4>>({0, 1, 1, 3}));
+    S.add_generator(make<Transf<4>>({0, 1, 2, 2}));
     REQUIRE(S.size() == 14);
     auto p = to_presentation<word_type>(S);
 
@@ -608,11 +608,11 @@ namespace libsemigroups {
   TEST_CASE("Catalan monoid n = 5 - all", "[catalan][n=5]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<5>> S;
-    S.add_generator(to<Transf<5>>({0, 1, 2, 3, 4}));
-    S.add_generator(to<Transf<5>>({0, 0, 2, 3, 4}));
-    S.add_generator(to<Transf<5>>({0, 1, 1, 3, 4}));
-    S.add_generator(to<Transf<5>>({0, 1, 2, 2, 4}));
-    S.add_generator(to<Transf<5>>({0, 1, 2, 3, 3}));
+    S.add_generator(make<Transf<5>>({0, 1, 2, 3, 4}));
+    S.add_generator(make<Transf<5>>({0, 0, 2, 3, 4}));
+    S.add_generator(make<Transf<5>>({0, 1, 1, 3, 4}));
+    S.add_generator(make<Transf<5>>({0, 1, 2, 2, 4}));
+    S.add_generator(make<Transf<5>>({0, 1, 2, 3, 3}));
     REQUIRE(S.size() == 42);
     auto p = to_presentation<word_type>(S);
 
@@ -638,9 +638,9 @@ namespace libsemigroups {
   TEST_CASE("Order endomorphisms n = 2 - all", "[order_endos][n=2]") {
     auto                   rg = ReportGuard(false);
     FroidurePin<Transf<2>> S;
-    S.add_generator(to<Transf<2>>({0, 1}));
-    S.add_generator(to<Transf<2>>({0, 0}));
-    S.add_generator(to<Transf<2>>({1, 1}));
+    S.add_generator(make<Transf<2>>({0, 1}));
+    S.add_generator(make<Transf<2>>({0, 0}));
+    S.add_generator(make<Transf<2>>({1, 1}));
     REQUIRE(S.size() == 3);
 
     Sims1 C;

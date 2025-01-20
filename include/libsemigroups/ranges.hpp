@@ -83,7 +83,7 @@ namespace libsemigroups {
   //!
   //! \par Example
   //! \code
-  //! auto wg = to_word_graph(4, [[0, 1], [1, 0], [2, 2]]);
+  //! auto wg = make<WordGraph<uint8_t>>(4, [[0, 1], [1, 0], [2, 2]]);
   //! Paths p(wg);
   //! p.source(0).max(10);
   //! p.count();            // returns 1023

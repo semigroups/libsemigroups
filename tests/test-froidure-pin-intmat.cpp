@@ -55,7 +55,7 @@ namespace libsemigroups {
     REQUIRE(TestType({{0, 1}, {0, -1}}) * TestType({{0, 1}, {2, 0}})
                 * TestType({{0, 1}, {2, 0}})
             == S.generator(0) * S.generator(1) * S.generator(0));
-    REQUIRE(to_matrix<TestType>({{64, 0}, {-64, 0}})
+    REQUIRE(make<TestType>({{64, 0}, {-64, 0}})
             == S.generator(0) * S.generator(1) * S.generator(0) * S.generator(1)
                    * S.generator(0) * S.generator(1) * S.generator(0)
                    * S.generator(1) * S.generator(0) * S.generator(1)

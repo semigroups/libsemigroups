@@ -3015,7 +3015,7 @@ namespace libsemigroups {
   //! \brief For pruning the search tree when looking for congruences arising
   //! from right or two-sided congruences representing faithful actions.
   //!
-  //! Defined in ``sims.hpp``.
+  //! Defined in `sims.hpp`.
   //!
   //! This class provides a pruner for pruning the search tree when looking for
   //! right congruences representing faithful actions. A right congruence

@@ -31,6 +31,7 @@
 #include <vector>            // for vector, operator<, operator==, allocator
 
 #include "adapters.hpp"  // for Hash
+#include "types.hpp"     // for enable_if_is_same
 
 namespace libsemigroups {
 
@@ -130,6 +131,10 @@ namespace libsemigroups {
     //! \no_libsemigroups_except
     explicit PBR(size_t n);
 
+    //! \copydoc PBR(vector_type<int32_t>,vector_type<int32_t>)
+    PBR(initializer_list_type<int32_t> left,
+        initializer_list_type<int32_t> right);
+
     //! \brief Construct from adjacencies \c 1 to \c n and \c -1 to \c -n.
     //!
     //! Construct from adjacencies \c 1 to \c n and \c -1 to \c -n.
@@ -152,14 +157,8 @@ namespace libsemigroups {
     //! performed.
     //!
     //! \sa \ref pbr::throw_if_invalid(PBR const&) and
-    //! \ref libsemigroups::to_pbr(initializer_list_type<int32_t>,
+    //! \ref make(initializer_list_type<int32_t>,
     //! initializer_list_type<int32_t>)
-    PBR(initializer_list_type<int32_t> left,
-        initializer_list_type<int32_t> right);
-
-    // clang-format off
-    //! \copydoc PBR(initializer_list_type<int32_t>, initializer_list_type<int32_t>) <!-- NOLINT(whitespace/line_length) -->
-    // clang-format on
     PBR(vector_type<int32_t> left, vector_type<int32_t> right);
 
     //! \brief Returns the degree of a PBR.
@@ -493,10 +492,22 @@ namespace libsemigroups {
 
   }  // namespace pbr
 
+  // end pbr_group
+  //! @}
+
+  namespace detail {
+    std::vector<std::vector<uint32_t>>
+    process_left_right(PBR::vector_type<int32_t> left,
+                       PBR::vector_type<int32_t> right);
+  }
+
+  //! \relates PBR
+  //!
   //! \brief Construct and validate a \ref PBR.
   //!
   //! Construct and validate a \ref PBR.
   //!
+  //! \tparam Return the return type. Must satisfy `std::is_same<Return, PBR>`.
   //! \tparam T the types of the arguments.
   //!
   //! \param args the arguments to forward to the \ref PBR constructor.
@@ -512,18 +523,22 @@ namespace libsemigroups {
   //! construction of the PBR object.
   //!
   //! \sa
-  //! \ref libsemigroups::PBR().
-  template <typename... T>
-  PBR to_pbr(T... args) {
+  //! #PBR.
+  template <typename Return, typename... T>
+  [[nodiscard]] enable_if_is_same<Return, PBR> make(T... args) {
     // TODO(later) validate_args
     PBR result(std::forward<T>(args)...);
     pbr::throw_if_invalid(result);
     return result;
   }
 
+  //! \relates PBR
+  //!
   //! \brief Construct and validate a \ref PBR.
   //!
   //! Construct and validate a \ref PBR.
+  //!
+  //! \tparam Return the return type. Must satisfy `std::is_same<Return, PBR>`.
   //!
   //! \param args the arguments to forward to the constructor.
   //!
@@ -538,14 +553,30 @@ namespace libsemigroups {
   //! construction of the PBR object.
   //!
   //! \sa
-  //! \ref libsemigroups::PBR(initializer_list_type<uint32_t>).
-  inline PBR to_pbr(PBR::initializer_list_type<uint32_t> args) {
-    return to_pbr<decltype(args)>(args);
+  //! PBR(initializer_list_type<uint32_t>).
+  template <typename Return>
+  [[nodiscard]] enable_if_is_same<Return, PBR>
+  make(PBR::initializer_list_type<uint32_t> args) {
+    return make<PBR, decltype(args)>(args);
   }
 
+  //! \relates PBR
+  //!
+  //! \copydoc make(PBR::vector_type<int32_t>, PBR::vector_type<int32_t>)
+  template <typename Return>
+  [[nodiscard]] enable_if_is_same<Return, PBR>
+  make(PBR::initializer_list_type<int32_t> left,
+       PBR::initializer_list_type<int32_t> right) {
+    return PBR(detail::process_left_right(left, right));
+  }
+
+  //! \relates PBR
+  //!
   //! \brief Construct and validate a \ref PBR.
   //!
   //! Construct and validate a \ref PBR.
+  //!
+  //! \tparam Return the return type. Must satisfy `std::is_same<Return, PBR>`.
   //!
   //! \param left the 1st argument to forward to the constructor.
   //! \param right the 2nd argument to forward to the constructor.
@@ -561,16 +592,15 @@ namespace libsemigroups {
   //! the construction of the PBR object.
   //!
   //! \sa
-  //! \ref libsemigroups::PBR(initializer_list_type<uint32_t>,
-  //! initializer_list_type<uint32_t>).
-  PBR to_pbr(PBR::initializer_list_type<int32_t> left,
-             PBR::initializer_list_type<int32_t> right);
+  //! PBR(initializer_list_type<int32_t>, initializer_list_type<int32_t>).
+  template <typename Return>
+  [[nodiscard]] enable_if_is_same<Return, PBR>
+  make(PBR::vector_type<int32_t> left, PBR::vector_type<int32_t> right) {
+    return PBR(detail::process_left_right(left, right));
+  }
 
-  // clang-format off
-  //! \copydoc to_pbr(PBR::initializer_list_type<int32_t>, PBR::initializer_list_type<int32_t>) <!-- NOLINT(whitespace/line_length) -->
-  // clang-format on
-  PBR to_pbr(PBR::vector_type<int32_t> left, PBR::vector_type<int32_t> right);
-
+  //! \relates PBR
+  //!
   //! \brief Return a human readable representation of a PBR.
   //!
   //! Return a human readable representation of a PBR.
@@ -584,6 +614,8 @@ namespace libsemigroups {
   //! \no_libsemigroups_except
   [[nodiscard]] std::string to_human_readable_repr(PBR const& x);
 
+  //! \relates PBR
+  //!
   //! \brief Multiply two PBRs.
   //!
   //! Returns a newly constructed PBR equal to the product of \p x and \p y.
@@ -601,6 +633,8 @@ namespace libsemigroups {
   //! Cubic in degree().
   PBR operator*(PBR const& x, PBR const& y);
 
+  //! \relates PBR
+  //!
   //! \brief Compare two PBRs for inequality.
   //!
   //! Compare two PBRs for inequality.
@@ -621,6 +655,8 @@ namespace libsemigroups {
     return !(x == y);
   }
 
+  //! \relates PBR
+  //!
   //! \brief Convenience function that just calls \ref PBR::operator<
   //! "operator<".
   //!
@@ -629,6 +665,8 @@ namespace libsemigroups {
     return y < x;
   }
 
+  //! \relates PBR
+  //!
   //! \brief Convenience function that just calls \ref PBR::operator<
   //! "operator<" and \ref PBR::operator== "operator==".
   //!
@@ -638,6 +676,8 @@ namespace libsemigroups {
     return x < y || x == y;
   }
 
+  //! \relates PBR
+  //!
   //! \brief Convenience function that just calls \ref operator<=(PBR const&,
   //! PBR const&) "operator<=".
   //!
@@ -665,9 +705,6 @@ namespace libsemigroups {
   //! \tparam T a type.
   template <typename T>
   static constexpr bool IsPBR = detail::IsPBRHelper<T>::value;
-
-  // end pbr_group
-  //! @}
 
   ////////////////////////////////////////////////////////////////////////
   // Adapters

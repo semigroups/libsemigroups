@@ -34,12 +34,21 @@ namespace libsemigroups {
   //!
   //! \ingroup misc_group
   //!
-  //! \brief Documentation for types.
+  //! \brief Documentation for types and aliases.
   //!
   //! This file contains functionality for various types used in
   //! `libsemigroups`.
   //!
   //! @{
+
+  //! \brief Alias equal to the second template parameter if both template
+  //! parameters are equal.
+  //!
+  //! Alias equal to the second template parameter if both template
+  //! parameters are equal.
+  template <typename Given, typename Expected>
+  using enable_if_is_same
+      = std::enable_if_t<std::is_same_v<Given, Expected>, Expected>;
 
   //! \brief Enum to indicate true, false or not currently knowable.
   //!

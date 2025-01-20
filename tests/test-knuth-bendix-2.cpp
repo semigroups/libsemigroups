@@ -1601,7 +1601,8 @@ namespace libsemigroups {
     // The gilman_graph generated is isomorphic to the word_graph given, but not
     // identical. Since the normal forms are correct (see above) the below check
     // is omitted. REQUIRE(kb.gilman_graph()
-    //         == to_word_graph<size_t>(5, {{1, 3}, {UNDEFINED, 2}, {}, {4}}));
+    //         == make<WordGraph<size_t>>(5, {{1, 3}, {UNDEFINED, 2}, {},
+    //         {4}}));
   }
 
   LIBSEMIGROUPS_TEMPLATE_TEST_CASE("KnuthBendix",
